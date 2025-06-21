@@ -1,0 +1,1540 @@
+import React, { useState, useRef } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Animated, PanResponder } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { MapPin, Search, Star, Clock, User, Bell, Wifi, ShoppingCart, ChefHat, X, Heart, ChevronLeft, ChevronRight } from 'lucide-react-native';
+import { router } from 'expo-router';
+import CustomLogo from '@/components/CustomLogo';
+import { useAuth } from '@/contexts/AuthContext';
+
+export default function Home() {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showInsightNotification, setShowInsightNotification] = useState(true);
+  const [selectedFoodCategory, setSelectedFoodCategory] = useState('dishes');
+  
+  // Animation values for category indicators
+  const indicatorAnimation = useRef(new Animated.Value(0)).current;
+  const scrollViewRef = useRef<ScrollView>(null);
+  const categoryScrollRef = useRef<ScrollView>(null);
+
+  const { user, profile } = useAuth();
+  const isGuest = !user;
+
+  const categories = [
+    { id: 1, name: 'Restaurants', icon: '🍽️', color: '#FF6B6B', route: 'restaurants' },
+    { id: 2, name: 'Street Food', icon: '🌮', color: '#4ECDC4', route: 'street-food' },
+    { id: 3, name: 'Desserts', icon: '🍰', color: '#45B7D1', route: 'desserts' },
+    { id: 4, name: 'Bakery', icon: '🥖', color: '#FFA726', route: 'bakery' },
+    { id: 5, name: 'Foreign', icon: '🌍', color: '#AB47BC', route: 'international' },
+    { id: 6, name: 'Budget Meals', icon: '💰', color: '#FFD54F', route: 'budget-meals' },
+  ];
+
+  const featuredFoods = [
+    {
+      id: 1,
+      name: 'Truffle Pasta',
+      restaurant: 'Bella Vista',
+      price: 12499,
+      originalPrice: 16499,
+      rating: 4.9,
+      image: 'https://images.pexels.com/photos/1279330/pexels-photo-1279330.jpeg',
+      badge: 'Chef Special',
+      cookTime: '25 min',
+    },
+    {
+      id: 2,
+      name: 'Wagyu Burger',
+      restaurant: 'Gourmet House',
+      price: 9250,
+      originalPrice: 12500,
+      rating: 4.8,
+      image: 'https://images.pexels.com/photos/1639557/pexels-photo-1639557.jpeg',
+      badge: 'Limited Time',
+      cookTime: '15 min',
+    },
+    {
+      id: 3,
+      name: 'Dragon Roll Sushi',
+      restaurant: 'Tokyo Kitchen',
+      price: 8495,
+      originalPrice: 11495,
+      rating: 4.7,
+      image: 'https://images.pexels.com/photos/357756/pexels-photo-357756.jpeg',
+      badge: 'Popular',
+      cookTime: '20 min',
+    },
+  ];
+
+  const popularItems = [
+    {
+      id: 1,
+      name: 'Margherita Pizza',
+      description: 'Fresh mozzarella, basil, tomato sauce',
+      calories: '420 cal',
+      image: 'https://images.pexels.com/photos/315755/pexels-photo-315755.jpeg',
+      price: 7495,
+      rating: 4.6,
+      restaurant: 'Pizza Corner',
+      hasRecipe: true,
+    },
+    {
+      id: 2,
+      name: 'Chicken Tikka Bowl',
+      description: 'Spiced chicken with basmati rice and naan',
+      calories: '580 cal',
+      image: 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg',
+      price: 6250,
+      rating: 4.8,
+      restaurant: 'Spice Garden',
+      hasRecipe: true,
+    },
+    {
+      id: 3,
+      name: 'Salmon Teriyaki',
+      description: 'Grilled salmon with vegetables and rice',
+      calories: '450 cal',
+      image: 'https://images.pexels.com/photos/262959/pexels-photo-262959.jpeg',
+      price: 9995,
+      rating: 4.9,
+      restaurant: 'Ocean Fresh',
+      hasRecipe: false,
+    },
+  ];
+
+  // Food categories with different items
+  const foodCategories = [
+    {
+      id: 'dishes',
+      name: 'Dishes',
+      icon: '🍽️',
+      items: [
+        {
+          id: 1,
+          name: 'Jollof Rice Special',
+          restaurant: 'Lagos Kitchen',
+          price: 4500,
+          rating: 4.8,
+          image: 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg',
+          cookTime: '20 min',
+          hasRecipe: true,
+        },
+        {
+          id: 2,
+          name: 'Grilled Chicken',
+          restaurant: 'Protein Palace',
+          price: 6500,
+          rating: 4.7,
+          image: 'https://images.pexels.com/photos/1279330/pexels-photo-1279330.jpeg',
+          cookTime: '25 min',
+          hasRecipe: true,
+        },
+        {
+          id: 3,
+          name: 'Fried Rice',
+          restaurant: 'Asian Fusion',
+          price: 3800,
+          rating: 4.6,
+          image: 'https://images.pexels.com/photos/2347311/pexels-photo-2347311.jpeg',
+          cookTime: '15 min',
+          hasRecipe: true,
+        },
+        {
+          id: 4,
+          name: 'Pepper Soup',
+          restaurant: 'Traditional Taste',
+          price: 3200,
+          rating: 4.9,
+          image: 'https://images.pexels.com/photos/1640772/pexels-photo-1640772.jpeg',
+          cookTime: '30 min',
+          hasRecipe: true,
+        },
+        {
+          id: 5,
+          name: 'Egusi Soup',
+          restaurant: 'Mama\'s Place',
+          price: 5200,
+          rating: 4.8,
+          image: 'https://images.pexels.com/photos/1640770/pexels-photo-1640770.jpeg',
+          cookTime: '35 min',
+          hasRecipe: true,
+        },
+        {
+          id: 6,
+          name: 'Amala & Ewedu',
+          restaurant: 'Yoruba Delights',
+          price: 4800,
+          rating: 4.7,
+          image: 'https://images.pexels.com/photos/1640772/pexels-photo-1640772.jpeg',
+          cookTime: '25 min',
+          hasRecipe: true,
+        },
+      ]
+    },
+    {
+      id: 'drinks',
+      name: 'Drinks',
+      icon: '🥤',
+      items: [
+        {
+          id: 1,
+          name: 'Fresh Orange Juice',
+          restaurant: 'Juice Bar',
+          price: 1500,
+          rating: 4.8,
+          image: 'https://images.pexels.com/photos/96974/pexels-photo-96974.jpeg',
+          cookTime: '5 min',
+          hasRecipe: false,
+        },
+        {
+          id: 2,
+          name: 'Smoothie Bowl',
+          restaurant: 'Healthy Drinks',
+          price: 2800,
+          rating: 4.7,
+          image: 'https://images.pexels.com/photos/1092730/pexels-photo-1092730.jpeg',
+          cookTime: '8 min',
+          hasRecipe: true,
+        },
+        {
+          id: 3,
+          name: 'Zobo Drink',
+          restaurant: 'Local Refreshments',
+          price: 1200,
+          rating: 4.6,
+          image: 'https://images.pexels.com/photos/1640770/pexels-photo-1640770.jpeg',
+          cookTime: '10 min',
+          hasRecipe: true,
+        },
+        {
+          id: 4,
+          name: 'Chapman',
+          restaurant: 'Cocktail Corner',
+          price: 2200,
+          rating: 4.5,
+          image: 'https://images.pexels.com/photos/1640771/pexels-photo-1640771.jpeg',
+          cookTime: '7 min',
+          hasRecipe: true,
+        },
+        {
+          id: 5,
+          name: 'Tiger Nut Drink',
+          restaurant: 'Natural Drinks',
+          price: 1800,
+          rating: 4.9,
+          image: 'https://images.pexels.com/photos/96974/pexels-photo-96974.jpeg',
+          cookTime: '12 min',
+          hasRecipe: true,
+        },
+        {
+          id: 6,
+          name: 'Kunu Drink',
+          restaurant: 'Traditional Beverages',
+          price: 1000,
+          rating: 4.6,
+          image: 'https://images.pexels.com/photos/1092730/pexels-photo-1092730.jpeg',
+          cookTime: '15 min',
+          hasRecipe: true,
+        },
+      ]
+    },
+    {
+      id: 'fruits',
+      name: 'Fruits',
+      icon: '🍎',
+      items: [
+        {
+          id: 1,
+          name: 'Fresh Fruit Salad',
+          restaurant: 'Garden Fresh',
+          price: 2500,
+          rating: 4.9,
+          image: 'https://images.pexels.com/photos/1092730/pexels-photo-1092730.jpeg',
+          cookTime: '10 min',
+          hasRecipe: false,
+        },
+        {
+          id: 2,
+          name: 'Watermelon Bowl',
+          restaurant: 'Tropical Fruits',
+          price: 1800,
+          rating: 4.7,
+          image: 'https://images.pexels.com/photos/1640770/pexels-photo-1640770.jpeg',
+          cookTime: '5 min',
+          hasRecipe: false,
+        },
+        {
+          id: 3,
+          name: 'Pineapple Chunks',
+          restaurant: 'Fresh Market',
+          price: 2000,
+          rating: 4.8,
+          image: 'https://images.pexels.com/photos/1640771/pexels-photo-1640771.jpeg',
+          cookTime: '3 min',
+          hasRecipe: false,
+        },
+        {
+          id: 4,
+          name: 'Mixed Berry Bowl',
+          restaurant: 'Berry Delights',
+          price: 3200,
+          rating: 4.6,
+          image: 'https://images.pexels.com/photos/1092730/pexels-photo-1092730.jpeg',
+          cookTime: '8 min',
+          hasRecipe: false,
+        },
+        {
+          id: 5,
+          name: 'Mango Slices',
+          restaurant: 'Tropical Paradise',
+          price: 2200,
+          rating: 4.8,
+          image: 'https://images.pexels.com/photos/1640770/pexels-photo-1640770.jpeg',
+          cookTime: '5 min',
+          hasRecipe: false,
+        },
+        {
+          id: 6,
+          name: 'Coconut Water',
+          restaurant: 'Fresh Coconuts',
+          price: 1500,
+          rating: 4.7,
+          image: 'https://images.pexels.com/photos/96974/pexels-photo-96974.jpeg',
+          cookTime: '2 min',
+          hasRecipe: false,
+        },
+      ]
+    },
+    {
+      id: 'pastries',
+      name: 'Pastries',
+      icon: '🥐',
+      items: [
+        {
+          id: 1,
+          name: 'Meat Pie',
+          restaurant: 'Nigerian Bakery',
+          price: 1200,
+          rating: 4.8,
+          image: 'https://images.pexels.com/photos/205961/pexels-photo-205961.jpeg',
+          cookTime: 'Fresh daily',
+          hasRecipe: true,
+        },
+        {
+          id: 2,
+          name: 'Sausage Roll',
+          restaurant: 'Golden Crust',
+          price: 1500,
+          rating: 4.7,
+          image: 'https://images.pexels.com/photos/2135/food-france-morning-breakfast.jpg',
+          cookTime: 'Fresh daily',
+          hasRecipe: true,
+        },
+        {
+          id: 3,
+          name: 'Chin Chin',
+          restaurant: 'Sweet Treats',
+          price: 800,
+          rating: 4.6,
+          image: 'https://images.pexels.com/photos/1055272/pexels-photo-1055272.jpeg',
+          cookTime: '15 min',
+          hasRecipe: true,
+        },
+        {
+          id: 4,
+          name: 'Puff Puff',
+          restaurant: 'Local Delights',
+          price: 600,
+          rating: 4.9,
+          image: 'https://images.pexels.com/photos/1126359/pexels-photo-1126359.jpeg',
+          cookTime: '20 min',
+          hasRecipe: true,
+        },
+        {
+          id: 5,
+          name: 'Doughnut',
+          restaurant: 'Sweet Circle',
+          price: 900,
+          rating: 4.5,
+          image: 'https://images.pexels.com/photos/1055272/pexels-photo-1055272.jpeg',
+          cookTime: 'Fresh daily',
+          hasRecipe: true,
+        },
+        {
+          id: 6,
+          name: 'Buns',
+          restaurant: 'Bakery Corner',
+          price: 700,
+          rating: 4.6,
+          image: 'https://images.pexels.com/photos/205961/pexels-photo-205961.jpeg',
+          cookTime: 'Fresh daily',
+          hasRecipe: true,
+        },
+      ]
+    },
+    {
+      id: 'raw',
+      name: 'Raw',
+      icon: '🥗',
+      items: [
+        {
+          id: 1,
+          name: 'Caesar Salad',
+          restaurant: 'Salad Station',
+          price: 3500,
+          rating: 4.7,
+          image: 'https://images.pexels.com/photos/1640771/pexels-photo-1640771.jpeg',
+          cookTime: '10 min',
+          hasRecipe: true,
+        },
+        {
+          id: 2,
+          name: 'Garden Salad',
+          restaurant: 'Green House',
+          price: 2800,
+          rating: 4.6,
+          image: 'https://images.pexels.com/photos/1640770/pexels-photo-1640770.jpeg',
+          cookTime: '8 min',
+          hasRecipe: true,
+        },
+        {
+          id: 3,
+          name: 'Sushi Platter',
+          restaurant: 'Tokyo Raw',
+          price: 8500,
+          rating: 4.9,
+          image: 'https://images.pexels.com/photos/357756/pexels-photo-357756.jpeg',
+          cookTime: '20 min',
+          hasRecipe: false,
+        },
+        {
+          id: 4,
+          name: 'Vegetable Wrap',
+          restaurant: 'Healthy Wraps',
+          price: 2200,
+          rating: 4.5,
+          image: 'https://images.pexels.com/photos/4958792/pexels-photo-4958792.jpeg',
+          cookTime: '12 min',
+          hasRecipe: true,
+        },
+        {
+          id: 5,
+          name: 'Cucumber Salad',
+          restaurant: 'Fresh Greens',
+          price: 1800,
+          rating: 4.4,
+          image: 'https://images.pexels.com/photos/1640771/pexels-photo-1640771.jpeg',
+          cookTime: '5 min',
+          hasRecipe: true,
+        },
+        {
+          id: 6,
+          name: 'Avocado Bowl',
+          restaurant: 'Healthy Bites',
+          price: 3800,
+          rating: 4.8,
+          image: 'https://images.pexels.com/photos/1640770/pexels-photo-1640770.jpeg',
+          cookTime: '8 min',
+          hasRecipe: true,
+        },
+      ]
+    },
+  ];
+
+  const formatPrice = (price: number) => {
+    return `₦${price.toLocaleString()}`;
+  };
+
+  const handleAuthAction = () => {
+    router.push('/auth');
+  };
+
+  const handleCategoryPress = (categoryRoute: string) => {
+    router.push({
+      pathname: '/category-detail',
+      params: { category: categoryRoute }
+    });
+  };
+
+  const handleFoodItemPress = (itemId: number) => {
+    router.push({
+      pathname: '/food-detail',
+      params: { id: itemId }
+    });
+  };
+
+  const handleFoodCategoryChange = (categoryId: string, index: number) => {
+    setSelectedFoodCategory(categoryId);
+    
+    // Animate the indicator
+    Animated.spring(indicatorAnimation, {
+      toValue: index,
+      useNativeDriver: false,
+      tension: 100,
+      friction: 8,
+    }).start();
+  };
+
+  const getCurrentCategoryItems = () => {
+    return foodCategories.find(cat => cat.id === selectedFoodCategory)?.items || [];
+  };
+
+  // Pan responder for swipe gestures on category items
+  const panResponder = PanResponder.create({
+    onMoveShouldSetPanResponder: (evt, gestureState) => {
+      return Math.abs(gestureState.dx) > Math.abs(gestureState.dy) && Math.abs(gestureState.dx) > 20;
+    },
+    onPanResponderMove: (evt, gestureState) => {
+      // Handle swipe gestures
+    },
+    onPanResponderRelease: (evt, gestureState) => {
+      const currentIndex = foodCategories.findIndex(cat => cat.id === selectedFoodCategory);
+      
+      if (gestureState.dx > 50 && currentIndex > 0) {
+        // Swipe right - go to previous category
+        const prevCategory = foodCategories[currentIndex - 1];
+        handleFoodCategoryChange(prevCategory.id, currentIndex - 1);
+      } else if (gestureState.dx < -50 && currentIndex < foodCategories.length - 1) {
+        // Swipe left - go to next category
+        const nextCategory = foodCategories[currentIndex + 1];
+        handleFoodCategoryChange(nextCategory.id, currentIndex + 1);
+      }
+    },
+  });
+
+  const scrollToNextCategory = () => {
+    const currentIndex = foodCategories.findIndex(cat => cat.id === selectedFoodCategory);
+    if (currentIndex < foodCategories.length - 1) {
+      const nextCategory = foodCategories[currentIndex + 1];
+      handleFoodCategoryChange(nextCategory.id, currentIndex + 1);
+    }
+  };
+
+  const scrollToPrevCategory = () => {
+    const currentIndex = foodCategories.findIndex(cat => cat.id === selectedFoodCategory);
+    if (currentIndex > 0) {
+      const prevCategory = foodCategories[currentIndex - 1];
+      handleFoodCategoryChange(prevCategory.id, currentIndex - 1);
+    }
+  };
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        {/* Enhanced Status Bar */}
+        <View style={styles.statusBar}>
+          <Text style={styles.time}>12:07 AM</Text>
+          <View style={styles.statusIcons}>
+            <View style={styles.signalContainer}>
+              <View style={[styles.signalBar, styles.signalBar1]} />
+              <View style={[styles.signalBar, styles.signalBar2]} />
+              <View style={[styles.signalBar, styles.signalBar3]} />
+              <View style={[styles.signalBar, styles.signalBar4]} />
+            </View>
+            <Wifi size={16} color="#FFFFFF" />
+            <View style={styles.batteryContainer}>
+              <View style={styles.batteryBody}>
+                <View style={styles.batteryLevel} />
+              </View>
+              <View style={styles.batteryTip} />
+            </View>
+          </View>
+        </View>
+
+        {/* Header with Custom Logo */}
+        <View style={styles.header}>
+          <View style={styles.headerContent}>
+            <View style={styles.brandContainer}>
+              <CustomLogo size="large" color="#FFFFFF" />
+              <Text style={styles.brandTagline}>Food Explorer</Text>
+            </View>
+            
+            <View style={styles.locationContainer}>
+              <View style={styles.locationRow}>
+                <MapPin size={16} color="#FFFFFF" />
+                <View>
+                  <Text style={styles.deliveryText}>Delivery to</Text>
+                  <Text style={styles.locationText}>Lagos, Nigeria ⌄</Text>
+                </View>
+              </View>
+              <TouchableOpacity style={styles.cartButton}>
+                <ShoppingCart size={20} color="#FFFFFF" />
+                <View style={styles.cartBadge}>
+                  <Text style={styles.cartBadgeText}>3</Text>
+                </View>
+              </TouchableOpacity>
+            </View>
+            
+            {isGuest && (
+              <View style={styles.guestBanner}>
+                <View style={styles.guestInfo}>
+                  <User size={16} color="#FFD700" />
+                  <Text style={styles.guestText}>Browsing as Guest</Text>
+                </View>
+                <TouchableOpacity style={styles.signInButton} onPress={handleAuthAction}>
+                  <Text style={styles.signInText}>Sign In</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {!isGuest && profile && (
+              <View style={styles.userBanner}>
+                <View style={styles.userInfo}>
+                  <User size={16} color="#FFD700" />
+                  <Text style={styles.userText}>Welcome back, {profile.full_name?.split(' ')[0] || 'User'}!</Text>
+                </View>
+                <View style={styles.userStats}>
+                  <Text style={styles.userPoints}>{profile.points} pts</Text>
+                </View>
+              </View>
+            )}
+          </View>
+        </View>
+
+        {/* Food Insight Notification */}
+        {showInsightNotification && (
+          <View style={styles.insightNotification}>
+            <View style={styles.insightContent}>
+              <Text style={styles.insightIcon}>💡</Text>
+              <Text style={styles.insightText}>
+                Did you know? Suya cheese is a great meat alternative with equal protein benefits!
+              </Text>
+            </View>
+            <TouchableOpacity 
+              style={styles.closeNotification}
+              onPress={() => setShowInsightNotification(false)}
+            >
+              <X size={16} color="#666666" />
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Search Bar */}
+        <View style={styles.searchContainer}>
+          <Search size={20} color="#666666" />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search for delicious food..."
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+          <TouchableOpacity>
+            <Text style={styles.filterIcon}>⚙️</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Featured Food Carousel */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Featured Today</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {featuredFoods.map((item) => (
+              <TouchableOpacity 
+                key={item.id} 
+                style={styles.featuredCard} 
+                onPress={() => handleFoodItemPress(item.id)}
+              >
+                <Image source={{ uri: item.image }} style={styles.featuredImage} />
+                <View style={styles.featuredBadge}>
+                  <Text style={styles.featuredBadgeText}>{item.badge}</Text>
+                </View>
+                <View style={styles.featuredOverlay}>
+                  <View style={styles.featuredInfo}>
+                    <Text style={styles.featuredName}>{item.name}</Text>
+                    <Text style={styles.featuredRestaurant}>{item.restaurant}</Text>
+                    <View style={styles.featuredMeta}>
+                      <View style={styles.ratingContainer}>
+                        <Star size={12} color="#FFD700" fill="#FFD700" />
+                        <Text style={styles.featuredRating}>{item.rating}</Text>
+                      </View>
+                      <View style={styles.timeContainer}>
+                        <Clock size={12} color="#FFFFFF" />
+                        <Text style={styles.featuredTime}>{item.cookTime}</Text>
+                      </View>
+                    </View>
+                    <View style={styles.priceContainer}>
+                      <Text style={styles.featuredPrice}>{formatPrice(item.price)}</Text>
+                      <Text style={styles.featuredOriginalPrice}>{formatPrice(item.originalPrice)}</Text>
+                    </View>
+                  </View>
+                  <TouchableOpacity style={styles.orderNowButton} onPress={handleAuthAction}>
+                    <Text style={styles.orderNowText}>Order Now</Text>
+                  </TouchableOpacity>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+
+        {/* Explore Categories - Single Row with Navigation */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Explore Categories</Text>
+            <View style={styles.categoryNavigation}>
+              <TouchableOpacity 
+                style={styles.navButton}
+                onPress={scrollToPrevCategory}
+              >
+                <ChevronLeft size={20} color="#006400" />
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.navButton}
+                onPress={scrollToNextCategory}
+              >
+                <ChevronRight size={20} color="#006400" />
+              </TouchableOpacity>
+            </View>
+          </View>
+          
+          <ScrollView 
+            ref={categoryScrollRef}
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            style={styles.categoriesScroll}
+          >
+            {categories.map((category) => (
+              <TouchableOpacity
+                key={category.id}
+                style={[styles.categoryItem, { backgroundColor: category.color + '15' }]}
+                onPress={() => handleCategoryPress(category.route)}
+              >
+                <View style={[styles.categoryIconContainer, { backgroundColor: category.color }]}>
+                  <Text style={styles.categoryIcon}>{category.icon}</Text>
+                </View>
+                <Text style={styles.categoryName}>{category.name}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+
+        {/* Popular Near You - Square Images */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Popular Near You</Text>
+            <TouchableOpacity>
+              <Text style={styles.showAllText}>View All</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.foodGrid}>
+            {popularItems.map((item) => (
+              <TouchableOpacity
+                key={item.id}
+                style={styles.foodGridItem}
+                onPress={() => handleFoodItemPress(item.id)}
+              >
+                <Image source={{ uri: item.image }} style={styles.foodGridImage} />
+                <View style={styles.foodGridInfo}>
+                  <Text style={styles.foodGridName}>{item.name}</Text>
+                  <Text style={styles.foodGridRestaurant}>{item.restaurant}</Text>
+                  <View style={styles.foodGridMeta}>
+                    <View style={styles.ratingContainer}>
+                      <Star size={12} color="#FFD700" fill="#FFD700" />
+                      <Text style={styles.foodGridRating}>{item.rating}</Text>
+                    </View>
+                    <Text style={styles.foodGridCalories}>{item.calories}</Text>
+                  </View>
+                  <View style={styles.foodGridBottom}>
+                    <Text style={styles.foodGridPrice}>{formatPrice(item.price)}</Text>
+                    <View style={styles.actionButtonsRow}>
+                      {item.hasRecipe && (
+                        <TouchableOpacity style={styles.cookButton}>
+                          <ChefHat size={12} color="#006400" />
+                          <Text style={styles.cookButtonText}>Cook</Text>
+                        </TouchableOpacity>
+                      )}
+                      <TouchableOpacity style={styles.orderButton} onPress={handleAuthAction}>
+                        <Text style={styles.orderButtonText}>Order Now</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        {/* Enhanced More Delicious Options with Category Scrolling */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>More Delicious Options</Text>
+          
+          {/* Category Tabs with Animated Indicator */}
+          <View style={styles.foodCategoryContainer}>
+            <View style={styles.foodCategoryTabs}>
+              {foodCategories.map((category, index) => (
+                <TouchableOpacity
+                  key={category.id}
+                  style={[
+                    styles.foodCategoryTab,
+                    selectedFoodCategory === category.id && styles.foodCategoryTabActive
+                  ]}
+                  onPress={() => handleFoodCategoryChange(category.id, index)}
+                >
+                  <Text style={styles.foodCategoryIcon}>{category.icon}</Text>
+                  <Text style={[
+                    styles.foodCategoryTabText,
+                    selectedFoodCategory === category.id && styles.foodCategoryTabTextActive
+                  ]}>
+                    {category.name}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            
+            {/* Animated Green Line Indicator */}
+            <Animated.View 
+              style={[
+                styles.categoryIndicator,
+                {
+                  left: indicatorAnimation.interpolate({
+                    inputRange: [0, foodCategories.length - 1],
+                    outputRange: ['10%', '90%'],
+                    extrapolate: 'clamp',
+                  }),
+                }
+              ]} 
+            />
+          </View>
+
+          {/* Category Items Vertical Scroll with Swipe Gestures */}
+          <View {...panResponder.panHandlers} style={styles.categoryItemsContainer}>
+            <ScrollView 
+              ref={scrollViewRef}
+              showsVerticalScrollIndicator={false}
+              style={styles.categoryItemsScroll}
+            >
+              {getCurrentCategoryItems().map((item) => (
+                <TouchableOpacity
+                  key={item.id}
+                  style={styles.fullWidthFoodCard}
+                  onPress={() => handleFoodItemPress(item.id)}
+                >
+                  <Image source={{ uri: item.image }} style={styles.fullWidthFoodImage} />
+                  <View style={styles.fullWidthOverlay}>
+                    <View style={styles.fullWidthInfo}>
+                      <Text style={styles.fullWidthName}>{item.name}</Text>
+                      <Text style={styles.fullWidthRestaurant}>{item.restaurant}</Text>
+                      <View style={styles.fullWidthMeta}>
+                        <View style={styles.ratingContainer}>
+                          <Star size={14} color="#FFD700" fill="#FFD700" />
+                          <Text style={styles.fullWidthRating}>{item.rating}</Text>
+                        </View>
+                        <View style={styles.timeContainer}>
+                          <Clock size={14} color="#FFFFFF" />
+                          <Text style={styles.fullWidthTime}>{item.cookTime}</Text>
+                        </View>
+                        <Text style={styles.fullWidthPrice}>{formatPrice(item.price)}</Text>
+                      </View>
+                    </View>
+                    <View style={styles.fullWidthActions}>
+                      {item.hasRecipe && (
+                        <TouchableOpacity style={styles.fullWidthCookButton}>
+                          <ChefHat size={16} color="#006400" />
+                          <Text style={styles.fullWidthCookText}>Cook</Text>
+                        </TouchableOpacity>
+                      )}
+                      <TouchableOpacity style={styles.fullWidthOrderButton} onPress={handleAuthAction}>
+                        <Text style={styles.fullWidthOrderText}>Order Now</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                  <TouchableOpacity style={styles.heartButton}>
+                    <Heart size={20} color="#FFFFFF" />
+                  </TouchableOpacity>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </View>
+
+        {/* Guest Call-to-Action */}
+        {isGuest && (
+          <View style={styles.guestCTA}>
+            <View style={styles.ctaContent}>
+              <Text style={styles.ctaTitle}>Ready to Order?</Text>
+              <Text style={styles.ctaSubtitle}>Join thousands of food lovers and start your culinary journey</Text>
+              <TouchableOpacity style={styles.ctaButton} onPress={handleAuthAction}>
+                <Text style={styles.ctaButtonText}>Get Started</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
+  statusBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 5,
+    backgroundColor: '#006400',
+  },
+  time: {
+    color: '#FFFFFF',
+    fontFamily: 'Inter-Medium',
+    fontSize: 16,
+  },
+  statusIcons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  signalContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 2,
+  },
+  signalBar: {
+    backgroundColor: '#FFFFFF',
+    width: 3,
+  },
+  signalBar1: {
+    height: 4,
+  },
+  signalBar2: {
+    height: 6,
+  },
+  signalBar3: {
+    height: 8,
+  },
+  signalBar4: {
+    height: 10,
+  },
+  batteryContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  batteryBody: {
+    width: 22,
+    height: 11,
+    borderWidth: 1,
+    borderColor: '#FFFFFF',
+    borderRadius: 2,
+    padding: 1,
+  },
+  batteryLevel: {
+    flex: 1,
+    backgroundColor: '#32CD32',
+    borderRadius: 1,
+    width: '80%',
+  },
+  batteryTip: {
+    width: 2,
+    height: 6,
+    backgroundColor: '#FFFFFF',
+    borderTopRightRadius: 1,
+    borderBottomRightRadius: 1,
+    marginLeft: 1,
+  },
+  header: {
+    backgroundColor: '#006400',
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
+  headerContent: {
+    gap: 15,
+  },
+  brandContainer: {
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  brandTagline: {
+    fontSize: 14,
+    fontFamily: 'Inter-Regular',
+    color: '#FFFFFF',
+    opacity: 0.9,
+    marginTop: 4,
+  },
+  locationContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  locationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  deliveryText: {
+    fontSize: 12,
+    color: '#FFFFFF',
+    fontFamily: 'Inter-Regular',
+    opacity: 0.9,
+  },
+  locationText: {
+    fontSize: 16,
+    fontFamily: 'Inter-Semibold',
+    color: '#FFFFFF',
+  },
+  cartButton: {
+    position: 'relative',
+    padding: 8,
+  },
+  cartBadge: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    backgroundColor: '#FFD700',
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cartBadgeText: {
+    fontSize: 10,
+    fontFamily: 'Inter-Bold',
+    color: '#000000',
+  },
+  guestBanner: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  guestInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  guestText: {
+    color: '#FFFFFF',
+    fontFamily: 'Inter-Medium',
+    fontSize: 14,
+  },
+  signInButton: {
+    backgroundColor: '#FFD700',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  signInText: {
+    color: '#000000',
+    fontFamily: 'Inter-Semibold',
+    fontSize: 12,
+  },
+  userBanner: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  userInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  userText: {
+    color: '#FFFFFF',
+    fontFamily: 'Inter-Medium',
+    fontSize: 14,
+  },
+  userStats: {
+    backgroundColor: '#FFD700',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 15,
+  },
+  userPoints: {
+    color: '#000000',
+    fontFamily: 'Inter-Semibold',
+    fontSize: 12,
+  },
+  insightNotification: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF9E6',
+    marginHorizontal: 20,
+    marginTop: 15,
+    padding: 15,
+    borderRadius: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: '#FFD700',
+  },
+  insightContent: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  insightIcon: {
+    fontSize: 20,
+  },
+  insightText: {
+    flex: 1,
+    fontSize: 14,
+    fontFamily: 'Inter-Regular',
+    color: '#333333',
+    lineHeight: 20,
+  },
+  closeNotification: {
+    padding: 4,
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F5F5F5',
+    marginHorizontal: 20,
+    paddingHorizontal: 15,
+    paddingVertical: 12,
+    borderRadius: 25,
+    gap: 10,
+    marginTop: 15,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    fontFamily: 'Inter-Regular',
+    color: '#000000',
+  },
+  filterIcon: {
+    fontSize: 16,
+  },
+  section: {
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontFamily: 'Inter-Bold',
+    color: '#000000',
+  },
+  showAllText: {
+    fontSize: 14,
+    fontFamily: 'Inter-Medium',
+    color: '#006400',
+  },
+  categoryNavigation: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  navButton: {
+    backgroundColor: '#E8F5E8',
+    borderRadius: 20,
+    padding: 8,
+  },
+  categoriesScroll: {
+    marginTop: 10,
+  },
+  categoryItem: {
+    alignItems: 'center',
+    padding: 15,
+    borderRadius: 15,
+    marginRight: 12,
+    width: 100,
+  },
+  categoryIconContainer: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  categoryIcon: {
+    fontSize: 24,
+  },
+  categoryName: {
+    fontSize: 12,
+    fontFamily: 'Inter-Medium',
+    color: '#000000',
+    textAlign: 'center',
+  },
+  featuredCard: {
+    width: 280,
+    height: 200,
+    marginRight: 15,
+    borderRadius: 20,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  featuredImage: {
+    width: '100%',
+    height: '100%',
+  },
+  featuredBadge: {
+    position: 'absolute',
+    top: 12,
+    left: 12,
+    backgroundColor: '#FFD700',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  featuredBadgeText: {
+    fontSize: 10,
+    fontFamily: 'Inter-Bold',
+    color: '#000000',
+  },
+  featuredOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    padding: 15,
+  },
+  featuredInfo: {
+    marginBottom: 10,
+  },
+  featuredName: {
+    fontSize: 18,
+    fontFamily: 'Inter-Bold',
+    color: '#FFFFFF',
+    marginBottom: 4,
+  },
+  featuredRestaurant: {
+    fontSize: 12,
+    fontFamily: 'Inter-Regular',
+    color: '#FFFFFF',
+    opacity: 0.8,
+    marginBottom: 8,
+  },
+  featuredMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 15,
+    marginBottom: 8,
+  },
+  ratingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  featuredRating: {
+    fontSize: 12,
+    fontFamily: 'Inter-Semibold',
+    color: '#FFFFFF',
+  },
+  timeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  featuredTime: {
+    fontSize: 12,
+    fontFamily: 'Inter-Regular',
+    color: '#FFFFFF',
+  },
+  priceContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  featuredPrice: {
+    fontSize: 16,
+    fontFamily: 'Inter-Bold',
+    color: '#32CD32',
+  },
+  featuredOriginalPrice: {
+    fontSize: 14,
+    fontFamily: 'Inter-Regular',
+    color: '#FFFFFF',
+    opacity: 0.6,
+    textDecorationLine: 'line-through',
+  },
+  orderNowButton: {
+    backgroundColor: '#FFD700',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+    alignSelf: 'flex-start',
+  },
+  orderNowText: {
+    fontSize: 14,
+    fontFamily: 'Inter-Bold',
+    color: '#000000',
+  },
+  foodGrid: {
+    gap: 15,
+  },
+  foodGridItem: {
+    flexDirection: 'row',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 15,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#E5E5E5',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  foodGridImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 12,
+  },
+  foodGridInfo: {
+    flex: 1,
+    marginLeft: 12,
+    justifyContent: 'space-between',
+  },
+  foodGridName: {
+    fontSize: 16,
+    fontFamily: 'Inter-Bold',
+    color: '#000000',
+    marginBottom: 2,
+  },
+  foodGridRestaurant: {
+    fontSize: 12,
+    fontFamily: 'Inter-Regular',
+    color: '#666666',
+    marginBottom: 4,
+  },
+  foodGridMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 8,
+  },
+  foodGridRating: {
+    fontSize: 12,
+    fontFamily: 'Inter-Semibold',
+    color: '#000000',
+  },
+  foodGridCalories: {
+    fontSize: 12,
+    fontFamily: 'Inter-Regular',
+    color: '#666666',
+  },
+  foodGridBottom: {
+    gap: 8,
+  },
+  foodGridPrice: {
+    fontSize: 16,
+    fontFamily: 'Inter-Bold',
+    color: '#006400',
+  },
+  actionButtonsRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  cookButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E8F5E8',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    gap: 4,
+  },
+  cookButtonText: {
+    fontSize: 11,
+    fontFamily: 'Inter-Medium',
+    color: '#006400',
+  },
+  orderButton: {
+    backgroundColor: '#FFD700',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  orderButtonText: {
+    fontSize: 11,
+    fontFamily: 'Inter-Bold',
+    color: '#000000',
+  },
+  // Food Category Scroll Styles
+  foodCategoryContainer: {
+    marginBottom: 20,
+    position: 'relative',
+  },
+  foodCategoryTabs: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingBottom: 15,
+  },
+  foodCategoryTab: {
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    flex: 1,
+  },
+  foodCategoryTabActive: {
+    // Active state handled by indicator
+  },
+  foodCategoryIcon: {
+    fontSize: 20,
+    marginBottom: 4,
+  },
+  foodCategoryTabText: {
+    fontSize: 12,
+    fontFamily: 'Inter-Medium',
+    color: '#666666',
+  },
+  foodCategoryTabTextActive: {
+    color: '#006400',
+    fontFamily: 'Inter-Semibold',
+  },
+  categoryIndicator: {
+    position: 'absolute',
+    bottom: 0,
+    height: 3,
+    width: '15%',
+    backgroundColor: '#32CD32',
+    borderRadius: 2,
+    marginLeft: '-7.5%',
+  },
+  categoryItemsContainer: {
+    flex: 1,
+  },
+  categoryItemsScroll: {
+    marginTop: 10,
+  },
+  fullWidthFoodCard: {
+    position: 'relative',
+    height: 160,
+    borderRadius: 20,
+    overflow: 'hidden',
+    marginBottom: 15,
+  },
+  fullWidthFoodImage: {
+    width: '100%',
+    height: '100%',
+  },
+  fullWidthOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    padding: 15,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+  },
+  fullWidthInfo: {
+    flex: 1,
+  },
+  fullWidthName: {
+    fontSize: 18,
+    fontFamily: 'Inter-Bold',
+    color: '#FFFFFF',
+    marginBottom: 4,
+  },
+  fullWidthRestaurant: {
+    fontSize: 12,
+    fontFamily: 'Inter-Regular',
+    color: '#FFFFFF',
+    opacity: 0.8,
+    marginBottom: 8,
+  },
+  fullWidthMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 15,
+  },
+  fullWidthRating: {
+    fontSize: 12,
+    fontFamily: 'Inter-Semibold',
+    color: '#FFFFFF',
+  },
+  fullWidthTime: {
+    fontSize: 12,
+    fontFamily: 'Inter-Regular',
+    color: '#FFFFFF',
+  },
+  fullWidthPrice: {
+    fontSize: 16,
+    fontFamily: 'Inter-Bold',
+    color: '#32CD32',
+  },
+  fullWidthActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  fullWidthCookButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 15,
+    gap: 4,
+  },
+  fullWidthCookText: {
+    fontSize: 12,
+    fontFamily: 'Inter-Medium',
+    color: '#FFFFFF',
+  },
+  fullWidthOrderButton: {
+    backgroundColor: '#FFD700',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 15,
+  },
+  fullWidthOrderText: {
+    fontSize: 12,
+    fontFamily: 'Inter-Bold',
+    color: '#000000',
+  },
+  heartButton: {
+    position: 'absolute',
+    top: 15,
+    right: 15,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    borderRadius: 20,
+    padding: 8,
+  },
+  guestCTA: {
+    marginHorizontal: 20,
+    marginVertical: 15,
+    backgroundColor: '#006400',
+    borderRadius: 20,
+    padding: 25,
+    alignItems: 'center',
+  },
+  ctaContent: {
+    alignItems: 'center',
+  },
+  ctaTitle: {
+    fontSize: 22,
+    fontFamily: 'Inter-Bold',
+    color: '#FFFFFF',
+    marginBottom: 8,
+  },
+  ctaSubtitle: {
+    fontSize: 14,
+    fontFamily: 'Inter-Regular',
+    color: '#FFFFFF',
+    textAlign: 'center',
+    marginBottom: 20,
+    lineHeight: 20,
+    opacity: 0.9,
+  },
+  ctaButton: {
+    backgroundColor: '#FFD700',
+    paddingHorizontal: 30,
+    paddingVertical: 12,
+    borderRadius: 25,
+  },
+  ctaButtonText: {
+    fontSize: 16,
+    fontFamily: 'Inter-Bold',
+    color: '#000000',
+  },
+});
