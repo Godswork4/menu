@@ -41,7 +41,7 @@ export default function Auth() {
       description: 'Sell your food, manage your restaurant or kitchen',
       icon: Store,
       color: '#3F51B5',
-      available: false,
+      available: true,
     },
   ];
 
@@ -78,11 +78,6 @@ export default function Auth() {
   const handleAuth = async () => {
     if (!validateForm()) return;
 
-    if (!isLogin && selectedRole !== 'customer') {
-      Alert.alert('Coming Soon', `${userRoles.find(r => r.id === selectedRole)?.title} registration will be available soon. Please sign up as a Customer for now.`);
-      return;
-    }
-
     setIsLoading(true);
 
     try {
@@ -98,20 +93,16 @@ export default function Auth() {
           );
         }
       } else {
-        const { error } = await signUp(email, password, fullName, selectedRole);
-        if (error) {
-          if (error.message?.includes('User already registered')) {
-            Alert.alert('Account Exists', 'An account with this email already exists. Please sign in instead.');
-            setIsLogin(true);
-          } else {
-            Alert.alert('Sign Up Error', error.message || 'Failed to create account. Please try again.');
-          }
-        } else {
-          Alert.alert(
-            'Account Created Successfully!', 
-            'Welcome to Menu! Your account has been created and you can now start exploring delicious food options.',
-            [{ text: 'Get Started', onPress: () => router.push('/(tabs)') }]
-          );
+        if (selectedRole === 'customer') {
+          router.push({
+            pathname: '/signup',
+            params: { email, password, fullName, role: selectedRole }
+          });
+        } else if (selectedRole === 'vendor') {
+          router.push({
+            pathname: '/vendor-signup',
+            params: { email, password, fullName, role: selectedRole }
+          });
         }
       }
     } catch (error) {
@@ -326,12 +317,12 @@ export default function Auth() {
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="small" color="#FFFFFF" />
               <Text style={styles.loadingText}>
-                {isLogin ? 'Signing In...' : 'Creating Account...'}
+                {isLogin ? 'Signing In...' : 'Processing...'}
               </Text>
             </View>
           ) : (
             <Text style={styles.authButtonText}>
-              {isLogin ? 'Sign In' : 'Create Account'}
+              {isLogin ? 'Sign In' : 'Continue'}
             </Text>
           )}
         </TouchableOpacity>

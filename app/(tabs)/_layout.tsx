@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { Utensils, ChefHat, Grid3x3 as Grid3X3, DollarSign, User, Calendar } from 'lucide-react-native';
+import { Utensils, ChefHat, Grid3x3 as Grid3X3, DollarSign, User, Lightbulb } from 'lucide-react-native';
 import { View, Text, StyleSheet } from 'react-native';
 
 export default function TabLayout() {
@@ -8,7 +8,7 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: styles.tabBar,
-        tabBarActiveTintColor: '#006400',
+        tabBarActiveTintColor: '#FFD700',
         tabBarInactiveTintColor: '#666666',
         tabBarLabelStyle: styles.tabLabel,
       }}>
@@ -22,20 +22,20 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="restaurants"
-        options={{
-          title: 'Restaurants',
-          tabBarIcon: ({ size, color }) => (
-            <ChefHat size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
         name="categories"
         options={{
           title: 'Categories',
           tabBarIcon: ({ size, color }) => (
             <Grid3X3 size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="insights"
+        options={{
+          title: 'Insights',
+          tabBarIcon: ({ size, color }) => (
+            <Lightbulb size={size} color={color} />
           ),
         }}
       />

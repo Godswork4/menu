@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Animated, PanResponder } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MapPin, Search, Star, Clock, User, Bell, Wifi, ShoppingCart, ChefHat, X, Heart, ChevronLeft, ChevronRight } from 'lucide-react-native';
+import { MapPin, Search, Star, Clock, User, Bell, Wifi, ShoppingBag, ChefHat, X, Heart, ChevronLeft, ChevronRight } from 'lucide-react-native';
 import { router } from 'expo-router';
 import CustomLogo from '@/components/CustomLogo';
 import { useAuth } from '@/contexts/AuthContext';
@@ -447,6 +447,14 @@ export default function Home() {
     router.push('/auth');
   };
 
+  const handleOrdersPress = () => {
+    if (isGuest) {
+      router.push('/auth');
+    } else {
+      router.push('/orders');
+    }
+  };
+
   const handleCategoryPress = (categoryRoute: string) => {
     router.push({
       pathname: '/category-detail',
@@ -555,11 +563,9 @@ export default function Home() {
                   <Text style={styles.locationText}>Lagos, Nigeria ⌄</Text>
                 </View>
               </View>
-              <TouchableOpacity style={styles.cartButton}>
-                <ShoppingCart size={20} color="#FFFFFF" />
-                <View style={styles.cartBadge}>
-                  <Text style={styles.cartBadgeText}>3</Text>
-                </View>
+              <TouchableOpacity style={styles.ordersButton} onPress={handleOrdersPress}>
+                <ShoppingBag size={20} color="#FFFFFF" />
+                <Text style={styles.ordersText}>Orders</Text>
               </TouchableOpacity>
             </View>
             
@@ -972,25 +978,19 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-Semibold',
     color: '#FFFFFF',
   },
-  cartButton: {
-    position: 'relative',
-    padding: 8,
-  },
-  cartBadge: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    backgroundColor: '#FFD700',
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    justifyContent: 'center',
+  ordersButton: {
+    flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: 'rgba(255, 215, 0, 0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    gap: 6,
   },
-  cartBadgeText: {
-    fontSize: 10,
-    fontFamily: 'Inter-Bold',
-    color: '#000000',
+  ordersText: {
+    fontSize: 14,
+    fontFamily: 'Inter-Semibold',
+    color: '#FFFFFF',
   },
   guestBanner: {
     flexDirection: 'row',
