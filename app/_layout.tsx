@@ -34,8 +34,14 @@ export default function RootLayout() {
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="onboarding" />
         <Stack.Screen name="auth" />
+        <Stack.Screen name="signup" />
+        <Stack.Screen name="vendor-signup" />
+        <Stack.Screen name="vendor-dashboard" />
+        <Stack.Screen name="add-food-item" />
+        <Stack.Screen name="orders" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="food-detail" />
+        <Stack.Screen name="category-detail" />
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style="light" backgroundColor="#006400" />

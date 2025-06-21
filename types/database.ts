@@ -106,6 +106,91 @@ export interface Database {
           created_at?: string;
         };
       };
+      food_items: {
+        Row: {
+          id: string;
+          vendor_id: string;
+          name: string;
+          description: string | null;
+          price: number;
+          category: string;
+          image_url: string | null;
+          prep_time: string | null;
+          ingredients: string | null;
+          status: 'active' | 'inactive';
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          vendor_id: string;
+          name: string;
+          description?: string | null;
+          price: number;
+          category?: string;
+          image_url?: string | null;
+          prep_time?: string | null;
+          ingredients?: string | null;
+          status?: 'active' | 'inactive';
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          vendor_id?: string;
+          name?: string;
+          description?: string | null;
+          price?: number;
+          category?: string;
+          image_url?: string | null;
+          prep_time?: string | null;
+          ingredients?: string | null;
+          status?: 'active' | 'inactive';
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      vendor_orders: {
+        Row: {
+          id: string;
+          vendor_id: string;
+          customer_id: string;
+          food_items: any;
+          total_amount: number;
+          status: 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivered' | 'cancelled';
+          delivery_address: string | null;
+          customer_phone: string | null;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          vendor_id: string;
+          customer_id: string;
+          food_items: any;
+          total_amount: number;
+          status?: 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivered' | 'cancelled';
+          delivery_address?: string | null;
+          customer_phone?: string | null;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          vendor_id?: string;
+          customer_id?: string;
+          food_items?: any;
+          total_amount?: number;
+          status?: 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivered' | 'cancelled';
+          delivery_address?: string | null;
+          customer_phone?: string | null;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
     };
     Views: {
       [_ in never]: never;
@@ -116,6 +201,8 @@ export interface Database {
     Enums: {
       user_role: 'customer' | 'delivery' | 'vendor';
       order_status: 'pending' | 'confirmed' | 'preparing' | 'delivered' | 'cancelled';
+      food_item_status: 'active' | 'inactive';
+      vendor_order_status: 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivered' | 'cancelled';
     };
   };
 }
