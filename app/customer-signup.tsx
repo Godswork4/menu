@@ -2,33 +2,25 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert, ActivityIndicator, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { ArrowLeft, Store, Phone, MapPin, Clock, Wifi, User, Mail, Lock, Eye, EyeOff } from 'lucide-react-native';
+import { ArrowLeft, User, Phone, MapPin, Mail, Lock, Eye, EyeOff, Wifi } from 'lucide-react-native';
 import CustomLogo from '@/components/CustomLogo';
 import { useAuth } from '@/contexts/AuthContext';
 
-export default function VendorSignUp() {
+export default function CustomerSignUp() {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [businessName, setBusinessName] = useState('');
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
-  const [businessType, setBusinessType] = useState('restaurant');
-  const [operatingHours, setOperatingHours] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const { signUp } = useAuth();
 
-  const businessTypes = [
-    { id: 'restaurant', name: 'Restaurant', icon: '🍽️' },
-    { id: 'chef', name: 'Private Chef', icon: '👨‍🍳' },
-  ];
-
   const validateForm = () => {
-    if (!fullName || !email || !password || !confirmPassword || !businessName || !phone || !address || !operatingHours) {
+    if (!fullName || !email || !password || !confirmPassword || !phone || !address) {
       Alert.alert('Error', 'Please fill in all required fields');
       return false;
     }
@@ -64,7 +56,7 @@ export default function VendorSignUp() {
     setIsLoading(true);
 
     try {
-      const { error } = await signUp(email, password, fullName, 'vendor');
+      const { error } = await signUp(email, password, fullName, 'customer');
 
       if (error) {
         if (error.message?.includes('User already registered')) {
@@ -75,14 +67,14 @@ export default function VendorSignUp() {
         }
       } else {
         Alert.alert(
-          'Vendor Account Created!', 
-          'Welcome to Menu! Your vendor account has been created. You can now start managing your food business.',
-          [{ text: 'Get Started', onPress: () => router.push('/vendor-dashboard') }]
+          'Account Created Successfully!', 
+          'Welcome to Menu! Your customer account has been created and you can now start exploring delicious food options.',
+          [{ text: 'Get Started', onPress: () => router.push('/(tabs)') }]
         );
       }
     } catch (error) {
       Alert.alert('Error', 'An unexpected error occurred. Please try again.');
-      console.error('Vendor sign up error:', error);
+      console.error('Customer sign up error:', error);
     } finally {
       setIsLoading(false);
     }
@@ -117,194 +109,135 @@ export default function VendorSignUp() {
         </TouchableOpacity>
         <View style={styles.headerContent}>
           <CustomLogo size="large" color="#FFFFFF" />
-          <Text style={styles.tagline}>Vendor Registration</Text>
+          <Text style={styles.tagline}>Customer Registration</Text>
         </View>
         <View style={styles.placeholder} />
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        <Text style={styles.title}>Start Your Food Business</Text>
+        <Text style={styles.title}>Create Your Account</Text>
         <Text style={styles.subtitle}>
-          Complete your vendor profile to start selling delicious food
+          Join thousands of food lovers and start your culinary journey
         </Text>
 
-        {/* Personal Information */}
-        <View style={styles.sectionContainer}>
-          <Text style={styles.sectionTitle}>Personal Information</Text>
-          
-          {/* Full Name Input */}
-          <View style={styles.inputContainer}>
-            <User size={20} color="#666666" />
-            <TextInput
-              style={styles.input}
-              placeholder="Enter your full name"
-              value={fullName}
-              onChangeText={setFullName}
-              autoCapitalize="words"
-              editable={!isLoading}
-            />
-          </View>
-
-          {/* Email Input */}
-          <View style={styles.inputContainer}>
-            <Mail size={20} color="#666666" />
-            <TextInput
-              style={styles.input}
-              placeholder="Enter your email"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              editable={!isLoading}
-            />
-          </View>
-
-          {/* Password Input */}
-          <View style={styles.inputContainer}>
-            <Lock size={20} color="#666666" />
-            <TextInput
-              style={styles.input}
-              placeholder="Create a password"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={!showPassword}
-              editable={!isLoading}
-            />
-            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-              {showPassword ? (
-                <EyeOff size={20} color="#666666" />
-              ) : (
-                <Eye size={20} color="#666666" />
-              )}
-            </TouchableOpacity>
-          </View>
-
-          {/* Confirm Password Input */}
-          <View style={styles.inputContainer}>
-            <Lock size={20} color="#666666" />
-            <TextInput
-              style={styles.input}
-              placeholder="Confirm your password"
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              secureTextEntry={!showConfirmPassword}
-              editable={!isLoading}
-            />
-            <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
-              {showConfirmPassword ? (
-                <EyeOff size={20} color="#666666" />
-              ) : (
-                <Eye size={20} color="#666666" />
-              )}
-            </TouchableOpacity>
-          </View>
+        {/* Full Name Input */}
+        <View style={styles.inputContainer}>
+          <User size={20} color="#666666" />
+          <TextInput
+            style={styles.input}
+            placeholder="Enter your full name"
+            value={fullName}
+            onChangeText={setFullName}
+            autoCapitalize="words"
+            editable={!isLoading}
+          />
         </View>
 
-        {/* Business Information */}
-        <View style={styles.sectionContainer}>
-          <Text style={styles.sectionTitle}>Business Information</Text>
-
-          {/* Business Type Selection */}
-          <View style={styles.businessTypeContainer}>
-            <Text style={styles.businessTypeTitle}>Business Type</Text>
-            <View style={styles.businessTypeGrid}>
-              {businessTypes.map((type) => (
-                <TouchableOpacity
-                  key={type.id}
-                  style={[
-                    styles.businessTypeCard,
-                    businessType === type.id && styles.businessTypeCardActive
-                  ]}
-                  onPress={() => setBusinessType(type.id)}
-                >
-                  <Text style={styles.businessTypeIcon}>{type.icon}</Text>
-                  <Text style={[
-                    styles.businessTypeName,
-                    businessType === type.id && styles.businessTypeNameActive
-                  ]}>
-                    {type.name}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-
-          {/* Business Name Input */}
-          <View style={styles.inputContainer}>
-            <Store size={20} color="#666666" />
-            <TextInput
-              style={styles.input}
-              placeholder="Business/Restaurant name"
-              value={businessName}
-              onChangeText={setBusinessName}
-              editable={!isLoading}
-            />
-          </View>
-
-          {/* Phone Input */}
-          <View style={styles.inputContainer}>
-            <Phone size={20} color="#666666" />
-            <TextInput
-              style={styles.input}
-              placeholder="Business phone number"
-              value={phone}
-              onChangeText={setPhone}
-              keyboardType="phone-pad"
-              editable={!isLoading}
-            />
-          </View>
-
-          {/* Address Input */}
-          <View style={styles.inputContainer}>
-            <MapPin size={20} color="#666666" />
-            <TextInput
-              style={styles.input}
-              placeholder="Business address"
-              value={address}
-              onChangeText={setAddress}
-              multiline
-              numberOfLines={2}
-              editable={!isLoading}
-            />
-          </View>
-
-          {/* Operating Hours Input */}
-          <View style={styles.inputContainer}>
-            <Clock size={20} color="#666666" />
-            <TextInput
-              style={styles.input}
-              placeholder="Operating hours (e.g., 9:00 AM - 10:00 PM)"
-              value={operatingHours}
-              onChangeText={setOperatingHours}
-              editable={!isLoading}
-            />
-          </View>
+        {/* Email Input */}
+        <View style={styles.inputContainer}>
+          <Mail size={20} color="#666666" />
+          <TextInput
+            style={styles.input}
+            placeholder="Enter your email"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            editable={!isLoading}
+          />
         </View>
 
-        {/* Vendor Benefits */}
+        {/* Password Input */}
+        <View style={styles.inputContainer}>
+          <Lock size={20} color="#666666" />
+          <TextInput
+            style={styles.input}
+            placeholder="Create a password"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry={!showPassword}
+            editable={!isLoading}
+          />
+          <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+            {showPassword ? (
+              <EyeOff size={20} color="#666666" />
+            ) : (
+              <Eye size={20} color="#666666" />
+            )}
+          </TouchableOpacity>
+        </View>
+
+        {/* Confirm Password Input */}
+        <View style={styles.inputContainer}>
+          <Lock size={20} color="#666666" />
+          <TextInput
+            style={styles.input}
+            placeholder="Confirm your password"
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
+            secureTextEntry={!showConfirmPassword}
+            editable={!isLoading}
+          />
+          <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
+            {showConfirmPassword ? (
+              <EyeOff size={20} color="#666666" />
+            ) : (
+              <Eye size={20} color="#666666" />
+            )}
+          </TouchableOpacity>
+        </View>
+
+        {/* Phone Input */}
+        <View style={styles.inputContainer}>
+          <Phone size={20} color="#666666" />
+          <TextInput
+            style={styles.input}
+            placeholder="Enter your phone number"
+            value={phone}
+            onChangeText={setPhone}
+            keyboardType="phone-pad"
+            editable={!isLoading}
+          />
+        </View>
+
+        {/* Address Input */}
+        <View style={styles.inputContainer}>
+          <MapPin size={20} color="#666666" />
+          <TextInput
+            style={styles.input}
+            placeholder="Enter your address"
+            value={address}
+            onChangeText={setAddress}
+            multiline
+            numberOfLines={2}
+            editable={!isLoading}
+          />
+        </View>
+
+        {/* Benefits Section */}
         <View style={styles.benefitsContainer}>
-          <Text style={styles.benefitsTitle}>Vendor Benefits:</Text>
+          <Text style={styles.benefitsTitle}>What you'll get:</Text>
           <View style={styles.benefitsList}>
             <View style={styles.benefitItem}>
-              <Text style={styles.benefitIcon}>📊</Text>
-              <Text style={styles.benefitText}>Real-time sales analytics</Text>
+              <Text style={styles.benefitIcon}>🍽️</Text>
+              <Text style={styles.benefitText}>Access to thousands of restaurants</Text>
             </View>
             <View style={styles.benefitItem}>
-              <Text style={styles.benefitIcon}>📱</Text>
-              <Text style={styles.benefitText}>Easy order management</Text>
+              <Text style={styles.benefitIcon}>🚚</Text>
+              <Text style={styles.benefitText}>Fast delivery to your location</Text>
             </View>
             <View style={styles.benefitItem}>
               <Text style={styles.benefitIcon}>💰</Text>
-              <Text style={styles.benefitText}>Competitive commission rates</Text>
+              <Text style={styles.benefitText}>Exclusive deals and discounts</Text>
             </View>
             <View style={styles.benefitItem}>
-              <Text style={styles.benefitIcon}>🚀</Text>
-              <Text style={styles.benefitText}>Marketing support</Text>
+              <Text style={styles.benefitIcon}>⭐</Text>
+              <Text style={styles.benefitText}>Earn points with every order</Text>
             </View>
           </View>
         </View>
 
-        {/* Create Vendor Account Button */}
+        {/* Create Account Button */}
         <TouchableOpacity 
           style={[styles.createButton, isLoading && styles.createButtonDisabled]} 
           onPress={handleSignUp}
@@ -313,17 +246,16 @@ export default function VendorSignUp() {
           {isLoading ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="small" color="#FFFFFF" />
-              <Text style={styles.loadingText}>Creating Vendor Account...</Text>
+              <Text style={styles.loadingText}>Creating Account...</Text>
             </View>
           ) : (
-            <Text style={styles.createButtonText}>Create Vendor Account</Text>
+            <Text style={styles.createButtonText}>Create My Account</Text>
           )}
         </TouchableOpacity>
 
         {/* Terms */}
         <Text style={styles.termsText}>
-          By creating a vendor account, you agree to our{' '}
-          <Text style={styles.termsLink}>Vendor Terms</Text>,{' '}
+          By creating an account, you agree to our{' '}
           <Text style={styles.termsLink}>Terms of Service</Text> and{' '}
           <Text style={styles.termsLink}>Privacy Policy</Text>
         </Text>
@@ -447,53 +379,6 @@ const styles = StyleSheet.create({
     marginBottom: 30,
     lineHeight: 24,
   },
-  sectionContainer: {
-    marginBottom: 25,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontFamily: 'Inter-Semibold',
-    color: '#000000',
-    marginBottom: 15,
-  },
-  businessTypeContainer: {
-    marginBottom: 20,
-  },
-  businessTypeTitle: {
-    fontSize: 16,
-    fontFamily: 'Inter-Semibold',
-    color: '#000000',
-    marginBottom: 15,
-  },
-  businessTypeGrid: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  businessTypeCard: {
-    flex: 1,
-    backgroundColor: '#F5F5F5',
-    borderRadius: 12,
-    padding: 20,
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#D3D3D3',
-  },
-  businessTypeCardActive: {
-    backgroundColor: '#E8F5E8',
-    borderColor: '#006400',
-  },
-  businessTypeIcon: {
-    fontSize: 32,
-    marginBottom: 8,
-  },
-  businessTypeName: {
-    fontSize: 14,
-    fontFamily: 'Inter-Semibold',
-    color: '#666666',
-  },
-  businessTypeNameActive: {
-    color: '#006400',
-  },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -511,7 +396,7 @@ const styles = StyleSheet.create({
     color: '#000000',
   },
   benefitsContainer: {
-    backgroundColor: '#FFF9E6',
+    backgroundColor: '#E8F5E8',
     borderRadius: 12,
     padding: 20,
     marginBottom: 30,
@@ -519,7 +404,7 @@ const styles = StyleSheet.create({
   benefitsTitle: {
     fontSize: 16,
     fontFamily: 'Inter-Semibold',
-    color: '#FF8F00',
+    color: '#006400',
     marginBottom: 15,
   },
   benefitsList: {

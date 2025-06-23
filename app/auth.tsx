@@ -8,15 +8,12 @@ import { useAuth } from '@/contexts/AuthContext';
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
-  const [selectedRole, setSelectedRole] = useState('customer');
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [fullName, setFullName] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const { signUp, signIn } = useAuth();
+  const { signIn } = useAuth();
 
   const userRoles = [
     {
@@ -51,16 +48,6 @@ export default function Auth() {
       return false;
     }
 
-    if (!isLogin && !fullName) {
-      Alert.alert('Error', 'Please enter your full name');
-      return false;
-    }
-
-    if (!isLogin && password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match');
-      return false;
-    }
-
     if (password.length < 6) {
       Alert.alert('Error', 'Password must be at least 6 characters long');
       return false;
@@ -75,35 +62,21 @@ export default function Auth() {
     return true;
   };
 
-  const handleAuth = async () => {
+  const handleSignIn = async () => {
     if (!validateForm()) return;
 
     setIsLoading(true);
 
     try {
-      if (isLogin) {
-        const { error } = await signIn(email, password);
-        if (error) {
-          Alert.alert('Sign In Error', error.message || 'Failed to sign in. Please check your credentials.');
-        } else {
-          Alert.alert(
-            'Welcome Back!', 
-            'You have successfully signed in.',
-            [{ text: 'OK', onPress: () => router.push('/(tabs)') }]
-          );
-        }
+      const { error } = await signIn(email, password);
+      if (error) {
+        Alert.alert('Sign In Error', error.message || 'Failed to sign in. Please check your credentials.');
       } else {
-        if (selectedRole === 'customer') {
-          router.push({
-            pathname: '/signup',
-            params: { email, password, fullName, role: selectedRole }
-          });
-        } else if (selectedRole === 'vendor') {
-          router.push({
-            pathname: '/vendor-signup',
-            params: { email, password, fullName, role: selectedRole }
-          });
-        }
+        Alert.alert(
+          'Welcome Back!', 
+          'You have successfully signed in.',
+          [{ text: 'OK', onPress: () => router.push('/(tabs)') }]
+        );
       }
     } catch (error) {
       Alert.alert('Error', 'An unexpected error occurred. Please try again.');
@@ -113,25 +86,28 @@ export default function Auth() {
     }
   };
 
-  const toggleAuthMode = () => {
-    setIsLogin(!isLogin);
-    setEmail('');
-    setPassword('');
-    setFullName('');
-    setConfirmPassword('');
-  };
-
-  const handleGuestMode = () => {
-    router.push('/(tabs)');
-  };
-
   const handleRoleSelection = (roleId: string) => {
     const role = userRoles.find(r => r.id === roleId);
     if (!role?.available) {
       Alert.alert('Coming Soon', `${role?.title} registration will be available soon. Please choose Customer for now.`);
       return;
     }
-    setSelectedRole(roleId);
+
+    if (roleId === 'customer') {
+      router.push('/customer-signup');
+    } else if (roleId === 'vendor') {
+      router.push('/vendor-signup');
+    }
+  };
+
+  const toggleAuthMode = () => {
+    setIsLogin(!isLogin);
+    setEmail('');
+    setPassword('');
+  };
+
+  const handleGuestMode = () => {
+    router.push('/(tabs)');
   };
 
   return (
@@ -170,162 +146,113 @@ export default function Auth() {
 
       <View style={styles.content}>
         <Text style={styles.title}>
-          {isLogin ? 'Welcome Back' : 'Create Your Account'}
+          {isLogin ? 'Welcome Back' : 'Join Menu'}
         </Text>
         <Text style={styles.subtitle}>
           {isLogin 
             ? 'Sign in to continue your food journey'
-            : 'Join us to explore amazing food experiences'
+            : 'Choose how you want to join our community'
           }
         </Text>
 
-        {!isLogin && (
-          <>
-            {/* Role Selection */}
-            <View style={styles.roleSection}>
-              <Text style={styles.roleTitle}>I want to join as:</Text>
-              <View style={styles.rolesGrid}>
-                {userRoles.map((role) => {
-                  const IconComponent = role.icon;
-                  return (
-                    <TouchableOpacity
-                      key={role.id}
-                      style={[
-                        styles.roleCard,
-                        selectedRole === role.id && styles.roleCardActive,
-                        !role.available && styles.roleCardDisabled,
-                      ]}
-                      onPress={() => handleRoleSelection(role.id)}
-                    >
-                      <View style={styles.roleCardHeader}>
-                        <IconComponent
-                          size={24}
-                          color={selectedRole === role.id ? '#FFFFFF' : role.color}
-                        />
-                        {!role.available && (
-                          <View style={styles.comingSoonBadge}>
-                            <Text style={styles.comingSoonText}>Soon</Text>
-                          </View>
-                        )}
-                      </View>
-                      <Text style={[
-                        styles.roleCardTitle,
-                        selectedRole === role.id && styles.roleCardTitleActive,
-                        !role.available && styles.roleCardTitleDisabled,
-                      ]}>
-                        {role.title}
-                      </Text>
-                      <Text style={[
-                        styles.roleCardDescription,
-                        selectedRole === role.id && styles.roleCardDescriptionActive,
-                        !role.available && styles.roleCardDescriptionDisabled,
-                      ]}>
-                        {role.description}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
+        {!isLogin ? (
+          // Sign Up Mode - Role Selection
+          <View style={styles.roleSection}>
+            <Text style={styles.roleTitle}>I want to join as:</Text>
+            <View style={styles.rolesGrid}>
+              {userRoles.map((role) => {
+                const IconComponent = role.icon;
+                return (
+                  <TouchableOpacity
+                    key={role.id}
+                    style={[
+                      styles.roleCard,
+                      !role.available && styles.roleCardDisabled,
+                    ]}
+                    onPress={() => handleRoleSelection(role.id)}
+                  >
+                    <View style={styles.roleCardHeader}>
+                      <IconComponent
+                        size={24}
+                        color={role.color}
+                      />
+                      {!role.available && (
+                        <View style={styles.comingSoonBadge}>
+                          <Text style={styles.comingSoonText}>Soon</Text>
+                        </View>
+                      )}
+                    </View>
+                    <Text style={[
+                      styles.roleCardTitle,
+                      !role.available && styles.roleCardTitleDisabled,
+                    ]}>
+                      {role.title}
+                    </Text>
+                    <Text style={[
+                      styles.roleCardDescription,
+                      !role.available && styles.roleCardDescriptionDisabled,
+                    ]}>
+                      {role.description}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
-
-            {/* Full Name Input */}
+          </View>
+        ) : (
+          // Sign In Mode - Login Form
+          <View style={styles.loginForm}>
+            {/* Email Input */}
             <View style={styles.inputContainer}>
-              <User size={20} color="#666666" />
+              <Mail size={20} color="#666666" />
               <TextInput
                 style={styles.input}
-                placeholder="Enter your full name"
-                value={fullName}
-                onChangeText={setFullName}
-                autoCapitalize="words"
+                placeholder="Enter your email"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
                 editable={!isLoading}
               />
             </View>
-          </>
-        )}
 
-        {/* Email Input */}
-        <View style={styles.inputContainer}>
-          <Mail size={20} color="#666666" />
-          <TextInput
-            style={styles.input}
-            placeholder="Enter your email"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            editable={!isLoading}
-          />
-        </View>
+            {/* Password Input */}
+            <View style={styles.inputContainer}>
+              <Lock size={20} color="#666666" />
+              <TextInput
+                style={styles.input}
+                placeholder="Enter your password"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+                editable={!isLoading}
+              />
+              <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                {showPassword ? (
+                  <EyeOff size={20} color="#666666" />
+                ) : (
+                  <Eye size={20} color="#666666" />
+                )}
+              </TouchableOpacity>
+            </View>
 
-        {/* Password Input */}
-        <View style={styles.inputContainer}>
-          <Lock size={20} color="#666666" />
-          <TextInput
-            style={styles.input}
-            placeholder="Enter your password"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry={!showPassword}
-            editable={!isLoading}
-          />
-          <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-            {showPassword ? (
-              <EyeOff size={20} color="#666666" />
-            ) : (
-              <Eye size={20} color="#666666" />
-            )}
-          </TouchableOpacity>
-        </View>
-
-        {/* Confirm Password Input (Sign Up Only) */}
-        {!isLogin && (
-          <View style={styles.inputContainer}>
-            <Lock size={20} color="#666666" />
-            <TextInput
-              style={styles.input}
-              placeholder="Confirm your password"
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              secureTextEntry={!showPassword}
-              editable={!isLoading}
-            />
+            {/* Sign In Button */}
+            <TouchableOpacity 
+              style={[styles.authButton, isLoading && styles.authButtonDisabled]} 
+              onPress={handleSignIn}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                  <Text style={styles.loadingText}>Signing In...</Text>
+                </View>
+              ) : (
+                <Text style={styles.authButtonText}>Sign In</Text>
+              )}
+            </TouchableOpacity>
           </View>
         )}
-
-        {/* Privacy Notice */}
-        {!isLogin && (
-          <View style={styles.privacyContainer}>
-            <View style={styles.privacyIcon}>
-              <Text style={styles.privacyIconText}>🛡️</Text>
-            </View>
-            <View style={styles.privacyText}>
-              <Text style={styles.privacyTitle}>Privacy Protected</Text>
-              <Text style={styles.privacyDescription}>
-                Your information is secure and will only be used to enhance your Menu experience
-              </Text>
-            </View>
-          </View>
-        )}
-
-        {/* Auth Button */}
-        <TouchableOpacity 
-          style={[styles.authButton, isLoading && styles.authButtonDisabled]} 
-          onPress={handleAuth}
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="small" color="#FFFFFF" />
-              <Text style={styles.loadingText}>
-                {isLogin ? 'Signing In...' : 'Processing...'}
-              </Text>
-            </View>
-          ) : (
-            <Text style={styles.authButtonText}>
-              {isLogin ? 'Sign In' : 'Continue'}
-            </Text>
-          )}
-        </TouchableOpacity>
 
         {/* Guest Mode */}
         <TouchableOpacity 
@@ -489,10 +416,6 @@ const styles = StyleSheet.create({
     borderColor: '#D3D3D3',
     alignItems: 'center',
   },
-  roleCardActive: {
-    backgroundColor: '#006400',
-    borderColor: '#006400',
-  },
   roleCardDisabled: {
     backgroundColor: '#F8F8F8',
     borderColor: '#E0E0E0',
@@ -526,9 +449,6 @@ const styles = StyleSheet.create({
     marginTop: 8,
     marginBottom: 4,
   },
-  roleCardTitleActive: {
-    color: '#FFFFFF',
-  },
   roleCardTitleDisabled: {
     color: '#999999',
   },
@@ -539,12 +459,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 16,
   },
-  roleCardDescriptionActive: {
-    color: '#FFFFFF',
-    opacity: 0.9,
-  },
   roleCardDescriptionDisabled: {
     color: '#BBBBBB',
+  },
+  loginForm: {
+    marginBottom: 30,
   },
   inputContainer: {
     flexDirection: 'row',
@@ -562,47 +481,12 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-Regular',
     color: '#000000',
   },
-  privacyContainer: {
-    flexDirection: 'row',
-    backgroundColor: '#F0F8FF',
-    borderRadius: 12,
-    padding: 15,
-    marginBottom: 20,
-    alignItems: 'center',
-    gap: 12,
-  },
-  privacyIcon: {
-    width: 40,
-    height: 40,
-    backgroundColor: '#006400',
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  privacyIconText: {
-    fontSize: 18,
-  },
-  privacyText: {
-    flex: 1,
-  },
-  privacyTitle: {
-    fontSize: 14,
-    fontFamily: 'Inter-Semibold',
-    color: '#000000',
-    marginBottom: 4,
-  },
-  privacyDescription: {
-    fontSize: 12,
-    fontFamily: 'Inter-Regular',
-    color: '#666666',
-    lineHeight: 16,
-  },
   authButton: {
     backgroundColor: '#006400',
     paddingVertical: 18,
     borderRadius: 25,
     alignItems: 'center',
-    marginBottom: 15,
+    marginTop: 10,
   },
   authButtonDisabled: {
     opacity: 0.7,

@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { Utensils, ChefHat, Grid3x3 as Grid3X3, DollarSign, User, Lightbulb } from 'lucide-react-native';
+import { Utensils, Grid3x3 as Grid3X3, Lightbulb, DollarSign, User } from 'lucide-react-native';
 import { View, Text, StyleSheet } from 'react-native';
 
 export default function TabLayout() {
