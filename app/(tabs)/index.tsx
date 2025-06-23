@@ -98,7 +98,7 @@ export default function Home() {
       price: 9995,
       rating: 4.9,
       restaurant: 'Ocean Fresh',
-      hasRecipe: false,
+      hasRecipe: true,
     },
   ];
 
@@ -458,10 +458,16 @@ export default function Home() {
   };
 
   const handleCategoryPress = (categoryRoute: string) => {
-    router.push({
-      pathname: '/category-detail',
-      params: { category: categoryRoute }
-    });
+    if (categoryRoute === 'supermarket') {
+      router.push('/supermarket');
+    } else if (categoryRoute === 'market') {
+      router.push('/market');
+    } else {
+      router.push({
+        pathname: '/category-detail',
+        params: { category: categoryRoute }
+      });
+    }
   };
 
   const handleFoodItemPress = (itemId: number) => {
@@ -574,7 +580,7 @@ export default function Home() {
             {isGuest && (
               <View style={styles.guestBanner}>
                 <View style={styles.guestInfo}>
-                  <User size={16} color="#FFD700" />
+                  <User size={16} color="#B8860B" />
                   <Text style={styles.guestText}>Browsing as Guest</Text>
                 </View>
                 <TouchableOpacity style={styles.signInButton} onPress={handleAuthAction}>
@@ -586,7 +592,7 @@ export default function Home() {
             {!isGuest && profile && (
               <View style={styles.userBanner}>
                 <View style={styles.userInfo}>
-                  <User size={16} color="#FFD700" />
+                  <User size={16} color="#B8860B" />
                   <Text style={styles.userText}>Welcome back, {profile.full_name?.split(' ')[0] || 'User'}!</Text>
                 </View>
                 <View style={styles.userStats}>
@@ -983,7 +989,7 @@ const styles = StyleSheet.create({
   ordersButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 215, 0, 0.2)',
+    backgroundColor: 'rgba(184, 134, 11, 0.3)',
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 20,
@@ -1016,13 +1022,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   signInButton: {
-    backgroundColor: '#FFD700',
+    backgroundColor: '#B8860B',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
   },
   signInText: {
-    color: '#000000',
+    color: '#FFFFFF',
     fontFamily: 'Inter-Semibold',
     fontSize: 12,
   },
@@ -1048,13 +1054,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   userStats: {
-    backgroundColor: '#FFD700',
+    backgroundColor: '#B8860B',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 15,
   },
   userPoints: {
-    color: '#000000',
+    color: '#FFFFFF',
     fontFamily: 'Inter-Semibold',
     fontSize: 12,
   },
@@ -1067,7 +1073,7 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 12,
     borderLeftWidth: 4,
-    borderLeftColor: '#FFD700',
+    borderLeftColor: '#B8860B',
   },
   insightContent: {
     flex: 1,
@@ -1180,7 +1186,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 12,
     left: 12,
-    backgroundColor: '#FFD700',
+    backgroundColor: '#B8860B',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
@@ -1188,7 +1194,7 @@ const styles = StyleSheet.create({
   featuredBadgeText: {
     fontSize: 10,
     fontFamily: 'Inter-Bold',
-    color: '#000000',
+    color: '#FFFFFF',
   },
   featuredOverlay: {
     position: 'absolute',
@@ -1267,7 +1273,7 @@ const styles = StyleSheet.create({
   orderNowText: {
     fontSize: 14,
     fontFamily: 'Inter-Bold',
-    color: '#000000',
+    color: '#FFFFFF',
   },
   foodGrid: {
     gap: 15,
@@ -1358,7 +1364,7 @@ const styles = StyleSheet.create({
   orderButtonText: {
     fontSize: 11,
     fontFamily: 'Inter-Bold',
-    color: '#000000',
+    color: '#FFFFFF',
   },
   // Food Category Scroll Styles
   foodCategoryContainer: {
@@ -1492,7 +1498,7 @@ const styles = StyleSheet.create({
   fullWidthOrderText: {
     fontSize: 12,
     fontFamily: 'Inter-Bold',
-    color: '#000000',
+    color: '#FFFFFF',
   },
   heartButton: {
     position: 'absolute',
@@ -1529,7 +1535,7 @@ const styles = StyleSheet.create({
     opacity: 0.9,
   },
   ctaButton: {
-    backgroundColor: '#FFD700',
+    backgroundColor: '#B8860B',
     paddingHorizontal: 30,
     paddingVertical: 12,
     borderRadius: 25,
@@ -1537,6 +1543,6 @@ const styles = StyleSheet.create({
   ctaButtonText: {
     fontSize: 16,
     fontFamily: 'Inter-Bold',
-    color: '#000000',
+    color: '#FFFFFF',
   },
 });

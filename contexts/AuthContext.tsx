@@ -39,6 +39,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state changed:', event, session?.user?.email);
       setSession(session);
       setUser(session?.user ?? null);
       
@@ -55,6 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const fetchProfile = async (userId: string) => {
     try {
+      console.log('Fetching profile for user:', userId);
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -64,6 +66,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error && error.code !== 'PGRST116') {
         console.error('Error fetching profile:', error);
       } else if (data) {
+        console.log('Profile fetched successfully:', data);
         setProfile(data);
       }
     } catch (error) {
@@ -76,6 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signUp = async (email: string, password: string, fullName: string, role: string = 'customer') => {
     try {
       setLoading(true);
+      console.log('Attempting to sign up user:', email, 'with role:', role);
       
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -89,11 +93,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (error) {
+        console.error('Sign up error:', error);
         return { error };
       }
 
+      console.log('Sign up successful:', data);
+
       // Create profile if user was created
-      if (data.user) {
+      if (data.user && !data.user.email_confirmed_at) {
+        console.log('Creating profile for new user');
         const { error: profileError } = await supabase
           .from('profiles')
           .insert({
@@ -109,11 +117,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (profileError) {
           console.error('Error creating profile:', profileError);
+        } else {
+          console.log('Profile created successfully');
         }
       }
 
       return { error: null };
     } catch (error) {
+      console.error('Unexpected sign up error:', error);
       return { error };
     } finally {
       setLoading(false);
@@ -123,12 +134,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signIn = async (email: string, password: string) => {
     try {
       setLoading(true);
-      const { error } = await supabase.auth.signInWithPassword({
+      console.log('Attempting to sign in user:', email);
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
-      return { error };
+
+      if (error) {
+        console.error('Sign in error:', error);
+        return { error };
+      }
+
+      console.log('Sign in successful:', data);
+      return { error: null };
     } catch (error) {
+      console.error('Unexpected sign in error:', error);
       return { error };
     } finally {
       setLoading(false);
@@ -138,8 +159,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     try {
       setLoading(true);
+      console.log('Signing out user');
       await supabase.auth.signOut();
       setProfile(null);
+      console.log('Sign out successful');
     } catch (error) {
       console.error('Error signing out:', error);
     } finally {

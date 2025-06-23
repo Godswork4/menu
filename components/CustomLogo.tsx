@@ -13,10 +13,10 @@ export default function CustomLogo({ size = 'medium', color = '#FFFFFF' }: Custo
     large: { fontSize: 36 },
   };
 
-  const leafSizes = {
-    small: { fontSize: 14, top: -4, right: -2 },
-    medium: { fontSize: 18, top: -5, right: -3 },
-    large: { fontSize: 24, top: -6, right: -4 },
+  const crossSizes = {
+    small: { fontSize: 12, top: -2, right: -1 },
+    medium: { fontSize: 16, top: -3, right: -2 },
+    large: { fontSize: 20, top: -4, right: -3 },
   };
 
   return (
@@ -25,16 +25,25 @@ export default function CustomLogo({ size = 'medium', color = '#FFFFFF' }: Custo
         Men
         <View style={styles.uContainer}>
           <Text style={[styles.logoText, sizeStyles[size], { color, fontStyle: 'italic' }]}>u</Text>
-          <Text style={[
-            styles.leaf, 
+          {/* Subtle cross using fork and spoon symbols */}
+          <View style={[
+            styles.crossContainer,
             { 
-              fontSize: leafSizes[size].fontSize,
-              top: leafSizes[size].top,
-              right: leafSizes[size].right,
+              top: crossSizes[size].top,
+              right: crossSizes[size].right,
             }
           ]}>
-            🌿
-          </Text>
+            <Text style={[
+              styles.forkSpoon, 
+              { 
+                fontSize: crossSizes[size].fontSize,
+                color: color,
+                opacity: 0.8,
+              }
+            ]}>
+              🍴
+            </Text>
+          </View>
         </View>
       </Text>
     </View>
@@ -54,9 +63,11 @@ const styles = StyleSheet.create({
     position: 'relative',
     display: 'inline-flex',
   },
-  leaf: {
+  crossContainer: {
     position: 'absolute',
-    transform: [{ rotate: '-25deg' }, { scale: 1.2 }],
+    transform: [{ rotate: '15deg' }, { scale: 0.8 }],
+  },
+  forkSpoon: {
     textShadowColor: 'rgba(0, 100, 0, 0.3)',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 2,
