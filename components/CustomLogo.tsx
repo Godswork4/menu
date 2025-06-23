@@ -14,38 +14,51 @@ export default function CustomLogo({ size = 'medium', color = '#FFFFFF' }: Custo
   };
 
   const crossSizes = {
-    small: { fontSize: 12, top: -2, right: -1 },
-    medium: { fontSize: 16, top: -3, right: -2 },
-    large: { fontSize: 20, top: -4, right: -3 },
+    small: { fontSize: 14, top: -6, right: -2 },
+    medium: { fontSize: 18, top: -8, right: -3 },
+    large: { fontSize: 24, top: -10, right: -4 },
   };
 
   return (
     <View style={styles.logoContainer}>
-      <Text style={[styles.logoText, sizeStyles[size], { color }]}>
-        Men
-        <View style={styles.uContainer}>
+      <View style={styles.logoWrapper}>
+        <Text style={[styles.logoText, sizeStyles[size], { color }]}>
+          Men
           <Text style={[styles.logoText, sizeStyles[size], { color, fontStyle: 'italic' }]}>u</Text>
-          {/* Subtle cross using fork and spoon symbols */}
-          <View style={[
-            styles.crossContainer,
+        </Text>
+        
+        {/* Subtle Christian Cross using fork and knife positioned as cross */}
+        <View style={[
+          styles.crossContainer,
+          { 
+            top: crossSizes[size].top,
+            right: crossSizes[size].right,
+          }
+        ]}>
+          {/* Vertical line of cross (fork) */}
+          <Text style={[
+            styles.verticalCross, 
             { 
-              top: crossSizes[size].top,
-              right: crossSizes[size].right,
+              fontSize: crossSizes[size].fontSize,
+              color: color,
+              opacity: 0.7,
             }
           ]}>
-            <Text style={[
-              styles.forkSpoon, 
-              { 
-                fontSize: crossSizes[size].fontSize,
-                color: color,
-                opacity: 0.8,
-              }
-            ]}>
-              🍴
-            </Text>
-          </View>
+            🍴
+          </Text>
+          {/* Horizontal line of cross (knife) */}
+          <Text style={[
+            styles.horizontalCross, 
+            { 
+              fontSize: crossSizes[size].fontSize * 0.8,
+              color: color,
+              opacity: 0.6,
+            }
+          ]}>
+            🔪
+          </Text>
         </View>
-      </Text>
+      </View>
     </View>
   );
 }
@@ -54,20 +67,28 @@ const styles = StyleSheet.create({
   logoContainer: {
     alignItems: 'center',
   },
+  logoWrapper: {
+    position: 'relative',
+  },
   logoText: {
     fontFamily: 'Inter-Bold',
-    position: 'relative',
     fontStyle: 'italic',
-  },
-  uContainer: {
-    position: 'relative',
-    display: 'inline-flex',
   },
   crossContainer: {
     position: 'absolute',
-    transform: [{ rotate: '15deg' }, { scale: 0.8 }],
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  forkSpoon: {
+  verticalCross: {
+    position: 'absolute',
+    transform: [{ rotate: '0deg' }],
+    textShadowColor: 'rgba(0, 100, 0, 0.3)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+  },
+  horizontalCross: {
+    position: 'absolute',
+    transform: [{ rotate: '90deg' }],
     textShadowColor: 'rgba(0, 100, 0, 0.3)',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 2,

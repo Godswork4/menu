@@ -4,14 +4,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft, Star, Clock, User, Heart, ShoppingCart, Plus, Minus } from 'lucide-react-native';
 
-// Food items database with proper mapping
+// Food items database with proper mapping and high-quality images
 const foodDatabase: { [key: number]: any } = {
   1: {
     name: 'Jollof Rice Special',
     price: 4500,
     originalPrice: 5500,
     description: 'Authentic Nigerian jollof rice cooked with premium ingredients, served with grilled chicken and fried plantain.',
-    image: 'https://images.shutterstock.com/image-photo/nigerian-jollof-rice-chicken-plantain-600nw-5678901234.jpg',
+    image: 'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=400&h=300&fit=crop',
     rating: 4.8,
     reviews: 1245,
     chef: {
@@ -46,7 +46,7 @@ const foodDatabase: { [key: number]: any } = {
     price: 7495,
     originalPrice: 9495,
     description: 'Classic Italian pizza with fresh mozzarella, basil, and tomato sauce on a crispy thin crust.',
-    image: 'https://images.shutterstock.com/image-photo/margherita-pizza-fresh-basil-mozzarella-600nw-4567890123.jpg',
+    image: 'https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?w=400&h=300&fit=crop',
     rating: 4.6,
     reviews: 892,
     chef: {
@@ -81,7 +81,7 @@ const foodDatabase: { [key: number]: any } = {
     price: 9995,
     originalPrice: 12995,
     description: 'Grilled salmon glazed with teriyaki sauce, served with steamed vegetables and jasmine rice.',
-    image: 'https://images.shutterstock.com/image-photo/grilled-salmon-teriyaki-vegetables-rice-600nw-6789012345.jpg',
+    image: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=400&h=300&fit=crop',
     rating: 4.9,
     reviews: 567,
     chef: {
@@ -109,6 +109,111 @@ const foodDatabase: { [key: number]: any } = {
       { name: 'Brown Rice', price: 500 },
       { name: 'Extra Vegetables', price: 1200 },
       { name: 'Spicy Mayo', price: 600 },
+    ],
+  },
+  4: {
+    name: 'Truffle Pasta',
+    price: 12499,
+    originalPrice: 16499,
+    description: 'Luxurious handmade pasta with black truffle shavings, wild mushrooms, and aged parmesan cheese in a creamy white wine sauce.',
+    image: 'https://images.unsplash.com/photo-1621996346565-e3dbc353d2e5?w=400&h=300&fit=crop',
+    rating: 4.9,
+    reviews: 1887,
+    chef: {
+      name: 'Chef Marco Romano',
+      restaurant: 'Bella Vista',
+      image: 'https://images.pexels.com/photos/1181686/pexels-photo-1181686.jpeg',
+    },
+    calories: 680,
+    prepTime: '25 min',
+    nutrition: {
+      calories: 680,
+      protein: '28g',
+      carbs: '65g',
+      fats: '35g',
+    },
+    ingredients: [
+      { name: 'Fresh Pasta', included: true },
+      { name: 'Black Truffle', included: true },
+      { name: 'Wild Mushrooms', included: true },
+      { name: 'Parmesan Cheese', included: true },
+      { name: 'White Wine Sauce', included: true },
+    ],
+    customizations: [
+      { name: 'Extra Truffle', price: 4250 },
+      { name: 'Gluten-Free Pasta', price: 1750 },
+      { name: 'Extra Parmesan', price: 1250 },
+      { name: 'Add Chicken', price: 3000 },
+    ],
+  },
+  5: {
+    name: 'Wagyu Burger',
+    price: 9250,
+    originalPrice: 12500,
+    description: 'Premium Wagyu beef patty with aged cheddar, caramelized onions, arugula, and truffle aioli on a brioche bun.',
+    image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&h=300&fit=crop',
+    rating: 4.8,
+    reviews: 1245,
+    chef: {
+      name: 'Chef Robert Johnson',
+      restaurant: 'Gourmet House',
+      image: 'https://images.pexels.com/photos/1181424/pexels-photo-1181424.jpeg',
+    },
+    calories: 750,
+    prepTime: '15 min',
+    nutrition: {
+      calories: 750,
+      protein: '45g',
+      carbs: '42g',
+      fats: '48g',
+    },
+    ingredients: [
+      { name: 'Wagyu Beef Patty', included: true },
+      { name: 'Aged Cheddar', included: true },
+      { name: 'Caramelized Onions', included: true },
+      { name: 'Arugula', included: true },
+      { name: 'Brioche Bun', included: true },
+    ],
+    customizations: [
+      { name: 'Extra Patty', price: 6000 },
+      { name: 'Bacon', price: 1750 },
+      { name: 'Avocado', price: 1250 },
+      { name: 'Sweet Potato Fries', price: 2000 },
+    ],
+  },
+  6: {
+    name: 'Dragon Roll Sushi',
+    price: 8495,
+    originalPrice: 11495,
+    description: 'Fresh eel and cucumber inside, topped with avocado, eel sauce, and sesame seeds. Served with wasabi and pickled ginger.',
+    image: 'https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?w=400&h=300&fit=crop',
+    rating: 4.7,
+    reviews: 892,
+    chef: {
+      name: 'Chef Hiroshi Tanaka',
+      restaurant: 'Tokyo Kitchen',
+      image: 'https://images.pexels.com/photos/1181686/pexels-photo-1181686.jpeg',
+    },
+    calories: 420,
+    prepTime: '20 min',
+    nutrition: {
+      calories: 420,
+      protein: '22g',
+      carbs: '48g',
+      fats: '18g',
+    },
+    ingredients: [
+      { name: 'Fresh Eel', included: true },
+      { name: 'Cucumber', included: true },
+      { name: 'Avocado', included: true },
+      { name: 'Sushi Rice', included: true },
+      { name: 'Nori Seaweed', included: true },
+    ],
+    customizations: [
+      { name: 'Extra Eel', price: 2750 },
+      { name: 'Spicy Mayo', price: 750 },
+      { name: 'Tempura Flakes', price: 1000 },
+      { name: 'Extra Avocado', price: 1250 },
     ],
   },
 };

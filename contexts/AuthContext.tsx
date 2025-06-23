@@ -26,8 +26,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log('🔄 AuthProvider: Initializing auth state...');
+    
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error) {
+        console.error('❌ AuthProvider: Error getting initial session:', error);
+      } else {
+        console.log('✅ AuthProvider: Initial session retrieved:', session?.user?.email || 'No session');
+      }
+      
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
@@ -39,7 +47,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state changed:', event, session?.user?.email);
+      console.log('🔄 AuthProvider: Auth state changed:', event, session?.user?.email || 'No user');
+      
       setSession(session);
       setUser(session?.user ?? null);
       
@@ -51,12 +60,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      console.log('🧹 AuthProvider: Cleaning up auth subscription');
+      subscription.unsubscribe();
+    };
   }, []);
 
   const fetchProfile = async (userId: string) => {
     try {
-      console.log('Fetching profile for user:', userId);
+      console.log('📋 AuthProvider: Fetching profile for user:', userId);
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -64,13 +77,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .single();
 
       if (error && error.code !== 'PGRST116') {
-        console.error('Error fetching profile:', error);
+        console.error('❌ AuthProvider: Error fetching profile:', error.message, error.details);
       } else if (data) {
-        console.log('Profile fetched successfully:', data);
+        console.log('✅ AuthProvider: Profile fetched successfully:', {
+          id: data.id,
+          email: data.email,
+          full_name: data.full_name,
+          role: data.role
+        });
         setProfile(data);
+      } else {
+        console.log('⚠️ AuthProvider: No profile found for user');
       }
     } catch (error) {
-      console.error('Error fetching profile:', error);
+      console.error('💥 AuthProvider: Unexpected error fetching profile:', error);
     } finally {
       setLoading(false);
     }
@@ -79,7 +99,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signUp = async (email: string, password: string, fullName: string, role: string = 'customer') => {
     try {
       setLoading(true);
-      console.log('Attempting to sign up user:', email, 'with role:', role);
+      console.log('📝 AuthProvider: Starting sign up process for:', email, 'with role:', role);
       
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -93,15 +113,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (error) {
-        console.error('Sign up error:', error);
+        console.error('❌ AuthProvider: Sign up error:', error.message, error);
         return { error };
       }
 
-      console.log('Sign up successful:', data);
+      console.log('✅ AuthProvider: Sign up successful:', {
+        user_id: data.user?.id,
+        email: data.user?.email,
+        email_confirmed: data.user?.email_confirmed_at ? 'Yes' : 'No'
+      });
 
-      // Create profile if user was created
-      if (data.user && !data.user.email_confirmed_at) {
-        console.log('Creating profile for new user');
+      // Create profile if user was created successfully
+      if (data.user) {
+        console.log('📋 AuthProvider: Creating profile for new user...');
+        
         const { error: profileError } = await supabase
           .from('profiles')
           .insert({
@@ -116,15 +141,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           });
 
         if (profileError) {
-          console.error('Error creating profile:', profileError);
+          console.error('❌ AuthProvider: Error creating profile:', profileError.message, profileError);
         } else {
-          console.log('Profile created successfully');
+          console.log('✅ AuthProvider: Profile created successfully');
         }
       }
 
       return { error: null };
     } catch (error) {
-      console.error('Unexpected sign up error:', error);
+      console.error('💥 AuthProvider: Unexpected sign up error:', error);
       return { error };
     } finally {
       setLoading(false);
@@ -134,7 +159,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signIn = async (email: string, password: string) => {
     try {
       setLoading(true);
-      console.log('Attempting to sign in user:', email);
+      console.log('🔐 AuthProvider: Starting sign in process for:', email);
       
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -142,14 +167,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (error) {
-        console.error('Sign in error:', error);
+        console.error('❌ AuthProvider: Sign in error:', error.message, error);
         return { error };
       }
 
-      console.log('Sign in successful:', data);
+      console.log('✅ AuthProvider: Sign in successful:', {
+        user_id: data.user?.id,
+        email: data.user?.email,
+        session_expires: data.session?.expires_at
+      });
+      
       return { error: null };
     } catch (error) {
-      console.error('Unexpected sign in error:', error);
+      console.error('💥 AuthProvider: Unexpected sign in error:', error);
       return { error };
     } finally {
       setLoading(false);
@@ -159,12 +189,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     try {
       setLoading(true);
-      console.log('Signing out user');
+      console.log('🚪 AuthProvider: Starting sign out process...');
+      
       await supabase.auth.signOut();
       setProfile(null);
-      console.log('Sign out successful');
+      
+      console.log('✅ AuthProvider: Sign out successful');
     } catch (error) {
-      console.error('Error signing out:', error);
+      console.error('❌ AuthProvider: Error signing out:', error);
     } finally {
       setLoading(false);
     }
@@ -172,7 +204,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const updateProfile = async (updates: Partial<Profile>) => {
     try {
-      if (!user) return { error: 'No user found' };
+      if (!user) {
+        console.error('❌ AuthProvider: Cannot update profile - no user found');
+        return { error: 'No user found' };
+      }
+
+      console.log('📝 AuthProvider: Updating profile for user:', user.id);
 
       const { error } = await supabase
         .from('profiles')
@@ -180,17 +217,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .eq('id', user.id);
 
       if (!error) {
+        console.log('✅ AuthProvider: Profile updated successfully');
         await refreshProfile();
+      } else {
+        console.error('❌ AuthProvider: Error updating profile:', error.message);
       }
 
       return { error };
     } catch (error) {
+      console.error('💥 AuthProvider: Unexpected error updating profile:', error);
       return { error };
     }
   };
 
   const refreshProfile = async () => {
     if (user) {
+      console.log('🔄 AuthProvider: Refreshing profile...');
       await fetchProfile(user.id);
     }
   };
