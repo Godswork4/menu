@@ -8,9 +8,10 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: styles.tabBar,
-        tabBarActiveTintColor: '#B8860B',
+        tabBarActiveTintColor: '#7CB342',
         tabBarInactiveTintColor: '#666666',
         tabBarLabelStyle: styles.tabLabel,
+        tabBarItemStyle: styles.tabItem,
       }}>
       <Tabs.Screen
         name="index"
@@ -65,14 +66,23 @@ const styles = StyleSheet.create({
   tabBar: {
     backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
-    borderTopColor: '#D3D3D3',
-    paddingTop: 5,
-    paddingBottom: 5,
-    height: 60,
+    borderTopColor: '#E5E5E5',
+    paddingTop: 8,
+    paddingBottom: 8,
+    height: 70,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+  },
+  tabItem: {
+    paddingVertical: 4,
   },
   tabLabel: {
-    fontFamily: 'Inter-Medium',
-    fontSize: 12,
-    marginTop: 4,
+    fontFamily: 'Inter-Semibold',
+    fontSize: 13,
+    marginTop: 6,
+    fontWeight: '600',
   },
 });

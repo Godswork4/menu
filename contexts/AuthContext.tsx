@@ -31,7 +31,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session }, error }) => {
       if (error) {
-        console.error('❌ AuthProvider: Error getting initial session:', error);
+        console.error('❌ AuthProvider: Error getting initial session:', error.message, error.details);
       } else {
         console.log('✅ AuthProvider: Initial session retrieved:', session?.user?.email || 'No session');
       }
@@ -77,7 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .single();
 
       if (error && error.code !== 'PGRST116') {
-        console.error('❌ AuthProvider: Error fetching profile:', error.message, error.details);
+        console.error('❌ AuthProvider: Error fetching profile:', error.message, error.details, error.hint);
       } else if (data) {
         console.log('✅ AuthProvider: Profile fetched successfully:', {
           id: data.id,
@@ -113,7 +113,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (error) {
-        console.error('❌ AuthProvider: Sign up error:', error.message, error);
+        console.error('❌ AuthProvider: Sign up error:', error.message, error.details, error.hint);
         return { error };
       }
 
@@ -141,7 +141,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           });
 
         if (profileError) {
-          console.error('❌ AuthProvider: Error creating profile:', profileError.message, profileError);
+          console.error('❌ AuthProvider: Error creating profile:', profileError.message, profileError.details, profileError.hint);
         } else {
           console.log('✅ AuthProvider: Profile created successfully');
         }
@@ -167,7 +167,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (error) {
-        console.error('❌ AuthProvider: Sign in error:', error.message, error);
+        console.error('❌ AuthProvider: Sign in error:', error.message, error.details, error.hint);
         return { error };
       }
 
@@ -220,7 +220,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.log('✅ AuthProvider: Profile updated successfully');
         await refreshProfile();
       } else {
-        console.error('❌ AuthProvider: Error updating profile:', error.message);
+        console.error('❌ AuthProvider: Error updating profile:', error.message, error.details);
       }
 
       return { error };

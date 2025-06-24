@@ -66,12 +66,15 @@ export default function Auth() {
     if (!validateForm()) return;
 
     setIsLoading(true);
+    console.log('🔐 Auth: Starting sign in process for:', email);
 
     try {
       const { error } = await signIn(email, password);
       if (error) {
+        console.error('❌ Auth: Sign in failed:', error.message, error.details);
         Alert.alert('Sign In Error', error.message || 'Failed to sign in. Please check your credentials.');
       } else {
+        console.log('✅ Auth: Sign in successful, redirecting to home');
         Alert.alert(
           'Welcome Back!', 
           'You have successfully signed in.',
@@ -79,8 +82,8 @@ export default function Auth() {
         );
       }
     } catch (error) {
+      console.error('💥 Auth: Unexpected error:', error);
       Alert.alert('Error', 'An unexpected error occurred. Please try again.');
-      console.error('Auth error:', error);
     } finally {
       setIsLoading(false);
     }
@@ -93,6 +96,7 @@ export default function Auth() {
       return;
     }
 
+    console.log('📝 Auth: User selected role:', roleId);
     if (roleId === 'customer') {
       router.push('/customer-signup');
     } else if (roleId === 'vendor') {
@@ -107,6 +111,7 @@ export default function Auth() {
   };
 
   const handleGuestMode = () => {
+    console.log('👤 Auth: User chose guest mode');
     router.push('/(tabs)');
   };
 
@@ -482,7 +487,7 @@ const styles = StyleSheet.create({
     color: '#000000',
   },
   authButton: {
-    backgroundColor: '#006400',
+    backgroundColor: '#7CB342',
     paddingVertical: 18,
     borderRadius: 25,
     alignItems: 'center',

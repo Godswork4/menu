@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { ArrowLeft, Search, Plus, Minus, ShoppingCart, Filter } from 'lucide-react-native';
+import AIAssistant from '@/components/AIAssistant';
 
 export default function Supermarket() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -19,7 +20,7 @@ export default function Supermarket() {
       name: 'Rice (5kg)',
       category: 'Groceries',
       price: 8500,
-      image: 'https://images.shutterstock.com/image-photo/bag-rice-grains-white-background-600nw-1234567890.jpg',
+      image: 'https://www.shutterstock.com/image-photo/bag-rice-grains-white-background-600nw-1234567890.jpg',
       description: 'Premium quality long grain rice',
       unit: 'bag',
     },
@@ -28,7 +29,7 @@ export default function Supermarket() {
       name: 'Bread (Loaf)',
       category: 'Groceries',
       price: 800,
-      image: 'https://images.shutterstock.com/image-photo/fresh-bread-loaf-sliced-white-600nw-2345678901.jpg',
+      image: 'https://www.shutterstock.com/image-photo/fresh-bread-loaf-sliced-white-600nw-2345678901.jpg',
       description: 'Fresh baked white bread',
       unit: 'loaf',
     },
@@ -37,7 +38,7 @@ export default function Supermarket() {
       name: 'Milk (1L)',
       category: 'Beverages',
       price: 1200,
-      image: 'https://images.shutterstock.com/image-photo/milk-bottle-glass-white-background-600nw-3456789012.jpg',
+      image: 'https://www.shutterstock.com/image-photo/milk-bottle-glass-white-background-600nw-3456789012.jpg',
       description: 'Fresh whole milk',
       unit: 'bottle',
     },
@@ -46,7 +47,7 @@ export default function Supermarket() {
       name: 'Eggs (12 pieces)',
       category: 'Groceries',
       price: 1800,
-      image: 'https://images.shutterstock.com/image-photo/dozen-eggs-carton-white-background-600nw-4567890123.jpg',
+      image: 'https://www.shutterstock.com/image-photo/dozen-eggs-carton-white-background-600nw-4567890123.jpg',
       description: 'Farm fresh eggs',
       unit: 'carton',
     },
@@ -55,7 +56,7 @@ export default function Supermarket() {
       name: 'Cooking Oil (1L)',
       category: 'Groceries',
       price: 2500,
-      image: 'https://images.shutterstock.com/image-photo/cooking-oil-bottle-vegetable-oil-600nw-5678901234.jpg',
+      image: 'https://www.shutterstock.com/image-photo/cooking-oil-bottle-vegetable-oil-600nw-5678901234.jpg',
       description: 'Pure vegetable cooking oil',
       unit: 'bottle',
     },
@@ -64,7 +65,7 @@ export default function Supermarket() {
       name: 'Soft Drink (500ml)',
       category: 'Beverages',
       price: 400,
-      image: 'https://images.shutterstock.com/image-photo/cola-bottle-soft-drink-refreshing-600nw-6789012345.jpg',
+      image: 'https://www.shutterstock.com/image-photo/cola-bottle-soft-drink-refreshing-600nw-6789012345.jpg',
       description: 'Refreshing cola drink',
       unit: 'bottle',
     },
@@ -73,7 +74,7 @@ export default function Supermarket() {
       name: 'Biscuits Pack',
       category: 'Snacks',
       price: 600,
-      image: 'https://images.shutterstock.com/image-photo/biscuits-pack-cookies-snack-food-600nw-7890123456.jpg',
+      image: 'https://www.shutterstock.com/image-photo/biscuits-pack-cookies-snack-food-600nw-7890123456.jpg',
       description: 'Crunchy chocolate biscuits',
       unit: 'pack',
     },
@@ -82,7 +83,7 @@ export default function Supermarket() {
       name: 'Detergent (1kg)',
       category: 'Household',
       price: 1500,
-      image: 'https://images.shutterstock.com/image-photo/laundry-detergent-powder-cleaning-product-600nw-8901234567.jpg',
+      image: 'https://www.shutterstock.com/image-photo/laundry-detergent-powder-cleaning-product-600nw-8901234567.jpg',
       description: 'Powerful cleaning detergent',
       unit: 'pack',
     },
@@ -91,7 +92,7 @@ export default function Supermarket() {
       name: 'Toothpaste',
       category: 'Personal Care',
       price: 800,
-      image: 'https://images.shutterstock.com/image-photo/toothpaste-tube-dental-care-hygiene-600nw-9012345678.jpg',
+      image: 'https://www.shutterstock.com/image-photo/toothpaste-tube-dental-care-hygiene-600nw-9012345678.jpg',
       description: 'Fluoride toothpaste for healthy teeth',
       unit: 'tube',
     },
@@ -100,7 +101,7 @@ export default function Supermarket() {
       name: 'Soap Bar',
       category: 'Personal Care',
       price: 300,
-      image: 'https://images.shutterstock.com/image-photo/soap-bar-white-background-hygiene-600nw-0123456789.jpg',
+      image: 'https://www.shutterstock.com/image-photo/soap-bar-white-background-hygiene-600nw-0123456789.jpg',
       description: 'Moisturizing bath soap',
       unit: 'bar',
     },
@@ -109,7 +110,7 @@ export default function Supermarket() {
       name: 'Noodles (Pack)',
       category: 'Groceries',
       price: 200,
-      image: 'https://images.shutterstock.com/image-photo/instant-noodles-pack-quick-meal-600nw-1234567890.jpg',
+      image: 'https://www.shutterstock.com/image-photo/instant-noodles-pack-quick-meal-600nw-1234567890.jpg',
       description: 'Instant noodles - chicken flavor',
       unit: 'pack',
     },
@@ -118,7 +119,7 @@ export default function Supermarket() {
       name: 'Tissue Paper',
       category: 'Household',
       price: 500,
-      image: 'https://images.shutterstock.com/image-photo/tissue-paper-roll-household-essential-600nw-2345678901.jpg',
+      image: 'https://www.shutterstock.com/image-photo/tissue-paper-roll-household-essential-600nw-2345678901.jpg',
       description: 'Soft tissue paper roll',
       unit: 'roll',
     },
@@ -327,6 +328,9 @@ export default function Supermarket() {
           </TouchableOpacity>
         </View>
       )}
+
+      {/* AI Assistant */}
+      <AIAssistant />
     </SafeAreaView>
   );
 }
