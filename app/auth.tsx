@@ -44,18 +44,18 @@ export default function Auth() {
 
   const validateForm = () => {
     if (!email || !password) {
-      Alert.alert('Error', 'Please fill in all required fields');
+      Alert.alert('Missing Information', 'Please enter both email and password to continue.');
       return false;
     }
 
     if (password.length < 6) {
-      Alert.alert('Error', 'Password must be at least 6 characters long');
+      Alert.alert('Password Too Short', 'Password must be at least 6 characters long for security.');
       return false;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      Alert.alert('Error', 'Please enter a valid email address');
+      Alert.alert('Invalid Email', 'Please enter a valid email address (e.g., user@example.com).');
       return false;
     }
 
@@ -72,18 +72,30 @@ export default function Auth() {
       const { error } = await signIn(email, password);
       if (error) {
         console.error('❌ Auth: Sign in failed:', error);
-        Alert.alert('Sign In Error', error.message || 'Failed to sign in. Please check your credentials.');
+        
+        // Provide user-friendly error messages
+        let errorMessage = 'Failed to sign in. Please try again.';
+        
+        if (error.message?.includes('Invalid login credentials')) {
+          errorMessage = 'Invalid email or password. Please check your credentials and try again.';
+        } else if (error.message?.includes('Email not confirmed')) {
+          errorMessage = 'Please check your email and confirm your account before signing in.';
+        } else if (error.message?.includes('Too many requests')) {
+          errorMessage = 'Too many sign in attempts. Please wait a moment and try again.';
+        }
+        
+        Alert.alert('Sign In Failed', errorMessage);
       } else {
         console.log('✅ Auth: Sign in successful, redirecting to home');
         Alert.alert(
           'Welcome Back!', 
-          'You have successfully signed in.',
-          [{ text: 'OK', onPress: () => router.push('/(tabs)') }]
+          'You have successfully signed in to your account.',
+          [{ text: 'Continue', onPress: () => router.push('/(tabs)') }]
         );
       }
     } catch (error) {
       console.error('💥 Auth: Unexpected error:', error);
-      Alert.alert('Error', 'An unexpected error occurred. Please try again.');
+      Alert.alert('Connection Error', 'Unable to connect to our servers. Please check your internet connection and try again.');
     } finally {
       setIsLoading(false);
     }
@@ -151,7 +163,7 @@ export default function Auth() {
 
       <View style={styles.content}>
         <Text style={styles.title}>
-          {isLogin ? 'Welcome Back' : 'Join Menu'}
+          {isLogin ? 'Welcome Back' : 'Join Menus'}
         </Text>
         <Text style={styles.subtitle}>
           {isLogin 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert, ActivityIndicator, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { ArrowLeft, User, Mail, Lock, Eye, EyeOff, Wifi, ChevronRight } from 'lucide-react-native';
@@ -16,23 +16,28 @@ export default function SignUpStep1() {
 
   const validateForm = () => {
     if (!fullName || !email || !password || !confirmPassword) {
-      Alert.alert('Error', 'Please fill in all required fields');
+      Alert.alert('Missing Information', 'Please fill in all required fields to continue.');
+      return false;
+    }
+
+    if (fullName.length < 2) {
+      Alert.alert('Invalid Name', 'Please enter your full name (at least 2 characters).');
       return false;
     }
 
     if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match');
+      Alert.alert('Password Mismatch', 'The passwords you entered do not match. Please try again.');
       return false;
     }
 
     if (password.length < 6) {
-      Alert.alert('Error', 'Password must be at least 6 characters long');
+      Alert.alert('Weak Password', 'Password must be at least 6 characters long for security.');
       return false;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      Alert.alert('Error', 'Please enter a valid email address');
+      Alert.alert('Invalid Email', 'Please enter a valid email address (e.g., user@example.com).');
       return false;
     }
 
@@ -96,7 +101,7 @@ export default function SignUpStep1() {
         <Text style={styles.progressText}>Step 1 of 2</Text>
       </View>
 
-      <View style={styles.content}>
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.title}>Create Your Account</Text>
         <Text style={styles.subtitle}>
           Let's start with your basic information
@@ -205,7 +210,7 @@ export default function SignUpStep1() {
             Already have an account? Sign In
           </Text>
         </TouchableOpacity>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -413,6 +418,7 @@ const styles = StyleSheet.create({
   },
   signInLink: {
     alignItems: 'center',
+    marginBottom: 30,
   },
   signInText: {
     fontSize: 14,

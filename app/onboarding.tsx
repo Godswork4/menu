@@ -5,7 +5,7 @@ import { router } from 'expo-router';
 import { ChevronRight, ChevronLeft, Sparkles, Users, ShoppingBag, Utensils, ChefHat, MapPin } from 'lucide-react-native';
 import CustomLogo from '@/components/CustomLogo';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
 export default function Onboarding() {
   const [currentStep, setCurrentStep] = useState(0);
@@ -15,7 +15,7 @@ export default function Onboarding() {
       id: 1,
       title: 'Discover Amazing Food',
       subtitle: 'Explore thousands of restaurants, local chefs, and hidden culinary gems',
-      image: 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg',
+      image: 'https://static.vecteezy.com/system/resources/previews/014/578/003/non_2x/delicious-food-on-a-wooden-table-free-photo.jpg',
       description: 'From street food to fine dining, discover your next favorite meal',
       icon: Sparkles,
       color: '#FF6B6B',
@@ -29,7 +29,7 @@ export default function Onboarding() {
       id: 2,
       title: 'Connect with Local Chefs',
       subtitle: 'Book private chefs, learn recipes, and get personalized cooking tips',
-      image: 'https://images.pexels.com/photos/1640770/pexels-photo-1640770.jpeg',
+      image: 'https://static.vecteezy.com/system/resources/previews/023/337/086/non_2x/ai-generative-professional-chef-cooking-in-kitchen-free-photo.jpg',
       description: 'Get exclusive access to chef secrets and cooking techniques',
       icon: ChefHat,
       color: '#4ECDC4',
@@ -43,7 +43,7 @@ export default function Onboarding() {
       id: 3,
       title: 'Smart Food Shopping',
       subtitle: 'Budget-friendly meals, grocery lists, and meal planning made easy',
-      image: 'https://images.pexels.com/photos/1640772/pexels-photo-1640772.jpeg',
+      image: 'https://static.vecteezy.com/system/resources/previews/023/337/088/non_2x/ai-generative-fresh-vegetables-and-fruits-in-shopping-basket-free-photo.jpg',
       description: 'Save money while eating well with our intelligent recommendations',
       icon: ShoppingBag,
       color: '#45B7D1',
@@ -57,7 +57,7 @@ export default function Onboarding() {
       id: 4,
       title: 'World\'s Best Food App',
       subtitle: 'Not just ordering food - your complete culinary companion',
-      image: 'https://images.pexels.com/photos/958545/pexels-photo-958545.jpeg',
+      image: 'https://static.vecteezy.com/system/resources/previews/023/337/087/non_2x/ai-generative-variety-of-international-cuisine-dishes-free-photo.jpg',
       description: 'Join millions of food lovers in the ultimate food discovery experience',
       icon: Utensils,
       color: '#32CD32',
@@ -100,30 +100,9 @@ export default function Onboarding() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Enhanced Status Bar */}
-      <View style={styles.statusBar}>
-        <Text style={styles.time}>12:07 AM</Text>
-        <View style={styles.statusIcons}>
-          <View style={styles.signalContainer}>
-            <View style={[styles.signalBar, styles.signalBar1]} />
-            <View style={[styles.signalBar, styles.signalBar2]} />
-            <View style={[styles.signalBar, styles.signalBar3]} />
-            <View style={[styles.signalBar, styles.signalBar4]} />
-          </View>
-          <Text style={styles.wifiIcon}>📶</Text>
-          <View style={styles.batteryContainer}>
-            <View style={styles.batteryBody}>
-              <View style={styles.batteryLevel} />
-            </View>
-            <View style={styles.batteryTip} />
-          </View>
-        </View>
-      </View>
-
       {/* Logo Header */}
       <View style={styles.logoHeader}>
         <CustomLogo size="large" color="#006400" />
-        <Text style={styles.appName}>Menu</Text>
         <Text style={styles.appTagline}>Your Food Explorer</Text>
       </View>
 
@@ -152,7 +131,7 @@ export default function Onboarding() {
         <View style={styles.imageContainer}>
           <Image source={{ uri: currentOnboarding.image }} style={styles.image} />
           <View style={[styles.iconOverlay, { backgroundColor: currentOnboarding.color }]}>
-            <IconComponent size={32} color="#FFFFFF" />
+            <IconComponent size={28} color="#FFFFFF" />
           </View>
         </View>
         
@@ -223,91 +202,16 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FFFFFF',
   },
-  statusBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 10,
-    paddingBottom: 5,
-    backgroundColor: '#006400',
-  },
-  time: {
-    color: '#FFFFFF',
-    fontFamily: 'Inter-Medium',
-    fontSize: 16,
-  },
-  statusIcons: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  signalContainer: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: 2,
-  },
-  signalBar: {
-    backgroundColor: '#FFFFFF',
-    width: 3,
-  },
-  signalBar1: {
-    height: 4,
-  },
-  signalBar2: {
-    height: 6,
-  },
-  signalBar3: {
-    height: 8,
-  },
-  signalBar4: {
-    height: 10,
-  },
-  wifiIcon: {
-    fontSize: 14,
-  },
-  batteryContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  batteryBody: {
-    width: 22,
-    height: 11,
-    borderWidth: 1,
-    borderColor: '#FFFFFF',
-    borderRadius: 2,
-    padding: 1,
-  },
-  batteryLevel: {
-    flex: 1,
-    backgroundColor: '#32CD32',
-    borderRadius: 1,
-    width: '80%',
-  },
-  batteryTip: {
-    width: 2,
-    height: 6,
-    backgroundColor: '#FFFFFF',
-    borderTopRightRadius: 1,
-    borderBottomRightRadius: 1,
-    marginLeft: 1,
-  },
   logoHeader: {
     alignItems: 'center',
     paddingVertical: 20,
     backgroundColor: '#F8F9FA',
   },
-  appName: {
-    fontSize: 32,
-    fontFamily: 'Inter-Bold',
-    color: '#006400',
-    marginTop: 8,
-  },
   appTagline: {
     fontSize: 16,
     fontFamily: 'Inter-Regular',
     color: '#666666',
-    marginTop: 4,
+    marginTop: 8,
   },
   progressContainer: {
     flexDirection: 'row',
@@ -317,7 +221,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   progressDot: {
-    width: width * 0.2,
+    width: width * 0.18,
     height: 4,
     borderRadius: 2,
   },
@@ -353,20 +257,20 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   image: {
-    width: width * 0.8,
-    height: width * 0.6,
+    width: width * 0.75,
+    height: width * 0.5,
     borderRadius: 20,
   },
   iconOverlay: {
     position: 'absolute',
     bottom: -15,
     right: 20,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 4,
+    borderWidth: 3,
     borderColor: '#FFFFFF',
   },
   textContent: {
@@ -375,7 +279,7 @@ const styles = StyleSheet.create({
     marginBottom: 25,
   },
   title: {
-    fontSize: 28,
+    fontSize: 24,
     fontFamily: 'Inter-Bold',
     textAlign: 'center',
     marginBottom: 12,

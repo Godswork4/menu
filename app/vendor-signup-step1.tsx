@@ -1,67 +1,62 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert, ActivityIndicator, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router, useLocalSearchParams } from 'expo-router';
-import { ArrowLeft, Phone, MapPin, Wifi, CircleCheck as CheckCircle } from 'lucide-react-native';
+import { router } from 'expo-router';
+import { ArrowLeft, User, Mail, Lock, Eye, EyeOff, Wifi, ChevronRight, ChefHat } from 'lucide-react-native';
 import CustomLogo from '@/components/CustomLogo';
-import { useAuth } from '@/contexts/AuthContext';
 
-export default function SignUpStep2() {
-  const { fullName, email, password, role } = useLocalSearchParams();
-  const [phone, setPhone] = useState('');
-  const [address, setAddress] = useState('');
+export default function VendorSignUpStep1() {
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const { signUp } = useAuth();
-
   const validateForm = () => {
-    if (!phone || !address) {
-      Alert.alert('Error', 'Please fill in all required fields');
+    if (!fullName || !email || !password || !confirmPassword) {
+      Alert.alert('Missing Information', 'Please fill in all required fields to continue.');
       return false;
     }
 
-    const phoneRegex = /^[0-9]{10,11}$/;
-    if (!phoneRegex.test(phone)) {
-      Alert.alert('Error', 'Please enter a valid phone number (10-11 digits)');
+    if (fullName.length < 2) {
+      Alert.alert('Invalid Name', 'Please enter your full name (at least 2 characters).');
+      return false;
+    }
+
+    if (password !== confirmPassword) {
+      Alert.alert('Password Mismatch', 'The passwords you entered do not match. Please try again.');
+      return false;
+    }
+
+    if (password.length < 6) {
+      Alert.alert('Weak Password', 'Password must be at least 6 characters long for security.');
+      return false;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      Alert.alert('Invalid Email', 'Please enter a valid email address (e.g., user@example.com).');
       return false;
     }
 
     return true;
   };
 
-  const handleSignUp = async () => {
+  const handleNext = () => {
     if (!validateForm()) return;
 
-    setIsLoading(true);
-
-    try {
-      const { error } = await signUp(
-        email as string, 
-        password as string, 
-        fullName as string, 
-        role as string
-      );
-
-      if (error) {
-        if (error.message?.includes('User already registered')) {
-          Alert.alert('Account Exists', 'An account with this email already exists. Please sign in instead.');
-          router.push('/auth');
-        } else {
-          Alert.alert('Sign Up Error', error.message || 'Failed to create account. Please try again.');
-        }
-      } else {
-        Alert.alert(
-          'Account Created Successfully!', 
-          'Welcome to Menu! Your account has been created and you can now start exploring delicious food options.',
-          [{ text: 'Get Started', onPress: () => router.push('/(tabs)') }]
-        );
+    // Pass data to next step
+    router.push({
+      pathname: '/vendor-signup-step2',
+      params: {
+        fullName,
+        email,
+        password,
+        role: 'vendor'
       }
-    } catch (error) {
-      Alert.alert('Error', 'An unexpected error occurred. Please try again.');
-      console.error('Sign up error:', error);
-    } finally {
-      setIsLoading(false);
-    }
+    });
   };
 
   return (
@@ -92,8 +87,13 @@ export default function SignUpStep2() {
           <ArrowLeft size={24} color="#FFFFFF" />
         </TouchableOpacity>
         <View style={styles.headerContent}>
-          <CustomLogo size="medium" color="#FFFFFF" />
-          <Text style={styles.tagline}>Almost There!</Text>
+          <View style={styles.logoContainer}>
+            <CustomLogo size="medium" color="#FFFFFF" />
+            <View style={styles.chefBadge}>
+              <ChefHat size={16} color="#FFFFFF" />
+            </View>
+          </View>
+          <Text style={styles.tagline}>Kitchen Partner Registration</Text>
         </View>
         <View style={styles.placeholder} />
       </View>
@@ -101,110 +101,137 @@ export default function SignUpStep2() {
       {/* Progress Indicator */}
       <View style={styles.progressContainer}>
         <View style={styles.progressBar}>
-          <View style={[styles.progressFill, { width: '100%' }]} />
+          <View style={[styles.progressFill, { width: '50%' }]} />
         </View>
-        <Text style={styles.progressText}>Step 2 of 2</Text>
+        <Text style={styles.progressText}>Step 1 of 2</Text>
       </View>
 
-      <View style={styles.content}>
-        <Text style={styles.title}>Complete Your Profile</Text>
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        <Text style={styles.title}>Start Your Kitchen Journey</Text>
         <Text style={styles.subtitle}>
-          Just a few more details to get you started
+          Let's begin with your personal information
         </Text>
 
-        {/* Account Summary */}
-        <View style={styles.summaryContainer}>
-          <View style={styles.summaryHeader}>
-            <CheckCircle size={20} color="#32CD32" />
-            <Text style={styles.summaryTitle}>Account Details</Text>
-          </View>
-          <View style={styles.summaryItem}>
-            <Text style={styles.summaryLabel}>Name:</Text>
-            <Text style={styles.summaryValue}>{fullName}</Text>
-          </View>
-          <View style={styles.summaryItem}>
-            <Text style={styles.summaryLabel}>Email:</Text>
-            <Text style={styles.summaryValue}>{email}</Text>
-          </View>
-          <View style={styles.summaryItem}>
-            <Text style={styles.summaryLabel}>Role:</Text>
-            <Text style={styles.summaryValue}>Food Lover</Text>
-          </View>
-        </View>
-
-        {/* Phone Input */}
+        {/* Full Name Input */}
         <View style={styles.inputContainer}>
-          <Phone size={20} color="#666666" />
+          <User size={20} color="#666666" />
           <TextInput
             style={styles.input}
-            placeholder="Enter your phone number"
-            value={phone}
-            onChangeText={setPhone}
-            keyboardType="phone-pad"
+            placeholder="Enter your full name"
+            value={fullName}
+            onChangeText={setFullName}
+            autoCapitalize="words"
             editable={!isLoading}
           />
         </View>
 
-        {/* Address Input */}
+        {/* Email Input */}
         <View style={styles.inputContainer}>
-          <MapPin size={20} color="#666666" />
+          <Mail size={20} color="#666666" />
           <TextInput
             style={styles.input}
-            placeholder="Enter your address"
-            value={address}
-            onChangeText={setAddress}
-            multiline
-            numberOfLines={2}
+            placeholder="Enter your email"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
             editable={!isLoading}
           />
         </View>
 
-        {/* Benefits Section */}
+        {/* Password Input */}
+        <View style={styles.inputContainer}>
+          <Lock size={20} color="#666666" />
+          <TextInput
+            style={styles.input}
+            placeholder="Create a password"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry={!showPassword}
+            editable={!isLoading}
+          />
+          <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+            {showPassword ? (
+              <EyeOff size={20} color="#666666" />
+            ) : (
+              <Eye size={20} color="#666666" />
+            )}
+          </TouchableOpacity>
+        </View>
+
+        {/* Confirm Password Input */}
+        <View style={styles.inputContainer}>
+          <Lock size={20} color="#666666" />
+          <TextInput
+            style={styles.input}
+            placeholder="Confirm your password"
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
+            secureTextEntry={!showConfirmPassword}
+            editable={!isLoading}
+          />
+          <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
+            {showConfirmPassword ? (
+              <EyeOff size={20} color="#666666" />
+            ) : (
+              <Eye size={20} color="#666666" />
+            )}
+          </TouchableOpacity>
+        </View>
+
+        {/* Kitchen Partner Benefits */}
         <View style={styles.benefitsContainer}>
-          <Text style={styles.benefitsTitle}>What you'll get:</Text>
+          <Text style={styles.benefitsTitle}>Kitchen Partner Benefits:</Text>
           <View style={styles.benefitsList}>
             <View style={styles.benefitItem}>
-              <Text style={styles.benefitIcon}>🍽️</Text>
-              <Text style={styles.benefitText}>Access to thousands of restaurants</Text>
+              <Text style={styles.benefitIcon}>📊</Text>
+              <Text style={styles.benefitText}>Real-time sales analytics</Text>
             </View>
             <View style={styles.benefitItem}>
-              <Text style={styles.benefitIcon}>🚚</Text>
-              <Text style={styles.benefitText}>Fast delivery to your location</Text>
+              <Text style={styles.benefitIcon}>📱</Text>
+              <Text style={styles.benefitText}>Easy order management</Text>
             </View>
             <View style={styles.benefitItem}>
               <Text style={styles.benefitIcon}>💰</Text>
-              <Text style={styles.benefitText}>Exclusive deals and discounts</Text>
+              <Text style={styles.benefitText}>Competitive commission rates</Text>
             </View>
             <View style={styles.benefitItem}>
-              <Text style={styles.benefitIcon}>⭐</Text>
-              <Text style={styles.benefitText}>Earn points with every order</Text>
+              <Text style={styles.benefitIcon}>🚀</Text>
+              <Text style={styles.benefitText}>Marketing support</Text>
             </View>
           </View>
         </View>
 
-        {/* Create Account Button */}
+        {/* Next Button */}
         <TouchableOpacity 
-          style={[styles.createButton, isLoading && styles.createButtonDisabled]} 
-          onPress={handleSignUp}
+          style={[styles.nextButton, isLoading && styles.nextButtonDisabled]} 
+          onPress={handleNext}
           disabled={isLoading}
         >
           {isLoading ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="small" color="#FFFFFF" />
-              <Text style={styles.loadingText}>Creating Account...</Text>
+              <Text style={styles.loadingText}>Processing...</Text>
             </View>
           ) : (
-            <Text style={styles.createButtonText}>Create My Account</Text>
+            <View style={styles.nextContainer}>
+              <Text style={styles.nextButtonText}>Continue</Text>
+              <ChevronRight size={20} color="#FFFFFF" />
+            </View>
           )}
         </TouchableOpacity>
 
-        {/* Terms */}
-        <Text style={styles.termsText}>
-          By creating an account, you agree to our{' '}
-          <Text style={styles.termsLink}>Terms of Service</Text> and{' '}
-          <Text style={styles.termsLink}>Privacy Policy</Text>
-        </Text>
-      </View>
+        {/* Sign In Link */}
+        <TouchableOpacity 
+          style={styles.signInLink} 
+          onPress={() => router.push('/auth')}
+          disabled={isLoading}
+        >
+          <Text style={styles.signInText}>
+            Already have an account? Sign In
+          </Text>
+        </TouchableOpacity>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -294,12 +321,25 @@ const styles = StyleSheet.create({
   headerContent: {
     alignItems: 'center',
   },
+  logoContainer: {
+    position: 'relative',
+  },
+  chefBadge: {
+    position: 'absolute',
+    top: -5,
+    right: -5,
+    backgroundColor: '#3F51B5',
+    borderRadius: 12,
+    padding: 4,
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+  },
   tagline: {
     fontSize: 14,
     fontFamily: 'Inter-Regular',
     color: '#FFFFFF',
     opacity: 0.9,
-    marginTop: 4,
+    marginTop: 8,
   },
   placeholder: {
     width: 40,
@@ -317,7 +357,7 @@ const styles = StyleSheet.create({
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#32CD32',
+    backgroundColor: '#3F51B5',
     borderRadius: 2,
   },
   progressText: {
@@ -346,38 +386,6 @@ const styles = StyleSheet.create({
     marginBottom: 30,
     lineHeight: 24,
   },
-  summaryContainer: {
-    backgroundColor: '#F8F9FA',
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 25,
-  },
-  summaryHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 15,
-  },
-  summaryTitle: {
-    fontSize: 16,
-    fontFamily: 'Inter-Semibold',
-    color: '#000000',
-  },
-  summaryItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  summaryLabel: {
-    fontSize: 14,
-    fontFamily: 'Inter-Regular',
-    color: '#666666',
-  },
-  summaryValue: {
-    fontSize: 14,
-    fontFamily: 'Inter-Semibold',
-    color: '#000000',
-  },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -395,7 +403,7 @@ const styles = StyleSheet.create({
     color: '#000000',
   },
   benefitsContainer: {
-    backgroundColor: '#E8F5E8',
+    backgroundColor: '#E8F0FF',
     borderRadius: 12,
     padding: 20,
     marginBottom: 30,
@@ -403,7 +411,7 @@ const styles = StyleSheet.create({
   benefitsTitle: {
     fontSize: 16,
     fontFamily: 'Inter-Semibold',
-    color: '#006400',
+    color: '#3F51B5',
     marginBottom: 15,
   },
   benefitsList: {
@@ -423,14 +431,14 @@ const styles = StyleSheet.create({
     color: '#333333',
     flex: 1,
   },
-  createButton: {
-    backgroundColor: '#32CD32',
+  nextButton: {
+    backgroundColor: '#3F51B5',
     paddingVertical: 18,
     borderRadius: 25,
     alignItems: 'center',
     marginBottom: 20,
   },
-  createButtonDisabled: {
+  nextButtonDisabled: {
     opacity: 0.7,
   },
   loadingContainer: {
@@ -443,21 +451,23 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-Semibold',
     color: '#FFFFFF',
   },
-  createButtonText: {
+  nextContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  nextButtonText: {
     fontSize: 16,
     fontFamily: 'Inter-Semibold',
     color: '#FFFFFF',
   },
-  termsText: {
-    fontSize: 12,
-    fontFamily: 'Inter-Regular',
-    color: '#666666',
-    textAlign: 'center',
-    lineHeight: 18,
+  signInLink: {
+    alignItems: 'center',
     marginBottom: 30,
   },
-  termsLink: {
+  signInText: {
+    fontSize: 14,
+    fontFamily: 'Inter-Medium',
     color: '#006400',
-    fontFamily: 'Inter-Semibold',
   },
 });
