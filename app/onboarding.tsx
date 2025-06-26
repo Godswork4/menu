@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { ChevronRight, ChevronLeft, Sparkles, Users, ShoppingBag } from 'lucide-react-native';
+import { ChevronRight, ChevronLeft, Sparkles, Users, ShoppingBag, Utensils, ChefHat, MapPin } from 'lucide-react-native';
+import CustomLogo from '@/components/CustomLogo';
 
 const { width } = Dimensions.get('window');
 
@@ -18,6 +19,11 @@ export default function Onboarding() {
       description: 'From street food to fine dining, discover your next favorite meal',
       icon: Sparkles,
       color: '#FF6B6B',
+      features: [
+        'Browse without signing up',
+        'Real-time restaurant updates',
+        'Authentic food reviews'
+      ]
     },
     {
       id: 2,
@@ -25,8 +31,13 @@ export default function Onboarding() {
       subtitle: 'Book private chefs, learn recipes, and get personalized cooking tips',
       image: 'https://images.pexels.com/photos/1640770/pexels-photo-1640770.jpeg',
       description: 'Get exclusive access to chef secrets and cooking techniques',
-      icon: Users,
+      icon: ChefHat,
       color: '#4ECDC4',
+      features: [
+        'Direct chef communication',
+        'Recipe sharing & learning',
+        'Cooking masterclasses'
+      ]
     },
     {
       id: 3,
@@ -36,6 +47,25 @@ export default function Onboarding() {
       description: 'Save money while eating well with our intelligent recommendations',
       icon: ShoppingBag,
       color: '#45B7D1',
+      features: [
+        'AI-powered meal planning',
+        'Budget tracking & insights',
+        'Smart grocery lists'
+      ]
+    },
+    {
+      id: 4,
+      title: 'World\'s Best Food App',
+      subtitle: 'Not just ordering food - your complete culinary companion',
+      image: 'https://images.pexels.com/photos/958545/pexels-photo-958545.jpeg',
+      description: 'Join millions of food lovers in the ultimate food discovery experience',
+      icon: Utensils,
+      color: '#32CD32',
+      features: [
+        'Global cuisine database',
+        'Nutritional insights',
+        'Food culture stories'
+      ]
     },
   ];
 
@@ -45,8 +75,6 @@ export default function Onboarding() {
   const handleNext = () => {
     if (currentStep < onboardingSteps.length - 1) {
       setCurrentStep(currentStep + 1);
-    } else {
-      router.push('/auth');
     }
   };
 
@@ -59,6 +87,16 @@ export default function Onboarding() {
   const handleSkip = () => {
     router.push('/(tabs)');
   };
+
+  const handleSignUp = () => {
+    router.push('/auth');
+  };
+
+  const handleSignIn = () => {
+    router.push('/auth');
+  };
+
+  const isLastStep = currentStep === onboardingSteps.length - 1;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -82,6 +120,13 @@ export default function Onboarding() {
         </View>
       </View>
 
+      {/* Logo Header */}
+      <View style={styles.logoHeader}>
+        <CustomLogo size="large" color="#006400" />
+        <Text style={styles.appName}>Menu</Text>
+        <Text style={styles.appTagline}>Your Food Explorer</Text>
+      </View>
+
       {/* Progress Indicators */}
       <View style={styles.progressContainer}>
         {onboardingSteps.map((_, index) => (
@@ -89,7 +134,9 @@ export default function Onboarding() {
             key={index}
             style={[
               styles.progressDot,
-              index <= currentStep ? styles.progressDotActive : styles.progressDotInactive,
+              index <= currentStep ? 
+                [styles.progressDotActive, { backgroundColor: currentOnboarding.color }] : 
+                styles.progressDotInactive,
             ]}
           />
         ))}
@@ -110,51 +157,62 @@ export default function Onboarding() {
         </View>
         
         <View style={styles.textContent}>
-          <Text style={styles.title}>{currentOnboarding.title}</Text>
+          <Text style={[styles.title, { color: currentOnboarding.color }]}>
+            {currentOnboarding.title}
+          </Text>
           <Text style={styles.subtitle}>{currentOnboarding.subtitle}</Text>
           <Text style={styles.description}>{currentOnboarding.description}</Text>
         </View>
 
         {/* Feature Highlights */}
         <View style={styles.featuresContainer}>
-          <View style={styles.featureItem}>
-            <View style={styles.featureDot} />
-            <Text style={styles.featureText}>
-              {currentStep === 0 && "Browse without signing up"}
-              {currentStep === 1 && "Direct chef communication"}
-              {currentStep === 2 && "AI-powered meal planning"}
-            </Text>
-          </View>
-          <View style={styles.featureItem}>
-            <View style={styles.featureDot} />
-            <Text style={styles.featureText}>
-              {currentStep === 0 && "Real-time restaurant updates"}
-              {currentStep === 1 && "Recipe sharing & learning"}
-              {currentStep === 2 && "Budget tracking & insights"}
-            </Text>
-          </View>
+          {currentOnboarding.features.map((feature, index) => (
+            <View key={index} style={styles.featureItem}>
+              <View style={[styles.featureDot, { backgroundColor: currentOnboarding.color }]} />
+              <Text style={styles.featureText}>{feature}</Text>
+            </View>
+          ))}
         </View>
       </View>
 
-      {/* Navigation */}
-      <View style={styles.navigation}>
-        <TouchableOpacity
-          style={[styles.navButton, styles.backButton]}
-          onPress={handleBack}
-          disabled={currentStep === 0}
-        >
-          <ChevronLeft size={20} color={currentStep === 0 ? '#CCCCCC' : '#006400'} />
-          <Text style={[styles.navText, currentStep === 0 && styles.navTextDisabled]}>
-            Back
-          </Text>
-        </TouchableOpacity>
+      {/* Navigation & Actions */}
+      <View style={styles.bottomSection}>
+        {!isLastStep ? (
+          <View style={styles.navigation}>
+            <TouchableOpacity
+              style={[styles.navButton, styles.backButton]}
+              onPress={handleBack}
+              disabled={currentStep === 0}
+            >
+              <ChevronLeft size={20} color={currentStep === 0 ? '#CCCCCC' : '#006400'} />
+              <Text style={[styles.navText, currentStep === 0 && styles.navTextDisabled]}>
+                Back
+              </Text>
+            </TouchableOpacity>
 
-        <TouchableOpacity style={[styles.navButton, styles.nextButton]} onPress={handleNext}>
-          <Text style={styles.nextText}>
-            {currentStep === onboardingSteps.length - 1 ? 'Get Started' : 'Next'}
-          </Text>
-          <ChevronRight size={20} color="#FFFFFF" />
-        </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.navButton, styles.nextButton, { backgroundColor: currentOnboarding.color }]} 
+              onPress={handleNext}
+            >
+              <Text style={styles.nextText}>Next</Text>
+              <ChevronRight size={20} color="#FFFFFF" />
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <View style={styles.finalActions}>
+            <TouchableOpacity style={styles.signUpButton} onPress={handleSignUp}>
+              <Text style={styles.signUpText}>Get Started</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.signInButton} onPress={handleSignIn}>
+              <Text style={styles.signInText}>Already have an account? Sign In</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.guestButton} onPress={handleSkip}>
+              <Text style={styles.guestText}>Continue as Guest</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
     </SafeAreaView>
   );
@@ -234,16 +292,32 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 1,
     marginLeft: 1,
   },
+  logoHeader: {
+    alignItems: 'center',
+    paddingVertical: 20,
+    backgroundColor: '#F8F9FA',
+  },
+  appName: {
+    fontSize: 32,
+    fontFamily: 'Inter-Bold',
+    color: '#006400',
+    marginTop: 8,
+  },
+  appTagline: {
+    fontSize: 16,
+    fontFamily: 'Inter-Regular',
+    color: '#666666',
+    marginTop: 4,
+  },
   progressContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingTop: 30,
-    paddingBottom: 10,
+    paddingVertical: 20,
     gap: 8,
   },
   progressDot: {
-    width: width * 0.25,
+    width: width * 0.2,
     height: 4,
     borderRadius: 2,
   },
@@ -276,7 +350,7 @@ const styles = StyleSheet.create({
   },
   imageContainer: {
     position: 'relative',
-    marginBottom: 40,
+    marginBottom: 30,
   },
   image: {
     width: width * 0.8,
@@ -298,12 +372,11 @@ const styles = StyleSheet.create({
   textContent: {
     alignItems: 'center',
     paddingHorizontal: 20,
-    marginBottom: 30,
+    marginBottom: 25,
   },
   title: {
     fontSize: 28,
     fontFamily: 'Inter-Bold',
-    color: '#000000',
     textAlign: 'center',
     marginBottom: 12,
   },
@@ -312,7 +385,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-Regular',
     color: '#666666',
     textAlign: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
     lineHeight: 24,
   },
   description: {
@@ -336,7 +409,6 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#32CD32',
   },
   featureText: {
     fontSize: 14,
@@ -344,11 +416,13 @@ const styles = StyleSheet.create({
     color: '#333333',
     flex: 1,
   },
+  bottomSection: {
+    paddingHorizontal: 20,
+    paddingBottom: 30,
+  },
   navigation: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingBottom: 30,
     gap: 15,
   },
   navButton: {
@@ -367,7 +441,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   nextButton: {
-    backgroundColor: '#006400',
     flex: 2,
     justifyContent: 'center',
   },
@@ -383,5 +456,42 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: 'Inter-Medium',
     color: '#FFFFFF',
+  },
+  finalActions: {
+    gap: 15,
+  },
+  signUpButton: {
+    backgroundColor: '#32CD32',
+    paddingVertical: 18,
+    borderRadius: 25,
+    alignItems: 'center',
+  },
+  signUpText: {
+    fontSize: 18,
+    fontFamily: 'Inter-Bold',
+    color: '#FFFFFF',
+  },
+  signInButton: {
+    backgroundColor: 'transparent',
+    paddingVertical: 15,
+    alignItems: 'center',
+  },
+  signInText: {
+    fontSize: 16,
+    fontFamily: 'Inter-Medium',
+    color: '#006400',
+  },
+  guestButton: {
+    backgroundColor: 'transparent',
+    paddingVertical: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#D3D3D3',
+    borderRadius: 25,
+  },
+  guestText: {
+    fontSize: 14,
+    fontFamily: 'Inter-Regular',
+    color: '#666666',
   },
 });

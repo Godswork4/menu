@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Animated, PanResponder } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Animated, PanResponder, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MapPin, Search, Star, Clock, User, Bell, Wifi, ShoppingBag, ChefHat, X, Heart, ChevronLeft, ChevronRight } from 'lucide-react-native';
 import { router } from 'expo-router';
@@ -7,15 +7,19 @@ import CustomLogo from '@/components/CustomLogo';
 import AIAssistant from '@/components/AIAssistant';
 import { useAuth } from '@/contexts/AuthContext';
 
+const { width } = Dimensions.get('window');
+
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showInsightNotification, setShowInsightNotification] = useState(true);
   const [selectedFoodCategory, setSelectedFoodCategory] = useState('dishes');
+  const [currentSlide, setCurrentSlide] = useState(0);
   
   // Animation values for category indicators
   const indicatorAnimation = useRef(new Animated.Value(0)).current;
   const scrollViewRef = useRef<ScrollView>(null);
   const categoryScrollRef = useRef<ScrollView>(null);
+  const slideScrollRef = useRef<ScrollView>(null);
 
   const { user, profile } = useAuth();
   const isGuest = !user;
@@ -42,6 +46,7 @@ export default function Home() {
       image: 'https://images.shutterstock.com/image-photo/jollof-rice-west-african-dish-600nw-1891234567.jpg',
       badge: 'Chef Special',
       cookTime: '20 min',
+      description: 'Authentic Nigerian jollof rice with premium spices, grilled chicken, and fried plantain',
     },
     {
       id: 2,
@@ -53,6 +58,7 @@ export default function Home() {
       image: 'https://images.shutterstock.com/image-photo/amala-ewedu-traditional-yoruba-food-600nw-1234567891.jpg',
       badge: 'Traditional',
       cookTime: '25 min',
+      description: 'Traditional Yoruba delicacy with smooth amala and nutritious ewedu soup',
     },
     {
       id: 3,
@@ -64,6 +70,31 @@ export default function Home() {
       image: 'https://images.shutterstock.com/image-photo/pounded-yam-egusi-soup-nigerian-600nw-1567891234.jpg',
       badge: 'Popular',
       cookTime: '30 min',
+      description: 'Smooth pounded yam served with rich egusi soup and assorted meat',
+    },
+    {
+      id: 4,
+      name: 'Pepper Soup',
+      restaurant: 'Traditional Taste',
+      price: 3200,
+      originalPrice: 4200,
+      rating: 4.9,
+      image: 'https://images.shutterstock.com/image-photo/nigerian-pepper-soup-catfish-spicy-600nw-1345678912.jpg',
+      badge: 'Spicy',
+      cookTime: '25 min',
+      description: 'Spicy Nigerian pepper soup with fresh catfish and aromatic spices',
+    },
+    {
+      id: 5,
+      name: 'Suya Platter',
+      restaurant: 'Suya Spot',
+      price: 6500,
+      originalPrice: 8000,
+      rating: 4.8,
+      image: 'https://images.shutterstock.com/image-photo/suya-nigerian-grilled-meat-spices-600nw-1678912345.jpg',
+      badge: 'Grilled',
+      cookTime: '15 min',
+      description: 'Grilled spiced beef skewers with traditional suya spice blend',
     },
   ];
 
@@ -447,12 +478,12 @@ export default function Home() {
   };
 
   const handleAuthAction = () => {
-    router.push('/auth');
+    router.push('/onboarding');
   };
 
   const handleOrdersPress = () => {
     if (isGuest) {
-      router.push('/auth');
+      router.push('/onboarding');
     } else {
       router.push('/orders');
     }
@@ -492,6 +523,18 @@ export default function Home() {
 
   const getCurrentCategoryItems = () => {
     return foodCategories.find(cat => cat.id === selectedFoodCategory)?.items || [];
+  };
+
+  const handleSlideScroll = (event: any) => {
+    const slideWidth = width - 40; // Account for padding
+    const currentIndex = Math.round(event.nativeEvent.contentOffset.x / slideWidth);
+    setCurrentSlide(currentIndex);
+  };
+
+  const scrollToSlide = (index: number) => {
+    const slideWidth = width - 40;
+    slideScrollRef.current?.scrollTo({ x: index * slideWidth, animated: true });
+    setCurrentSlide(index);
   };
 
   // Pan responder for swipe gestures on category items
@@ -636,37 +679,79 @@ export default function Home() {
           </TouchableOpacity>
         </View>
 
-        {/* Featured Food Carousel */}
+        {/* Featured Food Slide Carousel */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Featured Today</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          
+          {/* Slide Navigation */}
+          <View style={styles.slideNavigation}>
+            <TouchableOpacity 
+              style={[styles.slideNavButton, currentSlide === 0 && styles.slideNavButtonDisabled]}
+              onPress={() => scrollToSlide(Math.max(0, currentSlide - 1))}
+              disabled={currentSlide === 0}
+            >
+              <ChevronLeft size={20} color={currentSlide === 0 ? "#CCCCCC" : "#006400"} />
+            </TouchableOpacity>
+            
+            <View style={styles.slideIndicators}>
+              {featuredFoods.map((_, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={[
+                    styles.slideIndicator,
+                    currentSlide === index && styles.slideIndicatorActive
+                  ]}
+                  onPress={() => scrollToSlide(index)}
+                />
+              ))}
+            </View>
+            
+            <TouchableOpacity 
+              style={[styles.slideNavButton, currentSlide === featuredFoods.length - 1 && styles.slideNavButtonDisabled]}
+              onPress={() => scrollToSlide(Math.min(featuredFoods.length - 1, currentSlide + 1))}
+              disabled={currentSlide === featuredFoods.length - 1}
+            >
+              <ChevronRight size={20} color={currentSlide === featuredFoods.length - 1 ? "#CCCCCC" : "#006400"} />
+            </TouchableOpacity>
+          </View>
+
+          {/* Slide View */}
+          <ScrollView 
+            ref={slideScrollRef}
+            horizontal 
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            onMomentumScrollEnd={handleSlideScroll}
+            style={styles.slideContainer}
+          >
             {featuredFoods.map((item) => (
               <TouchableOpacity 
                 key={item.id} 
-                style={styles.featuredCard} 
+                style={styles.slideCard} 
                 onPress={() => handleFoodItemPress(item.id)}
               >
-                <Image source={{ uri: item.image }} style={styles.featuredImage} />
-                <View style={styles.featuredBadge}>
-                  <Text style={styles.featuredBadgeText}>{item.badge}</Text>
+                <Image source={{ uri: item.image }} style={styles.slideImage} />
+                <View style={styles.slideBadge}>
+                  <Text style={styles.slideBadgeText}>{item.badge}</Text>
                 </View>
-                <View style={styles.featuredOverlay}>
-                  <View style={styles.featuredInfo}>
-                    <Text style={styles.featuredName}>{item.name}</Text>
-                    <Text style={styles.featuredRestaurant}>{item.restaurant}</Text>
-                    <View style={styles.featuredMeta}>
+                <View style={styles.slideOverlay}>
+                  <View style={styles.slideInfo}>
+                    <Text style={styles.slideName}>{item.name}</Text>
+                    <Text style={styles.slideRestaurant}>{item.restaurant}</Text>
+                    <Text style={styles.slideDescription}>{item.description}</Text>
+                    <View style={styles.slideMeta}>
                       <View style={styles.ratingContainer}>
-                        <Star size={12} color="#FFD700" fill="#FFD700" />
-                        <Text style={styles.featuredRating}>{item.rating}</Text>
+                        <Star size={14} color="#FFD700" fill="#FFD700" />
+                        <Text style={styles.slideRating}>{item.rating}</Text>
                       </View>
                       <View style={styles.timeContainer}>
-                        <Clock size={12} color="#FFFFFF" />
-                        <Text style={styles.featuredTime}>{item.cookTime}</Text>
+                        <Clock size={14} color="#FFFFFF" />
+                        <Text style={styles.slideTime}>{item.cookTime}</Text>
                       </View>
                     </View>
                     <View style={styles.priceContainer}>
-                      <Text style={styles.featuredPrice}>{formatPrice(item.price)}</Text>
-                      <Text style={styles.featuredOriginalPrice}>{formatPrice(item.originalPrice)}</Text>
+                      <Text style={styles.slidePrice}>{formatPrice(item.price)}</Text>
+                      <Text style={styles.slideOriginalPrice}>{formatPrice(item.originalPrice)}</Text>
                     </View>
                   </View>
                   <TouchableOpacity style={styles.orderNowButton} onPress={handleAuthAction}>
@@ -1174,69 +1259,115 @@ const styles = StyleSheet.create({
     color: '#000000',
     textAlign: 'center',
   },
-  featuredCard: {
-    width: 280,
-    height: 200,
-    marginRight: 15,
+  // Slide View Styles
+  slideNavigation: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 15,
+    paddingHorizontal: 10,
+  },
+  slideNavButton: {
+    backgroundColor: '#E8F5E8',
+    borderRadius: 20,
+    padding: 8,
+  },
+  slideNavButtonDisabled: {
+    backgroundColor: '#F5F5F5',
+  },
+  slideIndicators: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  slideIndicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#D3D3D3',
+  },
+  slideIndicatorActive: {
+    backgroundColor: '#32CD32',
+    width: 24,
+  },
+  slideContainer: {
+    marginHorizontal: -20,
+  },
+  slideCard: {
+    width: width - 40,
+    height: 280,
+    marginHorizontal: 20,
     borderRadius: 20,
     overflow: 'hidden',
     position: 'relative',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
   },
-  featuredImage: {
+  slideImage: {
     width: '100%',
     height: '100%',
   },
-  featuredBadge: {
+  slideBadge: {
     position: 'absolute',
-    top: 12,
-    left: 12,
+    top: 15,
+    left: 15,
     backgroundColor: '#FFD700',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 15,
   },
-  featuredBadgeText: {
-    fontSize: 10,
+  slideBadgeText: {
+    fontSize: 12,
     fontFamily: 'Inter-Bold',
     color: '#000000',
   },
-  featuredOverlay: {
+  slideOverlay: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
     backgroundColor: 'rgba(0,0,0,0.8)',
-    padding: 15,
+    padding: 20,
   },
-  featuredInfo: {
-    marginBottom: 10,
+  slideInfo: {
+    marginBottom: 15,
   },
-  featuredName: {
-    fontSize: 18,
+  slideName: {
+    fontSize: 22,
     fontFamily: 'Inter-Bold',
     color: '#FFFFFF',
     marginBottom: 4,
   },
-  featuredRestaurant: {
-    fontSize: 12,
+  slideRestaurant: {
+    fontSize: 14,
     fontFamily: 'Inter-Regular',
     color: '#FFFFFF',
     opacity: 0.8,
     marginBottom: 8,
   },
-  featuredMeta: {
+  slideDescription: {
+    fontSize: 14,
+    fontFamily: 'Inter-Regular',
+    color: '#FFFFFF',
+    opacity: 0.9,
+    lineHeight: 20,
+    marginBottom: 12,
+  },
+  slideMeta: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 15,
-    marginBottom: 8,
+    gap: 20,
+    marginBottom: 10,
   },
   ratingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
   },
-  featuredRating: {
-    fontSize: 12,
+  slideRating: {
+    fontSize: 14,
     fontFamily: 'Inter-Semibold',
     color: '#FFFFFF',
   },
@@ -1245,23 +1376,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
   },
-  featuredTime: {
-    fontSize: 12,
+  slideTime: {
+    fontSize: 14,
     fontFamily: 'Inter-Regular',
     color: '#FFFFFF',
   },
   priceContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 10,
   },
-  featuredPrice: {
-    fontSize: 16,
+  slidePrice: {
+    fontSize: 20,
     fontFamily: 'Inter-Bold',
     color: '#32CD32',
   },
-  featuredOriginalPrice: {
-    fontSize: 14,
+  slideOriginalPrice: {
+    fontSize: 16,
     fontFamily: 'Inter-Regular',
     color: '#FFFFFF',
     opacity: 0.6,
@@ -1269,13 +1400,13 @@ const styles = StyleSheet.create({
   },
   orderNowButton: {
     backgroundColor: '#32CD32',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 20,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 25,
     alignSelf: 'flex-start',
   },
   orderNowText: {
-    fontSize: 14,
+    fontSize: 16,
     fontFamily: 'Inter-Bold',
     color: '#FFFFFF',
   },

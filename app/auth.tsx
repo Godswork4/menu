@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { User, Truck, Store, Mail, Lock, Eye, EyeOff, ArrowLeft, Wifi } from 'lucide-react-native';
+import { User, Truck, Store, Mail, Lock, Eye, EyeOff, ArrowLeft, Wifi, ChefHat } from 'lucide-react-native';
 import CustomLogo from '@/components/CustomLogo';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -18,25 +18,25 @@ export default function Auth() {
   const userRoles = [
     {
       id: 'customer',
-      title: 'Customer',
-      description: 'Explore restaurants, order food, and discover recipes',
+      title: 'Food Lover',
+      description: 'Explore restaurants, order food, and discover amazing recipes',
       icon: User,
-      color: '#006400',
+      color: '#32CD32',
       available: true,
     },
     {
       id: 'delivery',
       title: 'Delivery Partner',
-      description: 'Deliver food and earn money on your schedule',
+      description: 'Deliver food and earn money on your flexible schedule',
       icon: Truck,
       color: '#FF8F00',
       available: false,
     },
     {
       id: 'vendor',
-      title: 'Vendor',
-      description: 'Sell your food, manage your restaurant or kitchen',
-      icon: Store,
+      title: 'Kitchen Partner',
+      description: 'Share your culinary skills and grow your food business',
+      icon: ChefHat,
       color: '#3F51B5',
       available: true,
     },
@@ -71,7 +71,7 @@ export default function Auth() {
     try {
       const { error } = await signIn(email, password);
       if (error) {
-        console.error('❌ Auth: Sign in failed:', error.message, error.details);
+        console.error('❌ Auth: Sign in failed:', error);
         Alert.alert('Sign In Error', error.message || 'Failed to sign in. Please check your credentials.');
       } else {
         console.log('✅ Auth: Sign in successful, redirecting to home');
@@ -92,15 +92,15 @@ export default function Auth() {
   const handleRoleSelection = (roleId: string) => {
     const role = userRoles.find(r => r.id === roleId);
     if (!role?.available) {
-      Alert.alert('Coming Soon', `${role?.title} registration will be available soon. Please choose Customer for now.`);
+      Alert.alert('Coming Soon', `${role?.title} registration will be available soon. Please choose Food Lover for now.`);
       return;
     }
 
     console.log('📝 Auth: User selected role:', roleId);
     if (roleId === 'customer') {
-      router.push('/customer-signup');
+      router.push('/signup-step1');
     } else if (roleId === 'vendor') {
-      router.push('/vendor-signup');
+      router.push('/vendor-signup-step1');
     }
   };
 
@@ -177,10 +177,9 @@ export default function Auth() {
                     onPress={() => handleRoleSelection(role.id)}
                   >
                     <View style={styles.roleCardHeader}>
-                      <IconComponent
-                        size={24}
-                        color={role.color}
-                      />
+                      <View style={[styles.roleIconContainer, { backgroundColor: role.color }]}>
+                        <IconComponent size={24} color="#FFFFFF" />
+                      </View>
                       {!role.available && (
                         <View style={styles.comingSoonBadge}>
                           <Text style={styles.comingSoonText}>Soon</Text>
@@ -408,10 +407,11 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontFamily: 'Inter-Semibold',
     color: '#000000',
-    marginBottom: 15,
+    marginBottom: 20,
+    textAlign: 'center',
   },
   rolesGrid: {
-    gap: 12,
+    gap: 15,
   },
   roleCard: {
     backgroundColor: '#FFFFFF',
@@ -420,6 +420,11 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#D3D3D3',
     alignItems: 'center',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   roleCardDisabled: {
     backgroundColor: '#F8F8F8',
@@ -432,6 +437,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     width: '100%',
     position: 'relative',
+    marginBottom: 15,
+  },
+  roleIconContainer: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   comingSoonBadge: {
     position: 'absolute',
@@ -448,21 +461,21 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   roleCardTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontFamily: 'Inter-Semibold',
     color: '#000000',
-    marginTop: 8,
-    marginBottom: 4,
+    marginBottom: 8,
+    textAlign: 'center',
   },
   roleCardTitleDisabled: {
     color: '#999999',
   },
   roleCardDescription: {
-    fontSize: 12,
+    fontSize: 14,
     fontFamily: 'Inter-Regular',
     color: '#666666',
     textAlign: 'center',
-    lineHeight: 16,
+    lineHeight: 20,
   },
   roleCardDescriptionDisabled: {
     color: '#BBBBBB',
@@ -487,7 +500,7 @@ const styles = StyleSheet.create({
     color: '#000000',
   },
   authButton: {
-    backgroundColor: '#7CB342',
+    backgroundColor: '#32CD32',
     paddingVertical: 18,
     borderRadius: 25,
     alignItems: 'center',
