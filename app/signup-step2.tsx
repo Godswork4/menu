@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
-import { ArrowLeft, Phone, MapPin, Wifi, CheckCircle } from 'lucide-react-native';
+import { ArrowLeft, Phone, MapPin, Wifi, CircleCheck as CheckCircle } from 'lucide-react-native';
 import CustomLogo from '@/components/CustomLogo';
 import { useAuth } from '@/contexts/AuthContext';
 
