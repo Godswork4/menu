@@ -153,7 +153,7 @@ export default function Home() {
         <View style={styles.header}>
           <View style={styles.headerTop}>
             <View style={styles.logoSection}>
-              <CustomLogo size="medium" color="#FFFFFF" showImage={true} />
+              <CustomLogo size="medium" color="#FFFFFF" />
               <Text style={styles.tagline}>Your Food Explorer</Text>
             </View>
             <TouchableOpacity style={styles.notificationButton}>
@@ -381,7 +381,7 @@ const styles = StyleSheet.create({
     color: '#000000',
   },
   featuredSection: {
-    paddingVertical: 20,
+    paddingVertical: 15,
     paddingLeft: 20,
   },
   sectionTitle: {
@@ -391,7 +391,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   featuredCard: {
-    width: width * 0.7,
+    width: width * 0.65,
     backgroundColor: '#FFFFFF',
     borderRadius: 15,
     marginRight: 15,
@@ -404,7 +404,7 @@ const styles = StyleSheet.create({
   },
   featuredImage: {
     width: '100%',
-    height: 140,
+    height: 120,
   },
   badge: {
     position: 'absolute',
@@ -420,7 +420,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   featuredInfo: {
-    padding: 15,
+    padding: 12,
   },
   featuredName: {
     fontSize: 16,

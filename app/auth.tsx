@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert, ActivityIndicator, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { User, Truck, Store, Mail, Lock, Eye, EyeOff, ArrowLeft, Wifi, ChefHat } from 'lucide-react-native';
@@ -161,7 +161,7 @@ export default function Auth() {
         <View style={styles.placeholder} />
       </View>
 
-      <View style={styles.content}>
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.title}>
           {isLogin ? 'Welcome Back' : 'Join Menus'}
         </Text>
@@ -292,7 +292,7 @@ export default function Auth() {
             }
           </Text>
         </TouchableOpacity>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -555,6 +555,7 @@ const styles = StyleSheet.create({
   },
   toggleButton: {
     alignItems: 'center',
+    marginBottom: 30,
   },
   toggleText: {
     fontSize: 14,

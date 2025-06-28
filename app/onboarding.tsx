@@ -104,7 +104,7 @@ export default function Onboarding() {
     <SafeAreaView style={styles.container}>
       {/* Logo Header */}
       <View style={styles.logoHeader}>
-        <CustomLogo size="large" color="#006400" showImage={true} />
+        <CustomLogo size="large" color="#006400" />
         <Text style={styles.appTagline}>Your Food Explorer</Text>
       </View>
 
