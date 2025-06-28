@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { ChevronRight, ChevronLeft, Sparkles, Users, ShoppingBag, Utensils, ChefHat, MapPin } from 'lucide-react-native';
 import CustomLogo from '@/components/CustomLogo';
+import ImageWithFallback from '@/components/ImageWithFallback';
+import { IMAGES } from '@/constants/Images';
 
 const { width, height } = Dimensions.get('window');
 
@@ -15,7 +17,7 @@ export default function Onboarding() {
       id: 1,
       title: 'Discover Amazing Food',
       subtitle: 'Explore thousands of restaurants, local chefs, and hidden culinary gems',
-      image: 'https://static.vecteezy.com/system/resources/previews/014/578/003/non_2x/delicious-food-on-a-wooden-table-free-photo.jpg',
+      image: IMAGES.DELICIOUS_FOOD_TABLE,
       description: 'From street food to fine dining, discover your next favorite meal',
       icon: Sparkles,
       color: '#FF6B6B',
@@ -29,7 +31,7 @@ export default function Onboarding() {
       id: 2,
       title: 'Connect with Local Chefs',
       subtitle: 'Book private chefs, learn recipes, and get personalized cooking tips',
-      image: 'https://static.vecteezy.com/system/resources/previews/023/337/086/non_2x/ai-generative-professional-chef-cooking-in-kitchen-free-photo.jpg',
+      image: IMAGES.CHEF_COOKING,
       description: 'Get exclusive access to chef secrets and cooking techniques',
       icon: ChefHat,
       color: '#4ECDC4',
@@ -43,7 +45,7 @@ export default function Onboarding() {
       id: 3,
       title: 'Smart Food Shopping',
       subtitle: 'Budget-friendly meals, grocery lists, and meal planning made easy',
-      image: 'https://static.vecteezy.com/system/resources/previews/023/337/088/non_2x/ai-generative-fresh-vegetables-and-fruits-in-shopping-basket-free-photo.jpg',
+      image: IMAGES.SHOPPING_BASKET,
       description: 'Save money while eating well with our intelligent recommendations',
       icon: ShoppingBag,
       color: '#45B7D1',
@@ -57,7 +59,7 @@ export default function Onboarding() {
       id: 4,
       title: 'World\'s Best Food App',
       subtitle: 'Not just ordering food - your complete culinary companion',
-      image: 'https://static.vecteezy.com/system/resources/previews/023/337/087/non_2x/ai-generative-variety-of-international-cuisine-dishes-free-photo.jpg',
+      image: IMAGES.INTERNATIONAL_CUISINE,
       description: 'Join millions of food lovers in the ultimate food discovery experience',
       icon: Utensils,
       color: '#32CD32',
@@ -102,7 +104,7 @@ export default function Onboarding() {
     <SafeAreaView style={styles.container}>
       {/* Logo Header */}
       <View style={styles.logoHeader}>
-        <CustomLogo size="large" color="#006400" />
+        <CustomLogo size="large" color="#006400" showImage={true} />
         <Text style={styles.appTagline}>Your Food Explorer</Text>
       </View>
 
@@ -129,7 +131,11 @@ export default function Onboarding() {
       {/* Content */}
       <View style={styles.content}>
         <View style={styles.imageContainer}>
-          <Image source={{ uri: currentOnboarding.image }} style={styles.image} />
+          <ImageWithFallback 
+            source={currentOnboarding.image} 
+            style={styles.image}
+            fallback={IMAGES.DELICIOUS_FOOD_TABLE}
+          />
           <View style={[styles.iconOverlay, { backgroundColor: currentOnboarding.color }]}>
             <IconComponent size={28} color="#FFFFFF" />
           </View>
