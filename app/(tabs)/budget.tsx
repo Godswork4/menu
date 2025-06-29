@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { DollarSign, TrendingUp, TrendingDown, Plus, Target, Calendar, Lightbulb, ChartBar as BarChart3, PieChart, CreditCard, Clock } from 'lucide-react-native';
+import { DollarSign, TrendingUp, TrendingDown, Plus, Target, Calendar, Lightbulb, ChartBar as BarChart3, ChartPie as PieChart, CreditCard, Clock } from 'lucide-react-native';
 import { router } from 'expo-router';
 
 export default function Budget() {
