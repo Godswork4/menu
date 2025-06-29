@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { ArrowLeft, MapPin, Plus, Edit3, Trash2, Home, Briefcase, MapPinOff, Check } from 'lucide-react-native';
+import { ArrowLeft, MapPin, Plus, CreditCard as Edit3, Trash2, Chrome as Home, Briefcase, MapPinOff, Check } from 'lucide-react-native';
 import CustomLogo from '@/components/CustomLogo';
 
 interface Address {
