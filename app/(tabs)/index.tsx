@@ -1,13 +1,11 @@
 import React, { useState, useRef } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Animated, PanResponder, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Animated, PanResponder, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MapPin, Search, Star, Clock, User, Wifi, ShoppingBag, ChefHat, X, Heart, ChevronLeft, ChevronRight } from 'lucide-react-native';
+import { MapPin, Search, Star, Clock, User, Bell, Wifi, ShoppingBag, ChefHat, X, Heart, ChevronLeft, ChevronRight } from 'lucide-react-native';
 import { router } from 'expo-router';
 import CustomLogo from '@/components/CustomLogo';
 import AIAssistant from '@/components/AIAssistant';
 import { useAuth } from '@/contexts/AuthContext';
-import ImageWithFallback from '@/components/ImageWithFallback';
-import { IMAGES } from '@/constants/Images';
 
 const { width } = Dimensions.get('window');
 
@@ -45,7 +43,7 @@ export default function Home() {
       price: 4500,
       originalPrice: 5500,
       rating: 4.8,
-      image: 'https://as2.ftcdn.net/v2/jpg/02/94/65/23/1000_F_294652398_YrD7lqbHsJg2f4Q8RNAuJiTVcQNOUXZK.jpg',
+      image: 'https://as1.ftcdn.net/v2/jpg/02/94/52/96/1000_F_294529693_mzhg8TKjQJGkzCMCdElmjXRjmUaOaWoD.jpg',
       badge: 'Chef Special',
       cookTime: '20 min',
       description: 'Authentic Nigerian jollof rice with premium spices, grilled chicken, and fried plantain',
@@ -57,7 +55,7 @@ export default function Home() {
       price: 3800,
       originalPrice: 4800,
       rating: 4.9,
-      image: 'https://as1.ftcdn.net/v2/jpg/03/45/67/12/1000_F_345671234_AbCdEfGhIjKlMnOpQrStUvWxYz123456.jpg',
+      image: 'https://as2.ftcdn.net/v2/jpg/03/45/67/89/1000_F_345678912_AbCdEfGhIjKlMnOpQrStUvWxYz123456.jpg',
       badge: 'Traditional',
       cookTime: '25 min',
       description: 'Traditional Yoruba delicacy with smooth amala and nutritious ewedu soup',
@@ -69,7 +67,7 @@ export default function Home() {
       price: 5200,
       originalPrice: 6500,
       rating: 4.7,
-      image: 'https://as2.ftcdn.net/v2/jpg/04/12/34/56/1000_F_412345678_ZaBcDeFgHiJkLmNoPqRsTuVwXyZ987654.jpg',
+      image: 'https://as1.ftcdn.net/v2/jpg/04/56/78/90/1000_F_456789012_BcDeFgHiJkLmNoPqRsTuVwXyZ234567.jpg',
       badge: 'Popular',
       cookTime: '30 min',
       description: 'Smooth pounded yam served with rich egusi soup and assorted meat',
@@ -81,7 +79,7 @@ export default function Home() {
       price: 3200,
       originalPrice: 4200,
       rating: 4.9,
-      image: 'https://as1.ftcdn.net/v2/jpg/05/67/89/01/1000_F_567890123_QwErTyUiOpAsDfGhJkLzXcVbNm456789.jpg',
+      image: 'https://as2.ftcdn.net/v2/jpg/05/67/89/01/1000_F_567890123_CdEfGhIjKlMnOpQrStUvWxYz345678.jpg',
       badge: 'Spicy',
       cookTime: '25 min',
       description: 'Spicy Nigerian pepper soup with fresh catfish and aromatic spices',
@@ -93,7 +91,7 @@ export default function Home() {
       price: 6500,
       originalPrice: 8000,
       rating: 4.8,
-      image: 'https://as2.ftcdn.net/v2/jpg/06/78/90/12/1000_F_678901234_AzXcVbNmQwErTyUiOpLkJhGfDsA123456.jpg',
+      image: 'https://as1.ftcdn.net/v2/jpg/06/78/90/12/1000_F_678901234_DeFgHiJkLmNoPqRsTuVwXyZ456789.jpg',
       badge: 'Grilled',
       cookTime: '15 min',
       description: 'Grilled spiced beef skewers with traditional suya spice blend',
@@ -106,7 +104,7 @@ export default function Home() {
       name: 'Jollof Rice Bowl',
       description: 'Nigerian jollof rice with chicken and plantain',
       calories: '580 cal',
-      image: 'https://as2.ftcdn.net/v2/jpg/02/94/65/23/1000_F_294652398_YrD7lqbHsJg2f4Q8RNAuJiTVcQNOUXZK.jpg',
+      image: 'https://as1.ftcdn.net/v2/jpg/02/94/52/96/1000_F_294529693_mzhg8TKjQJGkzCMCdElmjXRjmUaOaWoD.jpg',
       price: 4500,
       rating: 4.8,
       restaurant: 'Lagos Kitchen',
@@ -117,7 +115,7 @@ export default function Home() {
       name: 'Pepper Soup',
       description: 'Spicy Nigerian pepper soup with fish',
       calories: '320 cal',
-      image: 'https://as1.ftcdn.net/v2/jpg/05/67/89/01/1000_F_567890123_QwErTyUiOpAsDfGhJkLzXcVbNm456789.jpg',
+      image: 'https://as2.ftcdn.net/v2/jpg/05/67/89/01/1000_F_567890123_CdEfGhIjKlMnOpQrStUvWxYz345678.jpg',
       price: 3200,
       rating: 4.9,
       restaurant: 'Traditional Taste',
@@ -128,7 +126,7 @@ export default function Home() {
       name: 'Suya Platter',
       description: 'Grilled spiced beef with onions and tomatoes',
       calories: '450 cal',
-      image: 'https://as2.ftcdn.net/v2/jpg/06/78/90/12/1000_F_678901234_AzXcVbNmQwErTyUiOpLkJhGfDsA123456.jpg',
+      image: 'https://as1.ftcdn.net/v2/jpg/06/78/90/12/1000_F_678901234_DeFgHiJkLmNoPqRsTuVwXyZ456789.jpg',
       price: 6500,
       rating: 4.7,
       restaurant: 'Suya Spot',
@@ -149,7 +147,7 @@ export default function Home() {
           restaurant: 'Lagos Kitchen',
           price: 4500,
           rating: 4.8,
-          image: 'https://as2.ftcdn.net/v2/jpg/02/94/65/23/1000_F_294652398_YrD7lqbHsJg2f4Q8RNAuJiTVcQNOUXZK.jpg',
+          image: 'https://as1.ftcdn.net/v2/jpg/02/94/52/96/1000_F_294529693_mzhg8TKjQJGkzCMCdElmjXRjmUaOaWoD.jpg',
           cookTime: '20 min',
           hasRecipe: true,
         },
@@ -159,7 +157,7 @@ export default function Home() {
           restaurant: 'Traditional Taste',
           price: 5200,
           rating: 4.9,
-          image: 'https://as2.ftcdn.net/v2/jpg/04/12/34/56/1000_F_412345678_ZaBcDeFgHiJkLmNoPqRsTuVwXyZ987654.jpg',
+          image: 'https://as1.ftcdn.net/v2/jpg/04/56/78/90/1000_F_456789012_BcDeFgHiJkLmNoPqRsTuVwXyZ234567.jpg',
           cookTime: '30 min',
           hasRecipe: true,
         },
@@ -169,7 +167,7 @@ export default function Home() {
           restaurant: 'Asian Fusion',
           price: 3800,
           rating: 4.6,
-          image: 'https://as1.ftcdn.net/v2/jpg/03/21/43/65/1000_F_321436587_BnMkLpQrStUvWxYzAbCdEfGhIjKl9876.jpg',
+          image: 'https://as2.ftcdn.net/v2/jpg/07/89/01/23/1000_F_789012345_EfGhIjKlMnOpQrStUvWxYz567890.jpg',
           cookTime: '15 min',
           hasRecipe: true,
         },
@@ -179,7 +177,7 @@ export default function Home() {
           restaurant: 'Traditional Taste',
           price: 3200,
           rating: 4.9,
-          image: 'https://as1.ftcdn.net/v2/jpg/05/67/89/01/1000_F_567890123_QwErTyUiOpAsDfGhJkLzXcVbNm456789.jpg',
+          image: 'https://as2.ftcdn.net/v2/jpg/05/67/89/01/1000_F_567890123_CdEfGhIjKlMnOpQrStUvWxYz345678.jpg',
           cookTime: '25 min',
           hasRecipe: true,
         },
@@ -189,7 +187,7 @@ export default function Home() {
           restaurant: 'Yoruba Kitchen',
           price: 3800,
           rating: 4.8,
-          image: 'https://as1.ftcdn.net/v2/jpg/03/45/67/12/1000_F_345671234_AbCdEfGhIjKlMnOpQrStUvWxYz123456.jpg',
+          image: 'https://as2.ftcdn.net/v2/jpg/03/45/67/89/1000_F_345678912_AbCdEfGhIjKlMnOpQrStUvWxYz123456.jpg',
           cookTime: '25 min',
           hasRecipe: true,
         },
@@ -199,7 +197,7 @@ export default function Home() {
           restaurant: 'Suya Spot',
           price: 6500,
           rating: 4.7,
-          image: 'https://as2.ftcdn.net/v2/jpg/06/78/90/12/1000_F_678901234_AzXcVbNmQwErTyUiOpLkJhGfDsA123456.jpg',
+          image: 'https://as1.ftcdn.net/v2/jpg/06/78/90/12/1000_F_678901234_DeFgHiJkLmNoPqRsTuVwXyZ456789.jpg',
           cookTime: '15 min',
           hasRecipe: true,
         },
@@ -216,7 +214,7 @@ export default function Home() {
           restaurant: 'Local Refreshments',
           price: 1200,
           rating: 4.6,
-          image: 'https://as2.ftcdn.net/v2/jpg/07/89/01/23/1000_F_789012345_CdEfGhIjKlMnOpQrStUvWxYzAbCdEfGh.jpg',
+          image: 'https://as1.ftcdn.net/v2/jpg/08/90/12/34/1000_F_890123456_FgHiJkLmNoPqRsTuVwXyZ678901.jpg',
           cookTime: '10 min',
           hasRecipe: true,
         },
@@ -226,7 +224,7 @@ export default function Home() {
           restaurant: 'Cocktail Corner',
           price: 2200,
           rating: 4.5,
-          image: 'https://as1.ftcdn.net/v2/jpg/08/90/12/34/1000_F_890123456_FgHiJkLmNoPqRsTuVwXyZaBcDeFgHiJk.jpg',
+          image: 'https://as2.ftcdn.net/v2/jpg/09/01/23/45/1000_F_901234567_GhIjKlMnOpQrStUvWxYz789012.jpg',
           cookTime: '7 min',
           hasRecipe: true,
         },
@@ -236,7 +234,7 @@ export default function Home() {
           restaurant: 'Natural Drinks',
           price: 1800,
           rating: 4.9,
-          image: 'https://as2.ftcdn.net/v2/jpg/09/01/23/45/1000_F_901234567_IjKlMnOpQrStUvWxYzAbCdEfGhIjKlMn.jpg',
+          image: 'https://as1.ftcdn.net/v2/jpg/10/12/34/56/1000_F_101234567_HiJkLmNoPqRsTuVwXyZ890123.jpg',
           cookTime: '12 min',
           hasRecipe: true,
         },
@@ -246,7 +244,7 @@ export default function Home() {
           restaurant: 'Traditional Beverages',
           price: 1000,
           rating: 4.6,
-          image: 'https://as1.ftcdn.net/v2/jpg/01/12/23/45/1000_F_112234567_LmNoPqRsTuVwXyZaBcDeFgHiJkLmNoPq.jpg',
+          image: 'https://as2.ftcdn.net/v2/jpg/11/23/45/67/1000_F_112345678_IjKlMnOpQrStUvWxYz901234.jpg',
           cookTime: '15 min',
           hasRecipe: true,
         },
@@ -256,7 +254,7 @@ export default function Home() {
           restaurant: 'Juice Bar',
           price: 1500,
           rating: 4.8,
-          image: 'https://as2.ftcdn.net/v2/jpg/02/23/45/67/1000_F_223456789_OpQrStUvWxYzAbCdEfGhIjKlMnOpQrSt.jpg',
+          image: 'https://as1.ftcdn.net/v2/jpg/12/34/56/78/1000_F_123456789_JkLmNoPqRsTuVwXyZ012345.jpg',
           cookTime: '5 min',
           hasRecipe: false,
         },
@@ -266,7 +264,7 @@ export default function Home() {
           restaurant: 'Healthy Drinks',
           price: 2800,
           rating: 4.7,
-          image: 'https://as1.ftcdn.net/v2/jpg/03/34/56/78/1000_F_334567890_RsTuVwXyZaBcDeFgHiJkLmNoPqRsTuVw.jpg',
+          image: 'https://as2.ftcdn.net/v2/jpg/13/45/67/89/1000_F_134567890_KlMnOpQrStUvWxYz123456.jpg',
           cookTime: '8 min',
           hasRecipe: true,
         },
@@ -283,7 +281,7 @@ export default function Home() {
           restaurant: 'Garden Fresh',
           price: 2500,
           rating: 4.9,
-          image: 'https://as2.ftcdn.net/v2/jpg/04/45/67/89/1000_F_445678901_UvWxYzAbCdEfGhIjKlMnOpQrStUvWxYz.jpg',
+          image: 'https://as1.ftcdn.net/v2/jpg/14/56/78/90/1000_F_145678901_LmNoPqRsTuVwXyZ234567.jpg',
           cookTime: '10 min',
           hasRecipe: false,
         },
@@ -293,7 +291,7 @@ export default function Home() {
           restaurant: 'Tropical Fruits',
           price: 1800,
           rating: 4.7,
-          image: 'https://as1.ftcdn.net/v2/jpg/05/56/78/90/1000_F_556789012_XyZaBcDeFgHiJkLmNoPqRsTuVwXyZaBc.jpg',
+          image: 'https://as2.ftcdn.net/v2/jpg/15/67/89/01/1000_F_156789012_MnOpQrStUvWxYz345678.jpg',
           cookTime: '5 min',
           hasRecipe: false,
         },
@@ -303,7 +301,7 @@ export default function Home() {
           restaurant: 'Fresh Market',
           price: 2000,
           rating: 4.8,
-          image: 'https://as2.ftcdn.net/v2/jpg/06/67/89/01/1000_F_667890123_aBcDeFgHiJkLmNoPqRsTuVwXyZaBcDeF.jpg',
+          image: 'https://as1.ftcdn.net/v2/jpg/16/78/90/12/1000_F_167890123_NoPqRsTuVwXyZ456789.jpg',
           cookTime: '3 min',
           hasRecipe: false,
         },
@@ -313,7 +311,7 @@ export default function Home() {
           restaurant: 'Berry Delights',
           price: 3200,
           rating: 4.6,
-          image: 'https://as1.ftcdn.net/v2/jpg/07/78/90/12/1000_F_778901234_dEfGhIjKlMnOpQrStUvWxYzAbCdEfGhI.jpg',
+          image: 'https://as2.ftcdn.net/v2/jpg/17/89/01/23/1000_F_178901234_OpQrStUvWxYz567890.jpg',
           cookTime: '8 min',
           hasRecipe: false,
         },
@@ -323,7 +321,7 @@ export default function Home() {
           restaurant: 'Tropical Paradise',
           price: 2200,
           rating: 4.8,
-          image: 'https://as2.ftcdn.net/v2/jpg/08/89/01/23/1000_F_889012345_gHiJkLmNoPqRsTuVwXyZaBcDeFgHiJkL.jpg',
+          image: 'https://as1.ftcdn.net/v2/jpg/18/90/12/34/1000_F_189012345_PqRsTuVwXyZ678901.jpg',
           cookTime: '5 min',
           hasRecipe: false,
         },
@@ -333,7 +331,7 @@ export default function Home() {
           restaurant: 'Fresh Coconuts',
           price: 1500,
           rating: 4.7,
-          image: 'https://as1.ftcdn.net/v2/jpg/09/90/12/34/1000_F_990123456_jKlMnOpQrStUvWxYzAbCdEfGhIjKlMnO.jpg',
+          image: 'https://as2.ftcdn.net/v2/jpg/19/01/23/45/1000_F_190123456_QrStUvWxYz789012.jpg',
           cookTime: '2 min',
           hasRecipe: false,
         },
@@ -350,7 +348,7 @@ export default function Home() {
           restaurant: 'Nigerian Bakery',
           price: 1200,
           rating: 4.8,
-          image: 'https://as2.ftcdn.net/v2/jpg/01/01/23/45/1000_F_101234567_mNoPqRsTuVwXyZaBcDeFgHiJkLmNoPqR.jpg',
+          image: 'https://as1.ftcdn.net/v2/jpg/20/12/34/56/1000_F_201234567_RsTuVwXyZ890123.jpg',
           cookTime: 'Fresh daily',
           hasRecipe: true,
         },
@@ -360,7 +358,7 @@ export default function Home() {
           restaurant: 'Golden Crust',
           price: 1500,
           rating: 4.7,
-          image: 'https://as1.ftcdn.net/v2/jpg/02/12/34/56/1000_F_212345678_pQrStUvWxYzAbCdEfGhIjKlMnOpQrStU.jpg',
+          image: 'https://as2.ftcdn.net/v2/jpg/21/23/45/67/1000_F_212345678_StUvWxYz901234.jpg',
           cookTime: 'Fresh daily',
           hasRecipe: true,
         },
@@ -370,7 +368,7 @@ export default function Home() {
           restaurant: 'Sweet Treats',
           price: 800,
           rating: 4.6,
-          image: 'https://as2.ftcdn.net/v2/jpg/03/23/45/67/1000_F_323456789_sTuVwXyZaBcDeFgHiJkLmNoPqRsTuVwX.jpg',
+          image: 'https://as1.ftcdn.net/v2/jpg/22/34/56/78/1000_F_223456789_TuVwXyZ012345.jpg',
           cookTime: '15 min',
           hasRecipe: true,
         },
@@ -380,7 +378,7 @@ export default function Home() {
           restaurant: 'Local Delights',
           price: 600,
           rating: 4.9,
-          image: 'https://as1.ftcdn.net/v2/jpg/04/34/56/78/1000_F_434567890_vWxYzAbCdEfGhIjKlMnOpQrStUvWxYzA.jpg',
+          image: 'https://as2.ftcdn.net/v2/jpg/23/45/67/89/1000_F_234567890_UvWxYz123456.jpg',
           cookTime: '20 min',
           hasRecipe: true,
         },
@@ -390,7 +388,7 @@ export default function Home() {
           restaurant: 'Sweet Circle',
           price: 900,
           rating: 4.5,
-          image: 'https://as2.ftcdn.net/v2/jpg/05/45/67/89/1000_F_545678901_yZaBcDeFgHiJkLmNoPqRsTuVwXyZaBcD.jpg',
+          image: 'https://as1.ftcdn.net/v2/jpg/24/56/78/90/1000_F_245678901_VwXyZ234567.jpg',
           cookTime: 'Fresh daily',
           hasRecipe: true,
         },
@@ -400,7 +398,7 @@ export default function Home() {
           restaurant: 'Bakery Corner',
           price: 700,
           rating: 4.6,
-          image: 'https://as1.ftcdn.net/v2/jpg/06/56/78/90/1000_F_656789012_BcDeFgHiJkLmNoPqRsTuVwXyZaBcDeFg.jpg',
+          image: 'https://as2.ftcdn.net/v2/jpg/25/67/89/01/1000_F_256789012_WxYz345678.jpg',
           cookTime: 'Fresh daily',
           hasRecipe: true,
         },
@@ -417,7 +415,7 @@ export default function Home() {
           restaurant: 'Green House',
           price: 2800,
           rating: 4.6,
-          image: 'https://as2.ftcdn.net/v2/jpg/07/67/89/01/1000_F_767890123_eFgHiJkLmNoPqRsTuVwXyZaBcDeFgHiJ.jpg',
+          image: 'https://as1.ftcdn.net/v2/jpg/26/78/90/12/1000_F_267890123_XyZ456789.jpg',
           cookTime: '8 min',
           hasRecipe: true,
         },
@@ -427,7 +425,7 @@ export default function Home() {
           restaurant: 'Salad Station',
           price: 3500,
           rating: 4.7,
-          image: 'https://as1.ftcdn.net/v2/jpg/08/78/90/12/1000_F_878901234_hIjKlMnOpQrStUvWxYzAbCdEfGhIjKlM.jpg',
+          image: 'https://as2.ftcdn.net/v2/jpg/27/89/01/23/1000_F_278901234_YzA567890.jpg',
           cookTime: '10 min',
           hasRecipe: true,
         },
@@ -437,7 +435,7 @@ export default function Home() {
           restaurant: 'Tokyo Raw',
           price: 8500,
           rating: 4.9,
-          image: 'https://as2.ftcdn.net/v2/jpg/09/89/01/23/1000_F_989012345_kLmNoPqRsTuVwXyZaBcDeFgHiJkLmNoP.jpg',
+          image: 'https://as1.ftcdn.net/v2/jpg/28/90/12/34/1000_F_289012345_ZaB678901.jpg',
           cookTime: '20 min',
           hasRecipe: false,
         },
@@ -447,7 +445,7 @@ export default function Home() {
           restaurant: 'Healthy Wraps',
           price: 2200,
           rating: 4.5,
-          image: 'https://as1.ftcdn.net/v2/jpg/01/90/12/34/1000_F_190123456_nOpQrStUvWxYzAbCdEfGhIjKlMnOpQrS.jpg',
+          image: 'https://as2.ftcdn.net/v2/jpg/29/01/23/45/1000_F_290123456_AbC789012.jpg',
           cookTime: '12 min',
           hasRecipe: true,
         },
@@ -457,7 +455,7 @@ export default function Home() {
           restaurant: 'Fresh Greens',
           price: 1800,
           rating: 4.4,
-          image: 'https://as2.ftcdn.net/v2/jpg/02/01/23/45/1000_F_201234567_qRsTuVwXyZaBcDeFgHiJkLmNoPqRsTuV.jpg',
+          image: 'https://as1.ftcdn.net/v2/jpg/30/12/34/56/1000_F_301234567_BcD890123.jpg',
           cookTime: '5 min',
           hasRecipe: true,
         },
@@ -467,7 +465,7 @@ export default function Home() {
           restaurant: 'Healthy Bites',
           price: 3800,
           rating: 4.8,
-          image: 'https://as1.ftcdn.net/v2/jpg/03/12/34/56/1000_F_312345678_tUvWxYzAbCdEfGhIjKlMnOpQrStUvWxY.jpg',
+          image: 'https://as2.ftcdn.net/v2/jpg/31/23/45/67/1000_F_312345678_CdE901234.jpg',
           cookTime: '8 min',
           hasRecipe: true,
         },
@@ -732,11 +730,7 @@ export default function Home() {
                 style={styles.slideCard} 
                 onPress={() => handleFoodItemPress(item.id)}
               >
-                <ImageWithFallback 
-                  source={item.image} 
-                  style={styles.slideImage}
-                  fallback={IMAGES.DEFAULT_FOOD}
-                />
+                <Image source={{ uri: item.image }} style={styles.slideImage} />
                 <View style={styles.slideBadge}>
                   <Text style={styles.slideBadgeText}>{item.badge}</Text>
                 </View>
@@ -826,11 +820,7 @@ export default function Home() {
                 style={styles.foodGridItem}
                 onPress={() => handleFoodItemPress(item.id)}
               >
-                <ImageWithFallback 
-                  source={item.image} 
-                  style={styles.foodGridImage}
-                  fallback={IMAGES.DEFAULT_FOOD}
-                />
+                <Image source={{ uri: item.image }} style={styles.foodGridImage} />
                 <View style={styles.foodGridInfo}>
                   <Text style={styles.foodGridName}>{item.name}</Text>
                   <Text style={styles.foodGridRestaurant}>{item.restaurant}</Text>
@@ -916,11 +906,7 @@ export default function Home() {
                   style={styles.fullWidthFoodCard}
                   onPress={() => handleFoodItemPress(item.id)}
                 >
-                  <ImageWithFallback 
-                    source={item.image} 
-                    style={styles.fullWidthFoodImage}
-                    fallback={IMAGES.DEFAULT_FOOD}
-                  />
+                  <Image source={{ uri: item.image }} style={styles.fullWidthFoodImage} />
                   <View style={styles.fullWidthOverlay}>
                     <View style={styles.fullWidthInfo}>
                       <Text style={styles.fullWidthName}>{item.name}</Text>

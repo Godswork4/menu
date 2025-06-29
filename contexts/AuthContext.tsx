@@ -111,6 +111,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(true);
       console.log('📝 AuthProvider: Starting sign up process for:', email, 'with role:', role);
       
+      // First check if user already exists
+      const { data: existingUser } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (existingUser.user) {
+        console.log('⚠️ AuthProvider: User already exists, signing them in instead');
+        return { error: null };
+      }
+
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -119,6 +130,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             full_name: fullName,
             role: role,
           },
+          emailRedirectTo: undefined, // Disable email confirmation for now
         },
       });
 
