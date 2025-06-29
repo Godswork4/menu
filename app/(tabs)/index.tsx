@@ -1,11 +1,13 @@
 import React, { useState, useRef } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Animated, PanResponder, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Animated, PanResponder, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MapPin, Search, Star, Clock, User, Bell, Wifi, ShoppingBag, ChefHat, X, Heart, ChevronLeft, ChevronRight } from 'lucide-react-native';
+import { MapPin, Search, Star, Clock, User, Wifi, ShoppingBag, ChefHat, X, Heart, ChevronLeft, ChevronRight } from 'lucide-react-native';
 import { router } from 'expo-router';
 import CustomLogo from '@/components/CustomLogo';
 import AIAssistant from '@/components/AIAssistant';
 import { useAuth } from '@/contexts/AuthContext';
+import ImageWithFallback from '@/components/ImageWithFallback';
+import { IMAGES } from '@/constants/Images';
 
 const { width } = Dimensions.get('window');
 
@@ -730,7 +732,11 @@ export default function Home() {
                 style={styles.slideCard} 
                 onPress={() => handleFoodItemPress(item.id)}
               >
-                <Image source={{ uri: item.image }} style={styles.slideImage} />
+                <ImageWithFallback 
+                  source={item.image} 
+                  style={styles.slideImage}
+                  fallback={IMAGES.DEFAULT_FOOD}
+                />
                 <View style={styles.slideBadge}>
                   <Text style={styles.slideBadgeText}>{item.badge}</Text>
                 </View>
@@ -820,7 +826,11 @@ export default function Home() {
                 style={styles.foodGridItem}
                 onPress={() => handleFoodItemPress(item.id)}
               >
-                <Image source={{ uri: item.image }} style={styles.foodGridImage} />
+                <ImageWithFallback 
+                  source={item.image} 
+                  style={styles.foodGridImage}
+                  fallback={IMAGES.DEFAULT_FOOD}
+                />
                 <View style={styles.foodGridInfo}>
                   <Text style={styles.foodGridName}>{item.name}</Text>
                   <Text style={styles.foodGridRestaurant}>{item.restaurant}</Text>
@@ -906,7 +916,11 @@ export default function Home() {
                   style={styles.fullWidthFoodCard}
                   onPress={() => handleFoodItemPress(item.id)}
                 >
-                  <Image source={{ uri: item.image }} style={styles.fullWidthFoodImage} />
+                  <ImageWithFallback 
+                    source={item.image} 
+                    style={styles.fullWidthFoodImage}
+                    fallback={IMAGES.DEFAULT_FOOD}
+                  />
                   <View style={styles.fullWidthOverlay}>
                     <View style={styles.fullWidthInfo}>
                       <Text style={styles.fullWidthName}>{item.name}</Text>
