@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { ArrowLeft, User, Bell, MapPin, CreditCard, Shield, Globe, Moon, Smartphone, HelpCircle, Info, LogOut, ChevronRight } from 'lucide-react-native';
+import { ArrowLeft, User, Bell, MapPin, CreditCard, Shield, Globe, Moon, Smartphone, CircleHelp as HelpCircle, Info, LogOut, ChevronRight } from 'lucide-react-native';
 import CustomLogo from '@/components/CustomLogo';
 import { useAuth } from '@/contexts/AuthContext';
 

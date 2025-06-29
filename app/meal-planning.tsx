@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, TextInput, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { ArrowLeft, Calendar, Plus, Clock, ChefHat, Star, MapPin, Edit3, Trash2, Bell } from 'lucide-react-native';
+import { ArrowLeft, Calendar, Plus, Clock, ChefHat, Star, MapPin, CreditCard as Edit3, Trash2, Bell } from 'lucide-react-native';
 import CustomLogo from '@/components/CustomLogo';
 import ImageWithFallback from '@/components/ImageWithFallback';
 import { IMAGES } from '@/constants/Images';
