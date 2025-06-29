@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Modal, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { ArrowLeft, Plus, Edit3, Trash2, Target, Calendar, TrendingUp, TrendingDown, DollarSign, PieChart, BarChart3, Filter } from 'lucide-react-native';
+import { ArrowLeft, Plus, CreditCard as Edit3, Trash2, Target, Calendar, TrendingUp, TrendingDown, DollarSign, ChartPie as PieChart, ChartBar as BarChart3, Filter } from 'lucide-react-native';
 import CustomLogo from '@/components/CustomLogo';
 import { useAuth } from '@/contexts/AuthContext';
 
