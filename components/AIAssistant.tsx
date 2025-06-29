@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal, ScrollView, TextInput, Animated, Easing, Image } from 'react-native';
-import { X, Send, ChefHat, Heart, DollarSign, Lightbulb } from 'lucide-react-native';
+import React, { useState, useRef, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Modal, ScrollView, TextInput, Animated, Easing } from 'react-native';
+import { MessageCircle, X, Send, ChefHat, Heart, DollarSign, Lightbulb } from 'lucide-react-native';
+import CustomLogo from '@/components/CustomLogo';
 
 interface Message {
   id: number;
@@ -22,44 +23,12 @@ export default function AIAssistant() {
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   
-  // Animation for the floating button
+  // Animation values
   const pulseAnim = useRef(new Animated.Value(1)).current;
-  const rotateAnim = useRef(new Animated.Value(0)).current;
-  
-  useEffect(() => {
-    // Start pulse animation
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, {
-          toValue: 1.1,
-          duration: 1000,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulseAnim, {
-          toValue: 1,
-          duration: 1000,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        })
-      ])
-    ).start();
-    
-    // Start rotation animation
-    Animated.loop(
-      Animated.timing(rotateAnim, {
-        toValue: 1,
-        duration: 10000,
-        easing: Easing.linear,
-        useNativeDriver: true,
-      })
-    ).start();
-  }, []);
-  
-  const rotate = rotateAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '360deg']
-  });
+  const typingDot1 = useRef(new Animated.Value(0.4)).current;
+  const typingDot2 = useRef(new Animated.Value(0.7)).current;
+  const typingDot3 = useRef(new Animated.Value(1)).current;
+  const scrollViewRef = useRef<ScrollView>(null);
 
   const quickActions = [
     { id: 1, text: "Find healthy recipes", icon: Heart, color: "#E91E63" },
@@ -67,6 +36,84 @@ export default function AIAssistant() {
     { id: 3, text: "Cooking tips", icon: ChefHat, color: "#FF9800" },
     { id: 4, text: "Nutrition advice", icon: Lightbulb, color: "#2196F3" },
   ];
+
+  // Start pulse animation for the floating button
+  useEffect(() => {
+    const pulsate = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.1,
+          duration: 1000,
+          easing: Easing.ease,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 1000,
+          easing: Easing.ease,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    pulsate.start();
+
+    return () => pulsate.stop();
+  }, []);
+
+  // Animate typing dots
+  useEffect(() => {
+    if (isTyping) {
+      const animateDots = Animated.loop(
+        Animated.sequence([
+          // First dot
+          Animated.timing(typingDot1, {
+            toValue: 1,
+            duration: 400,
+            useNativeDriver: true,
+          }),
+          Animated.timing(typingDot1, {
+            toValue: 0.4,
+            duration: 400,
+            useNativeDriver: true,
+          }),
+          // Second dot
+          Animated.timing(typingDot2, {
+            toValue: 1,
+            duration: 400,
+            useNativeDriver: true,
+          }),
+          Animated.timing(typingDot2, {
+            toValue: 0.7,
+            duration: 400,
+            useNativeDriver: true,
+          }),
+          // Third dot
+          Animated.timing(typingDot3, {
+            toValue: 1,
+            duration: 400,
+            useNativeDriver: true,
+          }),
+          Animated.timing(typingDot3, {
+            toValue: 0.4,
+            duration: 400,
+            useNativeDriver: true,
+          }),
+        ])
+      );
+      animateDots.start();
+
+      return () => animateDots.stop();
+    }
+  }, [isTyping]);
+
+  // Scroll to bottom when new messages arrive
+  useEffect(() => {
+    if (scrollViewRef.current) {
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    }
+  }, [messages, isTyping]);
 
   const getAIResponse = (userMessage: string): string => {
     const message = userMessage.toLowerCase();
@@ -138,34 +185,20 @@ export default function AIAssistant() {
   return (
     <>
       {/* Floating AI Button */}
-      <Animated.View
-        style={[
-          styles.floatingButtonContainer,
-          {
-            transform: [
-              { scale: pulseAnim },
-            ]
-          }
-        ]}
-      >
+      <Animated.View style={{
+        transform: [{ scale: pulseAnim }],
+        position: 'absolute',
+        bottom: 90,
+        right: 20,
+        zIndex: 1000,
+      }}>
         <TouchableOpacity
           style={styles.floatingButton}
           onPress={() => setIsVisible(true)}
+          activeOpacity={0.8}
         >
-          <Animated.View
-            style={[
-              styles.glowEffect,
-              {
-                transform: [{ rotate }]
-              }
-            ]}
-          />
-          <View style={styles.iconContainer}>
-            <Image 
-              source={require('../assets/images/menulogo copy.webp')} 
-              style={styles.menuLogo} 
-              resizeMode="contain"
-            />
+          <View style={styles.logoContainer}>
+            <CustomLogo size="small" color="#FFFFFF" />
           </View>
         </TouchableOpacity>
       </Animated.View>
@@ -183,11 +216,7 @@ export default function AIAssistant() {
             <View style={styles.chatHeader}>
               <View style={styles.aiInfo}>
                 <View style={styles.aiAvatar}>
-                  <Image 
-                    source={require('../assets/images/menulogo copy.webp')} 
-                    style={styles.menuLogoSmall} 
-                    resizeMode="contain"
-                  />
+                  <CustomLogo size="small" color="#FFFFFF" />
                 </View>
                 <View>
                   <Text style={styles.aiName}>Menu AI Assistant</Text>
@@ -203,7 +232,12 @@ export default function AIAssistant() {
             </View>
 
             {/* Messages */}
-            <ScrollView style={styles.messagesContainer} showsVerticalScrollIndicator={false}>
+            <ScrollView 
+              ref={scrollViewRef}
+              style={styles.messagesContainer} 
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.messagesContent}
+            >
               {messages.map((message) => (
                 <View
                   key={message.id}
@@ -232,9 +266,9 @@ export default function AIAssistant() {
                 <View style={styles.typingIndicator}>
                   <View style={styles.typingBubble}>
                     <View style={styles.typingDots}>
-                      <View style={[styles.typingDot, styles.typingDot1]} />
-                      <View style={[styles.typingDot, styles.typingDot2]} />
-                      <View style={[styles.typingDot, styles.typingDot3]} />
+                      <Animated.View style={[styles.typingDot, { opacity: typingDot1 }]} />
+                      <Animated.View style={[styles.typingDot, { opacity: typingDot2 }]} />
+                      <Animated.View style={[styles.typingDot, { opacity: typingDot3 }]} />
                     </View>
                   </View>
                 </View>
@@ -291,17 +325,11 @@ export default function AIAssistant() {
 }
 
 const styles = StyleSheet.create({
-  floatingButtonContainer: {
-    position: 'absolute',
-    bottom: 90,
-    right: 20,
-    zIndex: 1000,
-  },
   floatingButton: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: '#32CD32',
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#006400',
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 8,
@@ -309,34 +337,10 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
-    position: 'relative',
-    overflow: 'hidden',
   },
-  glowEffect: {
-    position: 'absolute',
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: 'transparent',
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-    top: -30,
-    left: -30,
-  },
-  iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
+  logoContainer: {
     alignItems: 'center',
-  },
-  menuLogo: {
-    width: 40,
-    height: 40,
-  },
-  menuLogoSmall: {
-    width: 30,
-    height: 30,
+    justifyContent: 'center',
   },
   modalOverlay: {
     flex: 1,
@@ -368,7 +372,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#32CD32',
+    backgroundColor: '#006400',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -380,7 +384,7 @@ const styles = StyleSheet.create({
   aiStatus: {
     fontSize: 12,
     fontFamily: 'Inter-Regular',
-    color: '#32CD32',
+    color: '#006400',
   },
   closeButton: {
     padding: 8,
@@ -388,6 +392,8 @@ const styles = StyleSheet.create({
   messagesContainer: {
     flex: 1,
     paddingHorizontal: 20,
+  },
+  messagesContent: {
     paddingVertical: 15,
   },
   messageWrapper: {
@@ -406,7 +412,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
   },
   userMessage: {
-    backgroundColor: '#32CD32',
+    backgroundColor: '#006400',
     borderBottomRightRadius: 4,
   },
   aiMessage: {
@@ -443,16 +449,7 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#CCCCCC',
-  },
-  typingDot1: {
-    opacity: 0.4,
-  },
-  typingDot2: {
-    opacity: 0.7,
-  },
-  typingDot3: {
-    opacity: 1,
+    backgroundColor: '#006400',
   },
   quickActionsContainer: {
     paddingHorizontal: 20,
@@ -505,7 +502,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#32CD32',
+    backgroundColor: '#006400',
     justifyContent: 'center',
     alignItems: 'center',
   },

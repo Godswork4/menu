@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { ArrowLeft, Search, Plus, Minus, ShoppingCart, Filter, MapPin } from 'lucide-react-native';
+import AIAssistant from '@/components/AIAssistant';
 
 export default function Market() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -19,7 +20,7 @@ export default function Market() {
       name: 'Palm Oil (1L)',
       category: 'Oils',
       price: 3500,
-      image: 'https://images.shutterstock.com/image-photo/palm-oil-bottle-red-cooking-600nw-1234567890.jpg',
+      image: 'https://images.pexels.com/photos/5946083/pexels-photo-5946083.jpeg',
       description: 'Fresh red palm oil from local farms',
       unit: 'bottle',
       vendor: 'Mama Kemi',
@@ -30,7 +31,7 @@ export default function Market() {
       name: 'Fresh Fish (Tilapia)',
       category: 'Seafood',
       price: 2800,
-      image: 'https://images.shutterstock.com/image-photo/fresh-tilapia-fish-market-seafood-600nw-1345678912.jpg',
+      image: 'https://images.pexels.com/photos/2252584/pexels-photo-2252584.jpeg',
       description: 'Fresh tilapia fish, cleaned and ready',
       unit: 'kg',
       vendor: 'Fish Seller John',
@@ -41,7 +42,7 @@ export default function Market() {
       name: 'Crayfish (Ground)',
       category: 'Spices',
       price: 1500,
-      image: 'https://images.shutterstock.com/image-photo/ground-crayfish-powder-nigerian-spice-600nw-1456789123.jpg',
+      image: 'https://images.pexels.com/photos/6941042/pexels-photo-6941042.jpeg',
       description: 'Freshly ground crayfish for seasoning',
       unit: 'cup',
       vendor: 'Spice Mama',
@@ -52,7 +53,7 @@ export default function Market() {
       name: 'Local Rice (5kg)',
       category: 'Grains',
       price: 12000,
-      image: 'https://images.shutterstock.com/image-photo/local-rice-grains-nigerian-ofada-600nw-1567891234.jpg',
+      image: 'https://images.pexels.com/photos/4110251/pexels-photo-4110251.jpeg',
       description: 'Premium local Ofada rice',
       unit: 'bag',
       vendor: 'Rice Merchant',
@@ -63,7 +64,7 @@ export default function Market() {
       name: 'Beans (Brown)',
       category: 'Grains',
       price: 4500,
-      image: 'https://images.shutterstock.com/image-photo/brown-beans-nigerian-honey-beans-600nw-1678912345.jpg',
+      image: 'https://images.pexels.com/photos/6157049/pexels-photo-6157049.jpeg',
       description: 'Quality brown honey beans',
       unit: 'kg',
       vendor: 'Grain Seller',
@@ -74,7 +75,7 @@ export default function Market() {
       name: 'Stockfish',
       category: 'Proteins',
       price: 8500,
-      image: 'https://images.shutterstock.com/image-photo/dried-stockfish-cod-nigerian-ingredient-600nw-1789123456.jpg',
+      image: 'https://images.pexels.com/photos/8472647/pexels-photo-8472647.jpeg',
       description: 'Premium dried stockfish',
       unit: 'piece',
       vendor: 'Fish Vendor',
@@ -85,7 +86,7 @@ export default function Market() {
       name: 'Pepper (Scotch Bonnet)',
       category: 'Spices',
       price: 800,
-      image: 'https://images.shutterstock.com/image-photo/scotch-bonnet-peppers-hot-chili-600nw-1891234567.jpg',
+      image: 'https://images.pexels.com/photos/4197444/pexels-photo-4197444.jpeg',
       description: 'Fresh hot scotch bonnet peppers',
       unit: 'cup',
       vendor: 'Pepper Seller',
@@ -96,7 +97,7 @@ export default function Market() {
       name: 'Groundnut Oil (1L)',
       category: 'Oils',
       price: 2200,
-      image: 'https://images.shutterstock.com/image-photo/groundnut-oil-peanut-oil-bottle-600nw-1912345678.jpg',
+      image: 'https://images.pexels.com/photos/5946083/pexels-photo-5946083.jpeg',
       description: 'Pure groundnut oil, locally processed',
       unit: 'bottle',
       vendor: 'Oil Merchant',
@@ -107,7 +108,7 @@ export default function Market() {
       name: 'Dried Fish (Panla)',
       category: 'Seafood',
       price: 3200,
-      image: 'https://images.shutterstock.com/image-photo/dried-fish-panla-nigerian-preserved-600nw-1123456789.jpg',
+      image: 'https://images.pexels.com/photos/8472647/pexels-photo-8472647.jpeg',
       description: 'Smoked and dried panla fish',
       unit: 'piece',
       vendor: 'Dried Fish Seller',
@@ -118,7 +119,7 @@ export default function Market() {
       name: 'Locust Beans (Iru)',
       category: 'Spices',
       price: 600,
-      image: 'https://images.shutterstock.com/image-photo/locust-beans-iru-nigerian-seasoning-600nw-1234567891.jpg',
+      image: 'https://images.pexels.com/photos/6941042/pexels-photo-6941042.jpeg',
       description: 'Traditional locust beans seasoning',
       unit: 'wrap',
       vendor: 'Traditional Seller',
@@ -129,7 +130,7 @@ export default function Market() {
       name: 'Yam (Tuber)',
       category: 'Vegetables',
       price: 1800,
-      image: 'https://images.shutterstock.com/image-photo/yam-tuber-nigerian-staple-food-600nw-1345678912.jpg',
+      image: 'https://images.pexels.com/photos/5945748/pexels-photo-5945748.jpeg',
       description: 'Fresh yam tuber, medium size',
       unit: 'tuber',
       vendor: 'Yam Seller',
@@ -140,7 +141,7 @@ export default function Market() {
       name: 'Garri (White)',
       category: 'Grains',
       price: 1200,
-      image: 'https://images.shutterstock.com/image-photo/garri-cassava-flakes-nigerian-food-600nw-1456789123.jpg',
+      image: 'https://images.pexels.com/photos/6157049/pexels-photo-6157049.jpeg',
       description: 'Quality white garri from cassava',
       unit: 'kg',
       vendor: 'Garri Seller',
@@ -359,6 +360,9 @@ export default function Market() {
           </TouchableOpacity>
         </View>
       )}
+
+      {/* AI Assistant */}
+      <AIAssistant />
     </SafeAreaView>
   );
 }
@@ -610,7 +614,7 @@ const styles = StyleSheet.create({
   addToCartButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#32CD32',
+    backgroundColor: '#FF5722',
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 20,
