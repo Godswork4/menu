@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Switch, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { User, Settings, Heart, CreditCard, Bell, MapPin, ChevronRight, Star, Award, Truck, Store, LogOut, CreditCard as Edit3 } from 'lucide-react-native';
+import { User, Settings, Heart, CreditCard, Bell, MapPin, ChevronRight, Star, Award, Truck, Store, LogOut, Edit3, Calendar, DollarSign, Target, BarChart3 } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { router } from 'expo-router';
+import ImageWithFallback from '@/components/ImageWithFallback';
+import { IMAGES } from '@/constants/Images';
 
 export default function Profile() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
@@ -18,55 +20,71 @@ export default function Profile() {
       description: 'Update your personal information',
       icon: Edit3,
       color: '#006400',
-      onPress: () => {},
+      onPress: () => router.push('/settings/profile'),
     },
     {
       id: 2,
-      title: 'Order History',
-      description: 'View your past orders',
-      icon: CreditCard,
-      color: '#3F51B5',
-      onPress: () => {},
+      title: 'Budget Management',
+      description: 'Set budgets and track spending',
+      icon: DollarSign,
+      color: '#FF8F00',
+      onPress: () => router.push('/budget-management'),
     },
     {
       id: 3,
+      title: 'Meal Planning',
+      description: 'Schedule your meals and orders',
+      icon: Calendar,
+      color: '#3F51B5',
+      onPress: () => router.push('/meal-planning'),
+    },
+    {
+      id: 4,
+      title: 'Order History',
+      description: 'View your past orders',
+      icon: CreditCard,
+      color: '#9C27B0',
+      onPress: () => router.push('/orders'),
+    },
+    {
+      id: 5,
       title: 'Favorites',
       description: 'Your saved restaurants and dishes',
       icon: Heart,
       color: '#E91E63',
-      onPress: () => {},
-    },
-    {
-      id: 4,
-      title: 'Addresses',
-      description: 'Manage delivery addresses',
-      icon: MapPin,
-      color: '#FF8F00',
-      onPress: () => {},
-    },
-    {
-      id: 5,
-      title: 'Payment Methods',
-      description: 'Manage cards and payment options',
-      icon: CreditCard,
-      color: '#9C27B0',
-      onPress: () => {},
+      onPress: () => router.push('/favorites'),
     },
     {
       id: 6,
-      title: 'Notifications',
-      description: 'Control your notification preferences',
-      icon: Bell,
+      title: 'Addresses',
+      description: 'Manage delivery addresses',
+      icon: MapPin,
       color: '#00ACC1',
-      onPress: () => {},
+      onPress: () => router.push('/settings/addresses'),
     },
     {
       id: 7,
-      title: 'Settings',
+      title: 'Payment Methods',
+      description: 'Manage cards and payment options',
+      icon: CreditCard,
+      color: '#4CAF50',
+      onPress: () => router.push('/settings/payments'),
+    },
+    {
+      id: 8,
+      title: 'Notifications',
+      description: 'Control your notification preferences',
+      icon: Bell,
+      color: '#FF5722',
+      onPress: () => router.push('/settings/notifications'),
+    },
+    {
+      id: 9,
+      title: 'App Settings',
       description: 'App preferences and privacy',
       icon: Settings,
       color: '#607D8B',
-      onPress: () => {},
+      onPress: () => router.push('/settings'),
     },
   ];
 
@@ -153,7 +171,7 @@ export default function Profile() {
           {/* Limited Menu Items for Guests */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Explore</Text>
-            {menuItems.slice(5, 7).map((item) => {
+            {menuItems.slice(7, 9).map((item) => {
               const IconComponent = item.icon;
               return (
                 <TouchableOpacity
@@ -195,11 +213,10 @@ export default function Profile() {
         {/* Profile Card */}
         <View style={styles.profileCard}>
           <View style={styles.profileImageContainer}>
-            <Image 
-              source={{ 
-                uri: profile?.avatar_url || 'https://images.pexels.com/photos/1181686/pexels-photo-1181686.jpeg' 
-              }} 
-              style={styles.profileImage} 
+            <ImageWithFallback 
+              source={profile?.avatar_url} 
+              style={styles.profileImage}
+              fallback={IMAGES.DEFAULT_CHEF}
             />
             <View style={styles.profileBadge}>
               <User size={16} color="#FFFFFF" />
@@ -215,7 +232,7 @@ export default function Profile() {
             </Text>
           </View>
 
-          <TouchableOpacity style={styles.editProfileButton}>
+          <TouchableOpacity style={styles.editProfileButton} onPress={() => router.push('/settings/profile')}>
             <Edit3 size={16} color="#006400" />
           </TouchableOpacity>
         </View>
@@ -238,6 +255,64 @@ export default function Profile() {
               <Text style={styles.statNumber}>{profile?.rating || 0}</Text>
             </View>
             <Text style={styles.statLabel}>Rating</Text>
+          </View>
+        </View>
+
+        {/* Quick Actions */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Quick Actions</Text>
+          <View style={styles.quickActionsGrid}>
+            <TouchableOpacity 
+              style={[styles.quickActionCard, { borderLeftColor: '#FF8F00' }]}
+              onPress={() => router.push('/budget-management')}
+            >
+              <View style={[styles.quickActionIcon, { backgroundColor: '#FF8F00' }]}>
+                <DollarSign size={20} color="#FFFFFF" />
+              </View>
+              <View style={styles.quickActionContent}>
+                <Text style={styles.quickActionTitle}>Budget</Text>
+                <Text style={styles.quickActionSubtitle}>Manage spending</Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[styles.quickActionCard, { borderLeftColor: '#3F51B5' }]}
+              onPress={() => router.push('/meal-planning')}
+            >
+              <View style={[styles.quickActionIcon, { backgroundColor: '#3F51B5' }]}>
+                <Calendar size={20} color="#FFFFFF" />
+              </View>
+              <View style={styles.quickActionContent}>
+                <Text style={styles.quickActionTitle}>Plan Meals</Text>
+                <Text style={styles.quickActionSubtitle}>Schedule orders</Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[styles.quickActionCard, { borderLeftColor: '#4CAF50' }]}
+              onPress={() => router.push('/budget-analytics')}
+            >
+              <View style={[styles.quickActionIcon, { backgroundColor: '#4CAF50' }]}>
+                <BarChart3 size={20} color="#FFFFFF" />
+              </View>
+              <View style={styles.quickActionContent}>
+                <Text style={styles.quickActionTitle}>Analytics</Text>
+                <Text style={styles.quickActionSubtitle}>Spending insights</Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[styles.quickActionCard, { borderLeftColor: '#E91E63' }]}
+              onPress={() => router.push('/favorites')}
+            >
+              <View style={[styles.quickActionIcon, { backgroundColor: '#E91E63' }]}>
+                <Heart size={20} color="#FFFFFF" />
+              </View>
+              <View style={styles.quickActionContent}>
+                <Text style={styles.quickActionTitle}>Favorites</Text>
+                <Text style={styles.quickActionSubtitle}>Saved items</Text>
+              </View>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -557,6 +632,47 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-Semibold',
     color: '#000000',
     marginBottom: 15,
+  },
+  quickActionsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  quickActionCard: {
+    width: '47%',
+    flexDirection: 'row',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 15,
+    alignItems: 'center',
+    borderLeftWidth: 4,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  quickActionIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  quickActionContent: {
+    flex: 1,
+  },
+  quickActionTitle: {
+    fontSize: 14,
+    fontFamily: 'Inter-Semibold',
+    color: '#000000',
+    marginBottom: 2,
+  },
+  quickActionSubtitle: {
+    fontSize: 11,
+    fontFamily: 'Inter-Regular',
+    color: '#666666',
   },
   achievementCard: {
     width: 140,
