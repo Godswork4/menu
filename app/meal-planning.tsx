@@ -1,100 +1,64 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, TextInput, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, TextInput, Alert, ActivityIndicator, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { ArrowLeft, Calendar, Plus, Clock, ChefHat, Star, MapPin, CreditCard as Edit3, Trash2, Bell } from 'lucide-react-native';
 import CustomLogo from '@/components/CustomLogo';
 import ImageWithFallback from '@/components/ImageWithFallback';
 import { IMAGES } from '@/constants/Images';
-
-interface MealPlan {
-  id: number;
-  date: string;
-  mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
-  foodName: string;
-  restaurant: string;
-  price: number;
-  image: string;
-  scheduledTime: string;
-  isOrdered: boolean;
-  isRecurring: boolean;
-  notes?: string;
-}
-
-interface ScheduledOrder {
-  id: number;
-  mealPlanId: number;
-  orderDate: string;
-  orderTime: string;
-  status: 'scheduled' | 'ordered' | 'delivered' | 'cancelled';
-  reminderSet: boolean;
-}
+import { useAuth } from '@/contexts/AuthContext';
+import { fetchMealPlans, createMealPlan, updateMealPlan, deleteMealPlan, MealPlan } from '@/lib/mealPlanning';
 
 export default function MealPlanning() {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
-  const [selectedMealType, setSelectedMealType] = useState<'breakfast' | 'lunch' | 'dinner' | 'snack'>('lunch');
+  const [selectedMealType, setSelectedMealType] = useState<string>('lunch');
   const [showAddModal, setShowAddModal] = useState(false);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [selectedMealPlan, setSelectedMealPlan] = useState<MealPlan | null>(null);
+  const [mealPlans, setMealPlans] = useState<MealPlan[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Form state for new meal plan
+  const [newMealName, setNewMealName] = useState('');
+  const [newMealRestaurant, setNewMealRestaurant] = useState('');
+  const [newMealPrice, setNewMealPrice] = useState('');
+  const [newMealTime, setNewMealTime] = useState('12:00');
+  const [newMealNotes, setNewMealNotes] = useState('');
+  const [newMealRecurring, setNewMealRecurring] = useState(false);
 
-  const [mealPlans, setMealPlans] = useState<MealPlan[]>([
-    {
-      id: 1,
-      date: '2024-01-20',
-      mealType: 'lunch',
-      foodName: 'Jollof Rice Special',
-      restaurant: 'Lagos Kitchen',
-      price: 4500,
-      image: IMAGES.JOLLOF_RICE,
-      scheduledTime: '13:00',
-      isOrdered: false,
-      isRecurring: false,
-      notes: 'Extra spicy, no plantain',
-    },
-    {
-      id: 2,
-      date: '2024-01-20',
-      mealType: 'dinner',
-      foodName: 'Grilled Chicken',
-      restaurant: 'Spice Garden',
-      price: 6500,
-      image: IMAGES.GRILLED_CHICKEN,
-      scheduledTime: '19:30',
-      isOrdered: false,
-      isRecurring: true,
-    },
-    {
-      id: 3,
-      date: '2024-01-21',
-      mealType: 'breakfast',
-      foodName: 'Akara & Bread',
-      restaurant: 'Lagos Street Food',
-      price: 2995,
-      image: IMAGES.AKARA_BREAD,
-      scheduledTime: '08:00',
-      isOrdered: true,
-      isRecurring: false,
-    },
-  ]);
+  const { user } = useAuth();
 
-  const [scheduledOrders, setScheduledOrders] = useState<ScheduledOrder[]>([
-    {
-      id: 1,
-      mealPlanId: 1,
-      orderDate: '2024-01-20',
-      orderTime: '12:30',
-      status: 'scheduled',
-      reminderSet: true,
-    },
-    {
-      id: 2,
-      mealPlanId: 2,
-      orderDate: '2024-01-20',
-      orderTime: '19:00',
-      status: 'scheduled',
-      reminderSet: true,
-    },
-  ]);
+  useEffect(() => {
+    if (user) {
+      loadMealPlans();
+    }
+  }, [user, selectedDate]);
+
+  const loadMealPlans = async () => {
+    if (!user) return;
+    
+    try {
+      setIsLoading(true);
+      const { data, error } = await fetchMealPlans(user.id, { date: selectedDate });
+      
+      if (error) throw error;
+      
+      setMealPlans(data || []);
+    } catch (error) {
+      console.error('Error loading meal plans:', error);
+      Alert.alert('Error', 'Failed to load your meal plans. Please try again.');
+    } finally {
+      setIsLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    loadMealPlans();
+  };
 
   const mealTypes = [
     { id: 'breakfast', name: 'Breakfast', icon: '🌅', color: '#FFD700' },
@@ -104,7 +68,7 @@ export default function MealPlanning() {
   ];
 
   const formatPrice = (price: number) => {
-    return `₦${price.toLocaleString()}`;
+    return `₦${(price / 100).toLocaleString()}`; // Convert from kobo to naira
   };
 
   const formatTime = (time: string) => {
@@ -141,7 +105,7 @@ export default function MealPlanning() {
   };
 
   const getMealsForDateAndType = (date: string, mealType: string) => {
-    return mealPlans.filter(meal => meal.date === date && meal.mealType === mealType);
+    return mealPlans.filter(meal => meal.date === date && meal.meal_type === mealType);
   };
 
   const handleScheduleOrder = (mealPlan: MealPlan) => {
@@ -149,7 +113,7 @@ export default function MealPlanning() {
     setShowScheduleModal(true);
   };
 
-  const handleDeleteMealPlan = (mealPlanId: number) => {
+  const handleDeleteMealPlan = async (mealPlanId: string) => {
     Alert.alert(
       'Delete Meal Plan',
       'Are you sure you want to remove this meal from your plan?',
@@ -158,40 +122,151 @@ export default function MealPlanning() {
         {
           text: 'Delete',
           style: 'destructive',
-          onPress: () => {
-            setMealPlans(mealPlans.filter(m => m.id !== mealPlanId));
-            setScheduledOrders(scheduledOrders.filter(o => o.mealPlanId !== mealPlanId));
+          onPress: async () => {
+            try {
+              const { error } = await deleteMealPlan(mealPlanId);
+              
+              if (error) throw error;
+              
+              setMealPlans(mealPlans.filter(m => m.id !== mealPlanId));
+              Alert.alert('Success', 'Meal plan deleted successfully');
+            } catch (error) {
+              console.error('Error deleting meal plan:', error);
+              Alert.alert('Error', 'Failed to delete meal plan. Please try again.');
+            }
           },
         },
       ]
     );
   };
 
-  const confirmScheduleOrder = () => {
-    if (!selectedMealPlan) return;
+  const confirmScheduleOrder = async () => {
+    if (!selectedMealPlan || !user) return;
 
-    const newOrder: ScheduledOrder = {
-      id: Date.now(),
-      mealPlanId: selectedMealPlan.id,
-      orderDate: selectedMealPlan.date,
-      orderTime: new Date(Date.now() + 30 * 60 * 1000).toTimeString().slice(0, 5), // 30 minutes before meal time
-      status: 'scheduled',
-      reminderSet: true,
-    };
+    setIsSubmitting(true);
 
-    setScheduledOrders([...scheduledOrders, newOrder]);
-    setShowScheduleModal(false);
-    setSelectedMealPlan(null);
+    try {
+      // Update the meal plan to mark it as ordered
+      const { error } = await updateMealPlan(selectedMealPlan.id, {
+        is_ordered: true
+      });
+      
+      if (error) throw error;
+      
+      // Update local state
+      setMealPlans(mealPlans.map(plan => 
+        plan.id === selectedMealPlan.id 
+          ? { ...plan, is_ordered: true } 
+          : plan
+      ));
+      
+      setShowScheduleModal(false);
+      setSelectedMealPlan(null);
+      
+      Alert.alert('Success', 'Order has been scheduled successfully!');
+    } catch (error) {
+      console.error('Error scheduling order:', error);
+      Alert.alert('Error', 'Failed to schedule order. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleAddMealPlan = async () => {
+    if (!user) {
+      Alert.alert('Error', 'You must be logged in to add meal plans');
+      return;
+    }
     
-    Alert.alert('Success', 'Order has been scheduled successfully!');
+    if (!newMealName || !newMealRestaurant || !newMealPrice || !newMealTime) {
+      Alert.alert('Error', 'Please fill in all required fields');
+      return;
+    }
+
+    const price = parseFloat(newMealPrice);
+    if (isNaN(price) || price <= 0) {
+      Alert.alert('Error', 'Please enter a valid price');
+      return;
+    }
+
+    // Validate time format (HH:MM)
+    const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
+    if (!timeRegex.test(newMealTime)) {
+      Alert.alert('Error', 'Please enter a valid time in HH:MM format');
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const { data, error } = await createMealPlan(user.id, {
+        date: selectedDate,
+        meal_type: selectedMealType,
+        food_name: newMealName,
+        restaurant: newMealRestaurant,
+        price: Math.round(price * 100), // Convert to kobo
+        image_url: null, // We could add image selection in the future
+        scheduled_time: newMealTime,
+        is_ordered: false,
+        is_recurring: newMealRecurring,
+        notes: newMealNotes || undefined,
+      });
+      
+      if (error) throw error;
+      
+      setMealPlans([...mealPlans, data]);
+      resetForm();
+      setShowAddModal(false);
+      
+      Alert.alert('Success', 'Meal plan added successfully!');
+    } catch (error) {
+      console.error('Error adding meal plan:', error);
+      Alert.alert('Error', 'Failed to add meal plan. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const resetForm = () => {
+    setNewMealName('');
+    setNewMealRestaurant('');
+    setNewMealPrice('');
+    setNewMealTime('12:00');
+    setNewMealNotes('');
+    setNewMealRecurring(false);
   };
 
   const getUpcomingOrders = () => {
-    return scheduledOrders
-      .filter(order => order.status === 'scheduled')
-      .sort((a, b) => new Date(`${a.orderDate}T${a.orderTime}`).getTime() - new Date(`${b.orderDate}T${b.orderTime}`).getTime())
+    return mealPlans
+      .filter(plan => plan.is_ordered)
+      .sort((a, b) => {
+        const dateA = new Date(`${a.date}T${a.scheduled_time}`);
+        const dateB = new Date(`${b.date}T${b.scheduled_time}`);
+        return dateA.getTime() - dateB.getTime();
+      })
       .slice(0, 3);
   };
+
+  if (isLoading && !refreshing) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+            <ArrowLeft size={24} color="#FFFFFF" />
+          </TouchableOpacity>
+          <View style={styles.headerContent}>
+            <CustomLogo size="medium" color="#FFFFFF" />
+            <Text style={styles.headerTitle}>Meal Planning</Text>
+          </View>
+          <View style={styles.placeholder} />
+        </View>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#006400" />
+          <Text style={styles.loadingText}>Loading your meal plans...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -209,7 +284,18 @@ export default function MealPlanning() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        style={styles.content} 
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#006400']}
+            tintColor={'#006400'}
+          />
+        }
+      >
         {/* Week Calendar */}
         <View style={styles.calendarSection}>
           <Text style={styles.sectionTitle}>This Week</Text>
@@ -268,7 +354,7 @@ export default function MealPlanning() {
                     isSelected && styles.mealTypeCardSelected,
                     { borderColor: mealType.color },
                   ]}
-                  onPress={() => setSelectedMealType(mealType.id as any)}
+                  onPress={() => setSelectedMealType(mealType.id)}
                 >
                   <Text style={styles.mealTypeIcon}>{mealType.icon}</Text>
                   <Text style={[
@@ -302,17 +388,17 @@ export default function MealPlanning() {
           {getMealsForDateAndType(selectedDate, selectedMealType).map((meal) => (
             <View key={meal.id} style={styles.mealCard}>
               <ImageWithFallback 
-                source={meal.image} 
+                source={meal.image_url} 
                 style={styles.mealImage}
                 fallback={IMAGES.DEFAULT_FOOD}
               />
               <View style={styles.mealInfo}>
-                <Text style={styles.mealName}>{meal.foodName}</Text>
+                <Text style={styles.mealName}>{meal.food_name}</Text>
                 <Text style={styles.mealRestaurant}>{meal.restaurant}</Text>
                 <View style={styles.mealMeta}>
                   <View style={styles.mealTime}>
                     <Clock size={14} color="#666666" />
-                    <Text style={styles.mealTimeText}>{formatTime(meal.scheduledTime)}</Text>
+                    <Text style={styles.mealTimeText}>{formatTime(meal.scheduled_time)}</Text>
                   </View>
                   <Text style={styles.mealPrice}>{formatPrice(meal.price)}</Text>
                 </View>
@@ -320,12 +406,12 @@ export default function MealPlanning() {
                   <Text style={styles.mealNotes}>Note: {meal.notes}</Text>
                 )}
                 <View style={styles.mealBadges}>
-                  {meal.isRecurring && (
+                  {meal.is_recurring && (
                     <View style={styles.recurringBadge}>
                       <Text style={styles.recurringText}>Recurring</Text>
                     </View>
                   )}
-                  {meal.isOrdered && (
+                  {meal.is_ordered && (
                     <View style={styles.orderedBadge}>
                       <Text style={styles.orderedText}>Ordered</Text>
                     </View>
@@ -336,9 +422,9 @@ export default function MealPlanning() {
                 <TouchableOpacity 
                   style={styles.actionButton}
                   onPress={() => handleScheduleOrder(meal)}
-                  disabled={meal.isOrdered}
+                  disabled={meal.is_ordered}
                 >
-                  <Calendar size={16} color={meal.isOrdered ? "#CCCCCC" : "#006400"} />
+                  <Calendar size={16} color={meal.is_ordered ? "#CCCCCC" : "#006400"} />
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.actionButton}>
                   <Edit3 size={16} color="#666666" />
@@ -380,40 +466,30 @@ export default function MealPlanning() {
             </TouchableOpacity>
           </View>
 
-          {getUpcomingOrders().map((order) => {
-            const mealPlan = mealPlans.find(m => m.id === order.mealPlanId);
-            if (!mealPlan) return null;
-
-            return (
+          {getUpcomingOrders().length > 0 ? (
+            getUpcomingOrders().map((order) => (
               <View key={order.id} style={styles.upcomingCard}>
                 <View style={styles.upcomingTime}>
                   <Text style={styles.upcomingDate}>
-                    {formatDate(order.orderDate)}
+                    {formatDate(order.date)}
                   </Text>
                   <Text style={styles.upcomingTimeText}>
-                    {formatTime(order.orderTime)}
+                    {formatTime(order.scheduled_time)}
                   </Text>
                 </View>
                 <View style={styles.upcomingInfo}>
-                  <Text style={styles.upcomingMeal}>{mealPlan.foodName}</Text>
-                  <Text style={styles.upcomingRestaurant}>{mealPlan.restaurant}</Text>
-                  <Text style={styles.upcomingPrice}>{formatPrice(mealPlan.price)}</Text>
+                  <Text style={styles.upcomingMeal}>{order.food_name}</Text>
+                  <Text style={styles.upcomingRestaurant}>{order.restaurant}</Text>
+                  <Text style={styles.upcomingPrice}>{formatPrice(order.price)}</Text>
                 </View>
                 <View style={styles.upcomingActions}>
-                  {order.reminderSet && (
-                    <View style={styles.reminderBadge}>
-                      <Bell size={12} color="#FFA726" />
-                    </View>
-                  )}
                   <View style={[styles.statusBadge, { backgroundColor: '#4CAF5020' }]}>
                     <Text style={[styles.statusText, { color: '#4CAF50' }]}>Scheduled</Text>
                   </View>
                 </View>
               </View>
-            );
-          })}
-
-          {getUpcomingOrders().length === 0 && (
+            ))
+          ) : (
             <View style={styles.emptyUpcoming}>
               <Text style={styles.emptyUpcomingText}>No upcoming orders scheduled</Text>
             </View>
@@ -459,6 +535,122 @@ export default function MealPlanning() {
         </View>
       </ScrollView>
 
+      {/* Add Meal Modal */}
+      <Modal
+        visible={showAddModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowAddModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Add New Meal</Text>
+              <TouchableOpacity onPress={() => setShowAddModal(false)}>
+                <Text style={styles.modalClose}>✕</Text>
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.modalBody}>
+              <View style={styles.formGroup}>
+                <Text style={styles.formLabel}>Meal Name</Text>
+                <TextInput
+                  style={styles.formInput}
+                  placeholder="e.g., Jollof Rice Special"
+                  value={newMealName}
+                  onChangeText={setNewMealName}
+                  editable={!isSubmitting}
+                />
+              </View>
+
+              <View style={styles.formGroup}>
+                <Text style={styles.formLabel}>Restaurant</Text>
+                <TextInput
+                  style={styles.formInput}
+                  placeholder="e.g., Lagos Kitchen"
+                  value={newMealRestaurant}
+                  onChangeText={setNewMealRestaurant}
+                  editable={!isSubmitting}
+                />
+              </View>
+
+              <View style={styles.formGroup}>
+                <Text style={styles.formLabel}>Price (₦)</Text>
+                <TextInput
+                  style={styles.formInput}
+                  placeholder="e.g., 4500"
+                  value={newMealPrice}
+                  onChangeText={setNewMealPrice}
+                  keyboardType="numeric"
+                  editable={!isSubmitting}
+                />
+              </View>
+
+              <View style={styles.formGroup}>
+                <Text style={styles.formLabel}>Scheduled Time</Text>
+                <TextInput
+                  style={styles.formInput}
+                  placeholder="HH:MM (e.g., 12:30)"
+                  value={newMealTime}
+                  onChangeText={setNewMealTime}
+                  editable={!isSubmitting}
+                />
+              </View>
+
+              <View style={styles.formGroup}>
+                <Text style={styles.formLabel}>Notes (Optional)</Text>
+                <TextInput
+                  style={[styles.formInput, styles.textArea]}
+                  placeholder="Any special instructions or notes"
+                  value={newMealNotes}
+                  onChangeText={setNewMealNotes}
+                  multiline
+                  numberOfLines={3}
+                  editable={!isSubmitting}
+                />
+              </View>
+
+              <View style={styles.formGroup}>
+                <TouchableOpacity
+                  style={styles.checkboxContainer}
+                  onPress={() => setNewMealRecurring(!newMealRecurring)}
+                  disabled={isSubmitting}
+                >
+                  <View style={[
+                    styles.checkbox,
+                    newMealRecurring && styles.checkboxChecked
+                  ]}>
+                    {newMealRecurring && <Text style={styles.checkmark}>✓</Text>}
+                  </View>
+                  <Text style={styles.checkboxLabel}>Make this a recurring meal</Text>
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
+
+            <View style={styles.modalFooter}>
+              <TouchableOpacity 
+                style={styles.cancelButton}
+                onPress={() => setShowAddModal(false)}
+                disabled={isSubmitting}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.addButton, isSubmitting && styles.addButtonDisabled]}
+                onPress={handleAddMealPlan}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <Text style={styles.addButtonText}>Add Meal</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
       {/* Schedule Order Modal */}
       <Modal
         visible={showScheduleModal}
@@ -479,12 +671,12 @@ export default function MealPlanning() {
               <View style={styles.modalBody}>
                 <View style={styles.scheduleInfo}>
                   <ImageWithFallback 
-                    source={selectedMealPlan.image} 
+                    source={selectedMealPlan.image_url} 
                     style={styles.scheduleImage}
                     fallback={IMAGES.DEFAULT_FOOD}
                   />
                   <View style={styles.scheduleDetails}>
-                    <Text style={styles.scheduleName}>{selectedMealPlan.foodName}</Text>
+                    <Text style={styles.scheduleName}>{selectedMealPlan.food_name}</Text>
                     <Text style={styles.scheduleRestaurant}>{selectedMealPlan.restaurant}</Text>
                     <Text style={styles.schedulePrice}>{formatPrice(selectedMealPlan.price)}</Text>
                   </View>
@@ -493,7 +685,7 @@ export default function MealPlanning() {
                 <View style={styles.scheduleOptions}>
                   <Text style={styles.scheduleOptionTitle}>Order will be placed:</Text>
                   <Text style={styles.scheduleOptionText}>
-                    30 minutes before meal time ({formatTime(selectedMealPlan.scheduledTime)})
+                    30 minutes before meal time ({formatTime(selectedMealPlan.scheduled_time)})
                   </Text>
                   <Text style={styles.scheduleOptionSubtext}>
                     You'll receive a notification before the order is placed
@@ -506,14 +698,20 @@ export default function MealPlanning() {
               <TouchableOpacity 
                 style={styles.cancelButton}
                 onPress={() => setShowScheduleModal(false)}
+                disabled={isSubmitting}
               >
                 <Text style={styles.cancelButtonText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity 
-                style={styles.confirmButton}
+                style={[styles.confirmButton, isSubmitting && styles.confirmButtonDisabled]}
                 onPress={confirmScheduleOrder}
+                disabled={isSubmitting}
               >
-                <Text style={styles.confirmButtonText}>Schedule Order</Text>
+                {isSubmitting ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <Text style={styles.confirmButtonText}>Schedule Order</Text>
+                )}
               </TouchableOpacity>
             </View>
           </View>
@@ -552,6 +750,20 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     borderRadius: 20,
     padding: 8,
+  },
+  placeholder: {
+    width: 40,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    fontFamily: 'Inter-Medium',
+    color: '#666666',
   },
   content: {
     flex: 1,
@@ -867,11 +1079,6 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     gap: 6,
   },
-  reminderBadge: {
-    backgroundColor: '#FFA72620',
-    borderRadius: 12,
-    padding: 4,
-  },
   statusBadge: {
     paddingHorizontal: 8,
     paddingVertical: 4,
@@ -922,14 +1129,13 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: 'flex-end',
   },
   modalContent: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    width: '90%',
-    maxHeight: '70%',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    maxHeight: '80%',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -950,6 +1156,55 @@ const styles = StyleSheet.create({
   },
   modalBody: {
     padding: 20,
+  },
+  formGroup: {
+    marginBottom: 20,
+  },
+  formLabel: {
+    fontSize: 14,
+    fontFamily: 'Inter-Medium',
+    color: '#000000',
+    marginBottom: 8,
+  },
+  formInput: {
+    backgroundColor: '#F5F5F5',
+    borderRadius: 12,
+    paddingHorizontal: 15,
+    paddingVertical: 12,
+    fontSize: 16,
+    fontFamily: 'Inter-Regular',
+    color: '#000000',
+  },
+  textArea: {
+    minHeight: 80,
+    textAlignVertical: 'top',
+  },
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: '#D3D3D3',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  checkboxChecked: {
+    backgroundColor: '#006400',
+    borderColor: '#006400',
+  },
+  checkmark: {
+    color: '#FFFFFF',
+    fontSize: 16,
+  },
+  checkboxLabel: {
+    fontSize: 14,
+    fontFamily: 'Inter-Regular',
+    color: '#000000',
   },
   scheduleInfo: {
     flexDirection: 'row',
@@ -1028,7 +1283,18 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     alignItems: 'center',
   },
+  confirmButtonDisabled: {
+    opacity: 0.7,
+  },
   confirmButtonText: {
+    fontSize: 16,
+    fontFamily: 'Inter-Semibold',
+    color: '#FFFFFF',
+  },
+  addButtonDisabled: {
+    opacity: 0.7,
+  },
+  addButtonText: {
     fontSize: 16,
     fontFamily: 'Inter-Semibold',
     color: '#FFFFFF',

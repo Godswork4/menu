@@ -1,56 +1,55 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Modal, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Modal, Alert, ActivityIndicator, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { ArrowLeft, Plus, Target, Calendar, TrendingUp, TrendingDown, DollarSign, CreditCard as Edit3, Trash2, Check } from 'lucide-react-native';
 import CustomLogo from '@/components/CustomLogo';
-
-interface Goal {
-  id: number;
-  name: string;
-  targetAmount: number;
-  currentAmount: number;
-  deadline: string;
-  category: string;
-  isCompleted: boolean;
-}
+import { useAuth } from '@/contexts/AuthContext';
+import { fetchBudgetGoals, createBudgetGoal, updateBudgetGoal, deleteBudgetGoal, BudgetGoal } from '@/lib/budget';
 
 export default function BudgetGoals() {
-  const [goals, setGoals] = useState<Goal[]>([
-    {
-      id: 1,
-      name: 'Save for Dinner Party',
-      targetAmount: 50000,
-      currentAmount: 35000,
-      deadline: '2024-05-15',
-      category: 'food',
-      isCompleted: false,
-    },
-    {
-      id: 2,
-      name: 'Reduce Weekly Takeout',
-      targetAmount: 10000,
-      currentAmount: 8500,
-      deadline: '2024-04-30',
-      category: 'savings',
-      isCompleted: false,
-    },
-    {
-      id: 3,
-      name: 'Monthly Grocery Budget',
-      targetAmount: 80000,
-      currentAmount: 80000,
-      deadline: '2024-03-31',
-      category: 'groceries',
-      isCompleted: true,
-    },
-  ]);
-
+  const [goals, setGoals] = useState<BudgetGoal[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
   const [newGoalName, setNewGoalName] = useState('');
   const [newGoalAmount, setNewGoalAmount] = useState('');
   const [newGoalDeadline, setNewGoalDeadline] = useState('');
   const [newGoalCategory, setNewGoalCategory] = useState('food');
+
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (user) {
+      loadGoals();
+    }
+  }, [user]);
+
+  const loadGoals = async () => {
+    if (!user) return;
+    
+    try {
+      setIsLoading(true);
+      const { data, error } = await fetchBudgetGoals(user.id);
+      
+      if (error) throw error;
+      
+      setGoals(data || []);
+    } catch (error) {
+      console.error('Error loading goals:', error);
+      Alert.alert('Error', 'Failed to load your budget goals. Please try again.');
+    } finally {
+      setIsLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    loadGoals();
+  };
 
   const categories = [
     { id: 'food', name: 'Food', icon: '🍽️' },
@@ -60,7 +59,7 @@ export default function BudgetGoals() {
   ];
 
   const formatPrice = (price: number) => {
-    return `₦${price.toLocaleString()}`;
+    return `₦${(price / 100).toLocaleString()}`; // Convert from kobo to naira
   };
 
   const formatDate = (dateString: string) => {
@@ -72,12 +71,12 @@ export default function BudgetGoals() {
     });
   };
 
-  const getGoalProgress = (goal: Goal) => {
-    return Math.min((goal.currentAmount / goal.targetAmount) * 100, 100);
+  const getGoalProgress = (goal: BudgetGoal) => {
+    return Math.min((goal.current_amount / goal.target_amount) * 100, 100);
   };
 
-  const getGoalStatus = (goal: Goal) => {
-    if (goal.isCompleted) return { status: 'completed', color: '#4CAF50' };
+  const getGoalStatus = (goal: BudgetGoal) => {
+    if (goal.is_completed) return { status: 'completed', color: '#4CAF50' };
     
     const progress = getGoalProgress(goal);
     if (progress >= 90) return { status: 'almost', color: '#4CAF50' };
@@ -93,7 +92,12 @@ export default function BudgetGoals() {
     return diffDays > 0 ? diffDays : 0;
   };
 
-  const handleAddGoal = () => {
+  const handleAddGoal = async () => {
+    if (!user) {
+      Alert.alert('Error', 'You must be logged in to add goals');
+      return;
+    }
+    
     if (!newGoalName || !newGoalAmount || !newGoalDeadline) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
@@ -105,22 +109,40 @@ export default function BudgetGoals() {
       return;
     }
 
-    const newGoal: Goal = {
-      id: Date.now(),
-      name: newGoalName,
-      targetAmount: amount,
-      currentAmount: 0,
-      deadline: newGoalDeadline,
-      category: newGoalCategory,
-      isCompleted: false,
-    };
+    // Validate date format (YYYY-MM-DD)
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(newGoalDeadline)) {
+      Alert.alert('Error', 'Please enter a valid date in YYYY-MM-DD format');
+      return;
+    }
 
-    setGoals([...goals, newGoal]);
-    resetForm();
-    setShowAddModal(false);
+    setIsSubmitting(true);
+
+    try {
+      const { data, error } = await createBudgetGoal(user.id, {
+        name: newGoalName,
+        target_amount: Math.round(amount * 100), // Convert to kobo
+        deadline: newGoalDeadline,
+        category: newGoalCategory,
+        is_recurring: false,
+      });
+      
+      if (error) throw error;
+      
+      setGoals([...goals, data]);
+      resetForm();
+      setShowAddModal(false);
+      
+      Alert.alert('Success', 'Budget goal added successfully!');
+    } catch (error) {
+      console.error('Error adding goal:', error);
+      Alert.alert('Error', 'Failed to add budget goal. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleDeleteGoal = (id: number) => {
+  const handleDeleteGoal = async (id: string) => {
     Alert.alert(
       'Delete Goal',
       'Are you sure you want to delete this goal?',
@@ -129,20 +151,42 @@ export default function BudgetGoals() {
         {
           text: 'Delete',
           style: 'destructive',
-          onPress: () => {
-            setGoals(goals.filter(goal => goal.id !== id));
+          onPress: async () => {
+            try {
+              const { error } = await deleteBudgetGoal(id);
+              
+              if (error) throw error;
+              
+              setGoals(goals.filter(goal => goal.id !== id));
+              Alert.alert('Success', 'Goal deleted successfully');
+            } catch (error) {
+              console.error('Error deleting goal:', error);
+              Alert.alert('Error', 'Failed to delete goal. Please try again.');
+            }
           },
         },
       ]
     );
   };
 
-  const handleMarkCompleted = (id: number) => {
-    setGoals(goals.map(goal => 
-      goal.id === id 
-        ? { ...goal, isCompleted: true, currentAmount: goal.targetAmount } 
-        : goal
-    ));
+  const handleMarkCompleted = async (id: string) => {
+    try {
+      const { data, error } = await updateBudgetGoal(id, { 
+        is_completed: true,
+        current_amount: goals.find(g => g.id === id)?.target_amount || 0
+      });
+      
+      if (error) throw error;
+      
+      setGoals(goals.map(goal => 
+        goal.id === id ? data : goal
+      ));
+      
+      Alert.alert('Success', 'Goal marked as completed!');
+    } catch (error) {
+      console.error('Error updating goal:', error);
+      Alert.alert('Error', 'Failed to update goal. Please try again.');
+    }
   };
 
   const resetForm = () => {
@@ -153,12 +197,33 @@ export default function BudgetGoals() {
   };
 
   const getActiveGoals = () => {
-    return goals.filter(goal => !goal.isCompleted);
+    return goals.filter(goal => !goal.is_completed);
   };
 
   const getCompletedGoals = () => {
-    return goals.filter(goal => goal.isCompleted);
+    return goals.filter(goal => goal.is_completed);
   };
+
+  if (isLoading && !refreshing) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+            <ArrowLeft size={24} color="#FFFFFF" />
+          </TouchableOpacity>
+          <View style={styles.headerContent}>
+            <CustomLogo size="medium" color="#FFFFFF" />
+            <Text style={styles.headerTitle}>Budget Goals</Text>
+          </View>
+          <View style={styles.placeholder} />
+        </View>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#006400" />
+          <Text style={styles.loadingText}>Loading your goals...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -182,7 +247,18 @@ export default function BudgetGoals() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        style={styles.content} 
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#006400']}
+            tintColor={'#006400'}
+          />
+        }
+      >
         {/* Overview */}
         <View style={styles.overviewSection}>
           <View style={styles.overviewCard}>
@@ -212,7 +288,7 @@ export default function BudgetGoals() {
             <View style={styles.overviewInfo}>
               <Text style={styles.overviewLabel}>Total Saved</Text>
               <Text style={styles.overviewAmount}>
-                {formatPrice(goals.reduce((sum, goal) => sum + goal.currentAmount, 0))}
+                {formatPrice(goals.reduce((sum, goal) => sum + goal.current_amount, 0))}
               </Text>
             </View>
           </View>
@@ -251,7 +327,7 @@ export default function BudgetGoals() {
                 <View key={goal.id} style={styles.goalCard}>
                   <View style={styles.goalHeader}>
                     <View style={styles.goalTitleRow}>
-                      <Text style={styles.goalIcon}>{category?.icon}</Text>
+                      <Text style={styles.goalIcon}>{category?.icon || '💰'}</Text>
                       <Text style={styles.goalName}>{goal.name}</Text>
                     </View>
                     <View style={styles.goalActions}>
@@ -268,8 +344,8 @@ export default function BudgetGoals() {
                   </View>
 
                   <View style={styles.goalAmounts}>
-                    <Text style={styles.currentAmount}>{formatPrice(goal.currentAmount)}</Text>
-                    <Text style={styles.targetAmount}>of {formatPrice(goal.targetAmount)}</Text>
+                    <Text style={styles.currentAmount}>{formatPrice(goal.current_amount)}</Text>
+                    <Text style={styles.targetAmount}>of {formatPrice(goal.target_amount)}</Text>
                   </View>
 
                   <View style={styles.goalProgress}>
@@ -319,7 +395,7 @@ export default function BudgetGoals() {
                 <View key={goal.id} style={[styles.goalCard, styles.completedGoalCard]}>
                   <View style={styles.goalHeader}>
                     <View style={styles.goalTitleRow}>
-                      <Text style={styles.goalIcon}>{category?.icon}</Text>
+                      <Text style={styles.goalIcon}>{category?.icon || '💰'}</Text>
                       <Text style={styles.goalName}>{goal.name}</Text>
                       <View style={styles.completedBadge}>
                         <Check size={12} color="#FFFFFF" />
@@ -335,7 +411,7 @@ export default function BudgetGoals() {
                   </View>
 
                   <View style={styles.goalAmounts}>
-                    <Text style={styles.currentAmount}>{formatPrice(goal.targetAmount)}</Text>
+                    <Text style={styles.currentAmount}>{formatPrice(goal.target_amount)}</Text>
                     <Text style={styles.completedDate}>
                       Completed on {formatDate(new Date().toISOString().split('T')[0])}
                     </Text>
@@ -406,6 +482,7 @@ export default function BudgetGoals() {
                   placeholder="e.g., Save for Dinner Party"
                   value={newGoalName}
                   onChangeText={setNewGoalName}
+                  editable={!isSubmitting}
                 />
               </View>
 
@@ -417,6 +494,7 @@ export default function BudgetGoals() {
                   value={newGoalAmount}
                   onChangeText={setNewGoalAmount}
                   keyboardType="numeric"
+                  editable={!isSubmitting}
                 />
               </View>
 
@@ -427,6 +505,7 @@ export default function BudgetGoals() {
                   placeholder="YYYY-MM-DD"
                   value={newGoalDeadline}
                   onChangeText={setNewGoalDeadline}
+                  editable={!isSubmitting}
                 />
               </View>
 
@@ -441,6 +520,7 @@ export default function BudgetGoals() {
                         newGoalCategory === category.id && styles.categoryOptionActive
                       ]}
                       onPress={() => setNewGoalCategory(category.id)}
+                      disabled={isSubmitting}
                     >
                       <Text style={styles.categoryOptionIcon}>{category.icon}</Text>
                       <Text style={[
@@ -459,14 +539,20 @@ export default function BudgetGoals() {
               <TouchableOpacity 
                 style={styles.cancelButton}
                 onPress={() => setShowAddModal(false)}
+                disabled={isSubmitting}
               >
                 <Text style={styles.cancelButtonText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity 
-                style={styles.createButton}
+                style={[styles.createButton, isSubmitting && styles.createButtonDisabled]}
                 onPress={handleAddGoal}
+                disabled={isSubmitting}
               >
-                <Text style={styles.createButtonText}>Create Goal</Text>
+                {isSubmitting ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <Text style={styles.createButtonText}>Create Goal</Text>
+                )}
               </TouchableOpacity>
             </View>
           </View>
@@ -505,6 +591,20 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     borderRadius: 20,
     padding: 8,
+  },
+  placeholder: {
+    width: 40,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    fontFamily: 'Inter-Medium',
+    color: '#666666',
   },
   content: {
     flex: 1,
@@ -853,6 +953,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingVertical: 15,
     alignItems: 'center',
+  },
+  createButtonDisabled: {
+    opacity: 0.7,
   },
   createButtonText: {
     fontSize: 16,
