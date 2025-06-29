@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { DollarSign, TrendingUp, TrendingDown, Plus, Target, Calendar } from 'lucide-react-native';
+import { DollarSign, TrendingUp, TrendingDown, Plus, Target, Calendar, Lightbulb, ChartBar as BarChart3, PieChart, CreditCard, Clock } from 'lucide-react-native';
+import { router } from 'expo-router';
 
 export default function Budget() {
   const [selectedPeriod, setSelectedPeriod] = useState('Month');
@@ -88,6 +89,25 @@ export default function Budget() {
 
   const progressPercentage = (budgetData.spent / budgetData.target) * 100;
 
+  const handleQuickActionPress = (action: string) => {
+    switch(action) {
+      case 'analytics':
+        router.push('/budget-analytics');
+        break;
+      case 'goals':
+        router.push('/budget-goals');
+        break;
+      case 'management':
+        router.push('/budget-management');
+        break;
+      case 'reports':
+        Alert.alert('Coming Soon', 'Budget reports feature will be available in the next update.');
+        break;
+      default:
+        break;
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -165,6 +185,52 @@ export default function Budget() {
           </View>
         </View>
 
+        {/* Quick Action Buttons */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Quick Actions</Text>
+          <View style={styles.quickActionsGrid}>
+            <TouchableOpacity 
+              style={styles.quickActionCard}
+              onPress={() => handleQuickActionPress('analytics')}
+            >
+              <View style={[styles.quickActionIcon, { backgroundColor: '#FF8F00' }]}>
+                <BarChart3 size={24} color="#FFFFFF" />
+              </View>
+              <Text style={styles.quickActionText}>View Analytics</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={styles.quickActionCard}
+              onPress={() => handleQuickActionPress('goals')}
+            >
+              <View style={[styles.quickActionIcon, { backgroundColor: '#4CAF50' }]}>
+                <Target size={24} color="#FFFFFF" />
+              </View>
+              <Text style={styles.quickActionText}>Set Goals</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={styles.quickActionCard}
+              onPress={() => handleQuickActionPress('management')}
+            >
+              <View style={[styles.quickActionIcon, { backgroundColor: '#3F51B5' }]}>
+                <DollarSign size={24} color="#FFFFFF" />
+              </View>
+              <Text style={styles.quickActionText}>Manage Budget</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={styles.quickActionCard}
+              onPress={() => handleQuickActionPress('reports')}
+            >
+              <View style={[styles.quickActionIcon, { backgroundColor: '#9C27B0' }]}>
+                <PieChart size={24} color="#FFFFFF" />
+              </View>
+              <Text style={styles.quickActionText}>View Reports</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
         {/* Budget Goals */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Budget Goals</Text>
@@ -183,8 +249,11 @@ export default function Budget() {
                 placeholder="250000"
               />
             </View>
-            <TouchableOpacity style={styles.saveGoalButton}>
-              <Text style={styles.saveGoalText}>Save Goal</Text>
+            <TouchableOpacity 
+              style={styles.saveGoalButton}
+              onPress={() => router.push('/budget-goals')}
+            >
+              <Text style={styles.saveGoalText}>Manage Goals</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -246,29 +315,75 @@ export default function Budget() {
           ))}
         </View>
 
-        {/* Quick Actions */}
+        {/* Budget Tips */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Quick Actions</Text>
-          <View style={styles.quickActionsGrid}>
-            <TouchableOpacity style={styles.quickActionCard}>
-              <Plus size={24} color="#006400" />
-              <Text style={styles.quickActionText}>Add Expense</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={styles.quickActionCard}>
-              <Target size={24} color="#FF8F00" />
-              <Text style={styles.quickActionText}>Set Goal</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={styles.quickActionCard}>
-              <Calendar size={24} color="#3F51B5" />
-              <Text style={styles.quickActionText}>Plan Meals</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={styles.quickActionCard}>
-              <TrendingUp size={24} color="#32CD32" />
-              <Text style={styles.quickActionText}>View Reports</Text>
-            </TouchableOpacity>
+          <Text style={styles.sectionTitle}>Budget Tips</Text>
+          <View style={styles.tipCard}>
+            <Lightbulb size={24} color="#FFD700" />
+            <View style={styles.tipContent}>
+              <Text style={styles.tipTitle}>Plan Your Meals</Text>
+              <Text style={styles.tipText}>
+                Planning meals in advance can help you save up to 30% on your food budget by reducing impulse purchases.
+              </Text>
+            </View>
+          </View>
+          
+          <View style={styles.tipCard}>
+            <Calendar size={24} color="#3F51B5" />
+            <View style={styles.tipContent}>
+              <Text style={styles.tipTitle}>Schedule Grocery Shopping</Text>
+              <Text style={styles.tipText}>
+                Shop on specific days when stores offer discounts or after receiving your paycheck to better manage your budget.
+              </Text>
+            </View>
+          </View>
+          
+          <View style={styles.tipCard}>
+            <CreditCard size={24} color="#4CAF50" />
+            <View style={styles.tipContent}>
+              <Text style={styles.tipTitle}>Track Every Expense</Text>
+              <Text style={styles.tipText}>
+                Keep track of all food-related expenses to identify patterns and areas where you can cut back.
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Upcoming Budget Events */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Upcoming Budget Events</Text>
+          <View style={styles.eventCard}>
+            <View style={styles.eventDateBadge}>
+              <Text style={styles.eventDateDay}>15</Text>
+              <Text style={styles.eventDateMonth}>May</Text>
+            </View>
+            <View style={styles.eventInfo}>
+              <Text style={styles.eventTitle}>Monthly Budget Review</Text>
+              <Text style={styles.eventDescription}>
+                Analyze your spending patterns and adjust your budget for the next month
+              </Text>
+              <View style={styles.eventMeta}>
+                <Clock size={14} color="#666666" />
+                <Text style={styles.eventTime}>Reminder set for 8:00 PM</Text>
+              </View>
+            </View>
+          </View>
+          
+          <View style={styles.eventCard}>
+            <View style={styles.eventDateBadge}>
+              <Text style={styles.eventDateDay}>01</Text>
+              <Text style={styles.eventDateMonth}>Jun</Text>
+            </View>
+            <View style={styles.eventInfo}>
+              <Text style={styles.eventTitle}>New Budget Cycle</Text>
+              <Text style={styles.eventDescription}>
+                Start of new monthly budget cycle with updated spending limits
+              </Text>
+              <View style={styles.eventMeta}>
+                <Clock size={14} color="#666666" />
+                <Text style={styles.eventTime}>All day event</Text>
+              </View>
+            </View>
           </View>
         </View>
       </ScrollView>
@@ -347,6 +462,11 @@ const styles = StyleSheet.create({
     padding: 20,
     borderWidth: 1,
     borderColor: '#D3D3D3',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   budgetHeader: {
     flexDirection: 'row',
@@ -430,12 +550,51 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-Semibold',
     color: '#000000',
   },
+  quickActionsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  quickActionCard: {
+    width: '47%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 15,
+    padding: 15,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    alignItems: 'center',
+    marginBottom: 12,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  quickActionIcon: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  quickActionText: {
+    fontSize: 14,
+    fontFamily: 'Inter-Medium',
+    color: '#333333',
+    textAlign: 'center',
+  },
   goalCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 15,
     padding: 20,
     borderWidth: 1,
     borderColor: '#D3D3D3',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   goalHeader: {
     flexDirection: 'row',
@@ -488,6 +647,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#D3D3D3',
     overflow: 'hidden',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   mealImage: {
     width: '100%',
@@ -547,6 +711,11 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderWidth: 1,
     borderColor: '#D3D3D3',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   transactionImage: {
     width: 50,
@@ -588,25 +757,95 @@ const styles = StyleSheet.create({
   negativeAmount: {
     color: '#FF6B6B',
   },
-  quickActionsGrid: {
+  tipCard: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-  },
-  quickActionCard: {
-    width: '47%',
     backgroundColor: '#FFFFFF',
     borderRadius: 15,
-    padding: 20,
+    padding: 15,
+    marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#D3D3D3',
-    alignItems: 'center',
+    borderColor: '#E0E0E0',
+    alignItems: 'flex-start',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
-  quickActionText: {
+  tipContent: {
+    flex: 1,
+    marginLeft: 15,
+  },
+  tipTitle: {
+    fontSize: 16,
+    fontFamily: 'Inter-Semibold',
+    color: '#000000',
+    marginBottom: 6,
+  },
+  tipText: {
+    fontSize: 14,
+    fontFamily: 'Inter-Regular',
+    color: '#666666',
+    lineHeight: 20,
+  },
+  eventCard: {
+    flexDirection: 'row',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 15,
+    padding: 15,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  eventDateBadge: {
+    width: 50,
+    height: 60,
+    backgroundColor: '#006400',
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 15,
+  },
+  eventDateDay: {
+    fontSize: 20,
+    fontFamily: 'Inter-Bold',
+    color: '#FFFFFF',
+  },
+  eventDateMonth: {
     fontSize: 14,
     fontFamily: 'Inter-Medium',
+    color: '#FFFFFF',
+    opacity: 0.9,
+  },
+  eventInfo: {
+    flex: 1,
+  },
+  eventTitle: {
+    fontSize: 16,
+    fontFamily: 'Inter-Semibold',
     color: '#000000',
-    marginTop: 8,
-    textAlign: 'center',
+    marginBottom: 6,
+  },
+  eventDescription: {
+    fontSize: 14,
+    fontFamily: 'Inter-Regular',
+    color: '#666666',
+    marginBottom: 8,
+    lineHeight: 20,
+  },
+  eventMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  eventTime: {
+    fontSize: 12,
+    fontFamily: 'Inter-Regular',
+    color: '#666666',
   },
 });

@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal, ScrollView, TextInput, Animated } from 'react-native';
-import { MessageCircle, X, Send, ChefHat, Heart, DollarSign, Lightbulb } from 'lucide-react-native';
+import React, { useState, useRef, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Modal, ScrollView, TextInput, Animated, Easing } from 'react-native';
+import { MessageCircle, X, Send, ChefHat, Heart, DollarSign, Lightbulb, Sparkles, Brain, Zap } from 'lucide-react-native';
 
 interface Message {
   id: number;
@@ -21,6 +21,11 @@ export default function AIAssistant() {
   ]);
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  
+  // Animation values
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const rotateAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(1)).current;
 
   const quickActions = [
     { id: 1, text: "Find healthy recipes", icon: Heart, color: "#E91E63" },
@@ -28,6 +33,54 @@ export default function AIAssistant() {
     { id: 3, text: "Cooking tips", icon: ChefHat, color: "#FF9800" },
     { id: 4, text: "Nutrition advice", icon: Lightbulb, color: "#2196F3" },
   ];
+
+  useEffect(() => {
+    // Start the pulse animation
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.2,
+          duration: 1000,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 1000,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        })
+      ])
+    ).start();
+
+    // Start the rotation animation
+    Animated.loop(
+      Animated.timing(rotateAnim, {
+        toValue: 1,
+        duration: 10000,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
+    ).start();
+  }, []);
+
+  const handleButtonPress = () => {
+    // Scale animation when button is pressed
+    Animated.sequence([
+      Animated.timing(scaleAnim, {
+        toValue: 0.8,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(scaleAnim, {
+        toValue: 1,
+        duration: 100,
+        useNativeDriver: true,
+      })
+    ]).start();
+    
+    setIsVisible(true);
+  };
 
   const getAIResponse = (userMessage: string): string => {
     const message = userMessage.toLowerCase();
@@ -96,15 +149,42 @@ export default function AIAssistant() {
     handleSendMessage();
   };
 
+  // Calculate rotation for the icon
+  const spin = rotateAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg']
+  });
+
   return (
     <>
       {/* Floating AI Button */}
-      <TouchableOpacity
-        style={styles.floatingButton}
-        onPress={() => setIsVisible(true)}
-      >
-        <MessageCircle size={24} color="#FFFFFF" />
-      </TouchableOpacity>
+      <Animated.View style={[
+        styles.floatingButtonContainer,
+        {
+          transform: [
+            { scale: scaleAnim },
+          ]
+        }
+      ]}>
+        <TouchableOpacity
+          style={styles.floatingButton}
+          onPress={handleButtonPress}
+          activeOpacity={0.8}
+        >
+          <Animated.View style={[
+            styles.innerCircle,
+            {
+              transform: [
+                { scale: pulseAnim },
+                { rotate: spin }
+              ]
+            }
+          ]}>
+            <Zap size={16} color="#FFFFFF" style={styles.sparkleIcon} />
+            <Brain size={24} color="#FFFFFF" />
+          </Animated.View>
+        </TouchableOpacity>
+      </Animated.View>
 
       {/* AI Chat Modal */}
       <Modal
@@ -119,7 +199,8 @@ export default function AIAssistant() {
             <View style={styles.chatHeader}>
               <View style={styles.aiInfo}>
                 <View style={styles.aiAvatar}>
-                  <MessageCircle size={20} color="#FFFFFF" />
+                  <Brain size={20} color="#FFFFFF" />
+                  <Sparkles size={12} color="#FFD700" style={styles.sparklesIcon} />
                 </View>
                 <View>
                   <Text style={styles.aiName}>Food AI Assistant</Text>
@@ -223,14 +304,17 @@ export default function AIAssistant() {
 }
 
 const styles = StyleSheet.create({
-  floatingButton: {
+  floatingButtonContainer: {
     position: 'absolute',
     bottom: 90,
     right: 20,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#7CB342',
+    zIndex: 1000,
+  },
+  floatingButton: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: 'rgba(0, 100, 0, 0.9)',
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 8,
@@ -238,7 +322,21 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
-    zIndex: 1000,
+  },
+  innerCircle: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#7CB342',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  sparkleIcon: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
   },
   modalOverlay: {
     flex: 1,
@@ -273,6 +371,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#7CB342',
     justifyContent: 'center',
     alignItems: 'center',
+    position: 'relative',
+  },
+  sparklesIcon: {
+    position: 'absolute',
+    top: -5,
+    right: -5,
   },
   aiName: {
     fontSize: 16,
