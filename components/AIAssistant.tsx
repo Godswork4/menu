@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Modal, ScrollView, TextInput, Animated, Easing } from 'react-native';
-import { MessageCircle, X, Send, ChefHat, Heart, DollarSign, Lightbulb, Sparkles, Brain, Zap } from 'lucide-react-native';
+import { MessageCircle, X, Send, ChefHat, Heart, DollarSign, Lightbulb, Sparkles } from 'lucide-react-native';
 
 interface Message {
   id: number;
@@ -22,24 +22,16 @@ export default function AIAssistant() {
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   
-  // Animation values
+  // Animation for the floating button
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const rotateAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(1)).current;
-
-  const quickActions = [
-    { id: 1, text: "Find healthy recipes", icon: Heart, color: "#E91E63" },
-    { id: 2, text: "Budget meal ideas", icon: DollarSign, color: "#4CAF50" },
-    { id: 3, text: "Cooking tips", icon: ChefHat, color: "#FF9800" },
-    { id: 4, text: "Nutrition advice", icon: Lightbulb, color: "#2196F3" },
-  ];
-
+  
   useEffect(() => {
-    // Start the pulse animation
+    // Start pulse animation
     Animated.loop(
       Animated.sequence([
         Animated.timing(pulseAnim, {
-          toValue: 1.2,
+          toValue: 1.1,
           duration: 1000,
           easing: Easing.inOut(Easing.ease),
           useNativeDriver: true,
@@ -52,8 +44,8 @@ export default function AIAssistant() {
         })
       ])
     ).start();
-
-    // Start the rotation animation
+    
+    // Start rotation animation
     Animated.loop(
       Animated.timing(rotateAnim, {
         toValue: 1,
@@ -63,24 +55,18 @@ export default function AIAssistant() {
       })
     ).start();
   }, []);
+  
+  const rotate = rotateAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg']
+  });
 
-  const handleButtonPress = () => {
-    // Scale animation when button is pressed
-    Animated.sequence([
-      Animated.timing(scaleAnim, {
-        toValue: 0.8,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.timing(scaleAnim, {
-        toValue: 1,
-        duration: 100,
-        useNativeDriver: true,
-      })
-    ]).start();
-    
-    setIsVisible(true);
-  };
+  const quickActions = [
+    { id: 1, text: "Find healthy recipes", icon: Heart, color: "#E91E63" },
+    { id: 2, text: "Budget meal ideas", icon: DollarSign, color: "#4CAF50" },
+    { id: 3, text: "Cooking tips", icon: ChefHat, color: "#FF9800" },
+    { id: 4, text: "Nutrition advice", icon: Lightbulb, color: "#2196F3" },
+  ];
 
   const getAIResponse = (userMessage: string): string => {
     const message = userMessage.toLowerCase();
@@ -149,40 +135,34 @@ export default function AIAssistant() {
     handleSendMessage();
   };
 
-  // Calculate rotation for the icon
-  const spin = rotateAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '360deg']
-  });
-
   return (
     <>
       {/* Floating AI Button */}
-      <Animated.View style={[
-        styles.floatingButtonContainer,
-        {
-          transform: [
-            { scale: scaleAnim },
-          ]
-        }
-      ]}>
+      <Animated.View
+        style={[
+          styles.floatingButtonContainer,
+          {
+            transform: [
+              { scale: pulseAnim },
+            ]
+          }
+        ]}
+      >
         <TouchableOpacity
           style={styles.floatingButton}
-          onPress={handleButtonPress}
-          activeOpacity={0.8}
+          onPress={() => setIsVisible(true)}
         >
-          <Animated.View style={[
-            styles.innerCircle,
-            {
-              transform: [
-                { scale: pulseAnim },
-                { rotate: spin }
-              ]
-            }
-          ]}>
-            <Zap size={16} color="#FFFFFF" style={styles.sparkleIcon} />
-            <Brain size={24} color="#FFFFFF" />
-          </Animated.View>
+          <Animated.View
+            style={[
+              styles.glowEffect,
+              {
+                transform: [{ rotate }]
+              }
+            ]}
+          />
+          <View style={styles.iconContainer}>
+            <Sparkles size={24} color="#FFFFFF" />
+          </View>
         </TouchableOpacity>
       </Animated.View>
 
@@ -199,8 +179,7 @@ export default function AIAssistant() {
             <View style={styles.chatHeader}>
               <View style={styles.aiInfo}>
                 <View style={styles.aiAvatar}>
-                  <Brain size={20} color="#FFFFFF" />
-                  <Sparkles size={12} color="#FFD700" style={styles.sparklesIcon} />
+                  <Sparkles size={20} color="#FFFFFF" />
                 </View>
                 <View>
                   <Text style={styles.aiName}>Food AI Assistant</Text>
@@ -314,7 +293,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: 'rgba(0, 100, 0, 0.9)',
+    backgroundColor: '#7CB342',
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 8,
@@ -322,21 +301,27 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
+    position: 'relative',
+    overflow: 'hidden',
   },
-  innerCircle: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#7CB342',
+  glowEffect: {
+    position: 'absolute',
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: 'transparent',
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    top: -30,
+    left: -30,
+  },
+  iconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-  },
-  sparkleIcon: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
   },
   modalOverlay: {
     flex: 1,
@@ -371,12 +356,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#7CB342',
     justifyContent: 'center',
     alignItems: 'center',
-    position: 'relative',
-  },
-  sparklesIcon: {
-    position: 'absolute',
-    top: -5,
-    right: -5,
   },
   aiName: {
     fontSize: 16,

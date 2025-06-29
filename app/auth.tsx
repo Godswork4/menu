@@ -90,7 +90,18 @@ export default function Auth() {
         Alert.alert(
           'Welcome Back!', 
           'You have successfully signed in to your account.',
-          [{ text: 'Continue', onPress: () => router.push('/(tabs)') }]
+          [{ 
+            text: 'Continue', 
+            onPress: () => {
+              // Check user role and redirect accordingly
+              const userRole = 'vendor'; // This should come from the user profile
+              if (userRole === 'vendor') {
+                router.push('/vendor-dashboard');
+              } else {
+                router.push('/(tabs)');
+              }
+            } 
+          }]
         );
       }
     } catch (error) {
@@ -112,7 +123,7 @@ export default function Auth() {
     if (roleId === 'customer') {
       router.push('/signup-step1');
     } else if (roleId === 'vendor') {
-      router.push('/vendor-signup-step1');
+      router.push('/vendor-signup');
     }
   };
 

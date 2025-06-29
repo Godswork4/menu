@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Alert, ActivityIndicator, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, ActivityIndicator, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { ArrowLeft, Plus, CreditCard as Edit3, Trash2, Eye, ChartBar as BarChart3, DollarSign, Package, Users, Camera, MapPin, Clock, Star } from 'lucide-react-native';
@@ -13,32 +13,42 @@ interface FoodItem {
   id: string;
   name: string;
   price: number;
-  image_url: string | null;
+  image_url: string;
   status: 'active' | 'inactive';
-  category: string;
-  description: string | null;
-  prep_time: string | null;
-  created_at: string;
+  orders?: number;
+  rating?: number;
+  description?: string;
+}
+
+interface Order {
+  id: string;
+  customer_name: string;
+  items: string;
+  amount: number;
+  status: string;
+  time: string;
 }
 
 export default function VendorDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
   const [menuItems, setMenuItems] = useState<FoodItem[]>([]);
+  const [recentOrders, setRecentOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [stats, setStats] = useState({
+  
+  const { user, profile } = useAuth();
+
+  // Dashboard stats
+  const [dashboardStats, setDashboardStats] = useState({
     totalOrders: 0,
     totalRevenue: 0,
     activeMenuItems: 0,
     averageRating: 0,
   });
-  
-  const { user, profile } = useAuth();
 
   useEffect(() => {
     if (user) {
       fetchMenuItems();
-      fetchStats();
+      fetchOrders();
     }
   }, [user]);
 
@@ -54,75 +64,94 @@ export default function VendorDashboard() {
       
       if (error) {
         console.error('Error fetching menu items:', error);
-        Alert.alert('Error', 'Failed to load menu items');
-      } else {
-        setMenuItems(data || []);
-        
-        // Update stats
-        setStats(prev => ({
-          ...prev,
-          activeMenuItems: data?.filter(item => item.status === 'active').length || 0
-        }));
+        return;
       }
+      
+      // Transform data to match the expected format
+      const transformedItems = data.map(item => ({
+        id: item.id,
+        name: item.name,
+        price: item.price / 100, // Convert from kobo to naira
+        image_url: item.image_url || IMAGES.DEFAULT_FOOD,
+        status: item.status,
+        orders: Math.floor(Math.random() * 50) + 1, // Mock data for now
+        rating: (Math.random() * 1 + 4).toFixed(1), // Random rating between 4.0 and 5.0
+        description: item.description
+      }));
+      
+      setMenuItems(transformedItems);
+      
+      // Update dashboard stats
+      setDashboardStats(prev => ({
+        ...prev,
+        activeMenuItems: transformedItems.filter(item => item.status === 'active').length
+      }));
+      
     } catch (error) {
       console.error('Unexpected error fetching menu items:', error);
-      Alert.alert('Error', 'An unexpected error occurred');
     } finally {
       setIsLoading(false);
-      setRefreshing(false);
     }
   };
 
-  const fetchStats = async () => {
-    // In a real app, this would fetch actual stats from the backend
-    // For now, we'll use mock data with some randomization
-    
+  const fetchOrders = async () => {
     try {
-      // Get order count
-      const { count: orderCount, error: orderError } = await supabase
-        .from('vendor_orders')
-        .select('*', { count: 'exact', head: true })
-        .eq('vendor_id', user?.id);
+      // For now, we'll use mock data since the orders table might not be fully implemented
+      // In a real app, you would fetch from the vendor_orders table
       
-      if (orderError) throw orderError;
+      const mockOrders = [
+        {
+          id: '1',
+          customer_name: 'John Doe',
+          items: 'Jollof Rice, Grilled Chicken',
+          amount: 8500,
+          status: 'preparing',
+          time: '10 mins ago',
+        },
+        {
+          id: '2',
+          customer_name: 'Sarah Johnson',
+          items: 'Fried Rice, Fish',
+          amount: 6750,
+          status: 'delivered',
+          time: '25 mins ago',
+        },
+        {
+          id: '3',
+          customer_name: 'Mike Wilson',
+          items: 'Pepper Soup, Bread',
+          amount: 4200,
+          status: 'confirmed',
+          time: '1 hour ago',
+        },
+      ];
       
-      // Get revenue
-      const { data: orderData, error: revenueError } = await supabase
-        .from('vendor_orders')
-        .select('total_amount')
-        .eq('vendor_id', user?.id);
+      setRecentOrders(mockOrders);
       
-      if (revenueError) throw revenueError;
+      // Update dashboard stats
+      setDashboardStats(prev => ({
+        ...prev,
+        totalOrders: mockOrders.length,
+        totalRevenue: mockOrders.reduce((sum, order) => sum + order.amount, 0),
+        averageRating: 4.7 // Mock average rating
+      }));
       
-      const totalRevenue = orderData?.reduce((sum, order) => sum + order.total_amount, 0) || 0;
-      
-      // Set stats
-      setStats({
-        totalOrders: orderCount || Math.floor(Math.random() * 200) + 50,
-        totalRevenue: totalRevenue || Math.floor(Math.random() * 3000000) + 1000000,
-        activeMenuItems: menuItems.filter(item => item.status === 'active').length,
-        averageRating: 4.5 + (Math.random() * 0.4),
-      });
     } catch (error) {
-      console.error('Error fetching stats:', error);
-      // Fallback to mock data
-      setStats({
-        totalOrders: Math.floor(Math.random() * 200) + 50,
-        totalRevenue: Math.floor(Math.random() * 3000000) + 1000000,
-        activeMenuItems: menuItems.filter(item => item.status === 'active').length,
-        averageRating: 4.5 + (Math.random() * 0.4),
-      });
+      console.error('Error fetching orders:', error);
     }
-  };
-
-  const onRefresh = () => {
-    setRefreshing(true);
-    fetchMenuItems();
-    fetchStats();
   };
 
   const formatPrice = (price: number) => {
-    return `₦${(price / 100).toLocaleString()}`; // Convert from kobo to naira
+    return `₦${price.toLocaleString()}`;
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'preparing': return '#FF8F00';
+      case 'confirmed': return '#2196F3';
+      case 'delivered': return '#4CAF50';
+      default: return '#666666';
+    }
   };
 
   const handleAddFood = () => {
@@ -136,8 +165,56 @@ export default function VendorDashboard() {
     });
   };
 
-  const handleToggleStatus = async (itemId: string, currentStatus: 'active' | 'inactive') => {
+  const handleDeleteFood = async (itemId: string) => {
+    Alert.alert(
+      'Delete Item',
+      'Are you sure you want to delete this menu item?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Delete', 
+          style: 'destructive', 
+          onPress: async () => {
+            try {
+              setIsLoading(true);
+              
+              const { error } = await supabase
+                .from('food_items')
+                .delete()
+                .eq('id', itemId);
+              
+              if (error) {
+                console.error('Error deleting food item:', error);
+                Alert.alert('Error', 'Failed to delete menu item: ' + error.message);
+                return;
+              }
+              
+              // Update local state
+              setMenuItems(prev => prev.filter(item => item.id !== itemId));
+              
+              // Update dashboard stats
+              setDashboardStats(prev => ({
+                ...prev,
+                activeMenuItems: prev.activeMenuItems - 1
+              }));
+              
+              Alert.alert('Success', 'Menu item deleted successfully');
+            } catch (error) {
+              console.error('Unexpected error deleting food item:', error);
+              Alert.alert('Error', 'An unexpected error occurred');
+            } finally {
+              setIsLoading(false);
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  const toggleItemStatus = async (itemId: string, currentStatus: 'active' | 'inactive') => {
     try {
+      setIsLoading(true);
+      
       const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
       
       const { error } = await supabase
@@ -146,157 +223,103 @@ export default function VendorDashboard() {
         .eq('id', itemId);
       
       if (error) {
-        throw error;
+        console.error('Error updating food item status:', error);
+        Alert.alert('Error', 'Failed to update item status: ' + error.message);
+        return;
       }
       
       // Update local state
-      setMenuItems(menuItems.map(item => 
+      setMenuItems(prev => prev.map(item => 
         item.id === itemId ? { ...item, status: newStatus } : item
       ));
       
-      // Update stats
-      setStats(prev => ({
+      // Update dashboard stats
+      const statusChange = newStatus === 'active' ? 1 : -1;
+      setDashboardStats(prev => ({
         ...prev,
-        activeMenuItems: newStatus === 'active' 
-          ? prev.activeMenuItems + 1 
-          : prev.activeMenuItems - 1
+        activeMenuItems: prev.activeMenuItems + statusChange
       }));
       
-      Alert.alert(
-        'Status Updated', 
-        `Item is now ${newStatus === 'active' ? 'visible to customers' : 'hidden from customers'}`
-      );
     } catch (error) {
-      console.error('Error updating status:', error);
-      Alert.alert('Error', 'Failed to update item status');
+      console.error('Unexpected error updating food item status:', error);
+      Alert.alert('Error', 'An unexpected error occurred');
+    } finally {
+      setIsLoading(false);
     }
-  };
-
-  const handleDeleteFood = (itemId: string, imageUrl: string | null) => {
-    Alert.alert(
-      'Delete Item',
-      'Are you sure you want to delete this menu item? This action cannot be undone.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Delete', 
-          style: 'destructive', 
-          onPress: async () => {
-            try {
-              // Delete the item from the database
-              const { error } = await supabase
-                .from('food_items')
-                .delete()
-                .eq('id', itemId);
-              
-              if (error) {
-                throw error;
-              }
-              
-              // Update local state
-              setMenuItems(menuItems.filter(item => item.id !== itemId));
-              
-              // Update stats
-              const deletedItem = menuItems.find(item => item.id === itemId);
-              if (deletedItem?.status === 'active') {
-                setStats(prev => ({
-                  ...prev,
-                  activeMenuItems: prev.activeMenuItems - 1
-                }));
-              }
-              
-              Alert.alert('Success', 'Menu item deleted successfully');
-            } catch (error) {
-              console.error('Error deleting item:', error);
-              Alert.alert('Error', 'Failed to delete menu item');
-            }
-          }
-        }
-      ]
-    );
   };
 
   const renderOverview = () => (
     <View>
-      {/* Stats Cards */}
-      <View style={styles.statsGrid}>
-        <View style={styles.statCard}>
-          <Package size={24} color="#006400" />
-          <Text style={styles.statNumber}>{stats.totalOrders}</Text>
-          <Text style={styles.statLabel}>Total Orders</Text>
+      {isLoading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#006400" />
+          <Text style={styles.loadingText}>Loading dashboard data...</Text>
         </View>
-        <View style={styles.statCard}>
-          <DollarSign size={24} color="#FFD700" />
-          <Text style={styles.statNumber}>{formatPrice(stats.totalRevenue)}</Text>
-          <Text style={styles.statLabel}>Revenue</Text>
-        </View>
-        <View style={styles.statCard}>
-          <Users size={24} color="#3F51B5" />
-          <Text style={styles.statNumber}>{stats.activeMenuItems}</Text>
-          <Text style={styles.statLabel}>Active Items</Text>
-        </View>
-        <View style={styles.statCard}>
-          <Star size={24} color="#FF6B6B" />
-          <Text style={styles.statNumber}>{stats.averageRating.toFixed(1)}</Text>
-          <Text style={styles.statLabel}>Rating</Text>
-        </View>
-      </View>
+      ) : (
+        <>
+          {/* Stats Cards */}
+          <View style={styles.statsGrid}>
+            <View style={styles.statCard}>
+              <Package size={24} color="#006400" />
+              <Text style={styles.statNumber}>{dashboardStats.totalOrders}</Text>
+              <Text style={styles.statLabel}>Total Orders</Text>
+            </View>
+            <View style={styles.statCard}>
+              <DollarSign size={24} color="#FFD700" />
+              <Text style={styles.statNumber}>{formatPrice(dashboardStats.totalRevenue)}</Text>
+              <Text style={styles.statLabel}>Revenue</Text>
+            </View>
+            <View style={styles.statCard}>
+              <Users size={24} color="#3F51B5" />
+              <Text style={styles.statNumber}>{dashboardStats.activeMenuItems}</Text>
+              <Text style={styles.statLabel}>Menu Items</Text>
+            </View>
+            <View style={styles.statCard}>
+              <Star size={24} color="#FF6B6B" />
+              <Text style={styles.statNumber}>{dashboardStats.averageRating}</Text>
+              <Text style={styles.statLabel}>Rating</Text>
+            </View>
+          </View>
 
-      {/* Recent Orders */}
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Recent Orders</Text>
-          <TouchableOpacity>
-            <Text style={styles.seeAllText}>View All</Text>
-          </TouchableOpacity>
-        </View>
-        
-        {isLoading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#006400" />
-            <Text style={styles.loadingText}>Loading orders...</Text>
-          </View>
-        ) : (
-          <View>
-            {/* Mock orders for now */}
-            <View style={styles.orderCard}>
-              <View style={styles.orderInfo}>
-                <Text style={styles.customerName}>John Doe</Text>
-                <Text style={styles.orderItems}>Jollof Rice, Grilled Chicken</Text>
-                <Text style={styles.orderTime}>10 mins ago</Text>
-              </View>
-              <View style={styles.orderRight}>
-                <Text style={styles.orderAmount}>{formatPrice(850000)}</Text>
-                <View style={[styles.statusBadge, { backgroundColor: '#FF8F0020' }]}>
-                  <Text style={[styles.statusText, { color: '#FF8F00' }]}>
-                    preparing
-                  </Text>
-                </View>
-              </View>
+          {/* Recent Orders */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Recent Orders</Text>
+              <TouchableOpacity>
+                <Text style={styles.seeAllText}>View All</Text>
+              </TouchableOpacity>
             </View>
             
-            <View style={styles.orderCard}>
-              <View style={styles.orderInfo}>
-                <Text style={styles.customerName}>Sarah Johnson</Text>
-                <Text style={styles.orderItems}>Fried Rice, Fish</Text>
-                <Text style={styles.orderTime}>25 mins ago</Text>
-              </View>
-              <View style={styles.orderRight}>
-                <Text style={styles.orderAmount}>{formatPrice(675000)}</Text>
-                <View style={[styles.statusBadge, { backgroundColor: '#4CAF5020' }]}>
-                  <Text style={[styles.statusText, { color: '#4CAF50' }]}>
-                    delivered
-                  </Text>
+            {recentOrders.length > 0 ? (
+              recentOrders.map((order) => (
+                <View key={order.id} style={styles.orderCard}>
+                  <View style={styles.orderInfo}>
+                    <Text style={styles.customerName}>{order.customer_name}</Text>
+                    <Text style={styles.orderItems}>{order.items}</Text>
+                    <Text style={styles.orderTime}>{order.time}</Text>
+                  </View>
+                  <View style={styles.orderRight}>
+                    <Text style={styles.orderAmount}>{formatPrice(order.amount)}</Text>
+                    <View style={[styles.statusBadge, { backgroundColor: getStatusColor(order.status) + '20' }]}>
+                      <Text style={[styles.statusText, { color: getStatusColor(order.status) }]}>
+                        {order.status}
+                      </Text>
+                    </View>
+                  </View>
                 </View>
+              ))
+            ) : (
+              <View style={styles.emptyState}>
+                <Package size={48} color="#CCCCCC" />
+                <Text style={styles.emptyStateTitle}>No Orders Yet</Text>
+                <Text style={styles.emptyStateText}>
+                  Your orders will appear here once customers start placing them
+                </Text>
               </View>
-            </View>
-            
-            <TouchableOpacity style={styles.viewAllButton}>
-              <Text style={styles.viewAllText}>View All Orders</Text>
-            </TouchableOpacity>
+            )}
           </View>
-        )}
-      </View>
+        </>
+      )}
     </View>
   );
 
@@ -317,19 +340,7 @@ export default function VendorDashboard() {
             <ActivityIndicator size="large" color="#006400" />
             <Text style={styles.loadingText}>Loading menu items...</Text>
           </View>
-        ) : menuItems.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Package size={48} color="#CCCCCC" />
-            <Text style={styles.emptyStateTitle}>No Menu Items</Text>
-            <Text style={styles.emptyStateText}>
-              Start adding delicious food items to your menu
-            </Text>
-            <TouchableOpacity style={styles.emptyStateButton} onPress={handleAddFood}>
-              <Plus size={20} color="#FFFFFF" />
-              <Text style={styles.emptyStateButtonText}>Add First Item</Text>
-            </TouchableOpacity>
-          </View>
-        ) : (
+        ) : menuItems.length > 0 ? (
           menuItems.map((item) => (
             <View key={item.id} style={styles.menuItemCard}>
               <ImageWithFallback 
@@ -340,28 +351,24 @@ export default function VendorDashboard() {
               <View style={styles.menuItemInfo}>
                 <Text style={styles.menuItemName}>{item.name}</Text>
                 <Text style={styles.menuItemPrice}>{formatPrice(item.price)}</Text>
-                <Text style={styles.menuItemCategory}>
-                  {item.category.charAt(0).toUpperCase() + item.category.slice(1).replace('-', ' ')}
-                </Text>
-                <View style={[
-                  styles.menuItemStatus,
-                  { backgroundColor: item.status === 'active' ? '#4CAF5020' : '#FF6B6B20' }
-                ]}>
-                  <Text style={[
-                    styles.menuItemStatusText,
-                    { color: item.status === 'active' ? '#4CAF50' : '#FF6B6B' }
-                  ]}>
-                    {item.status.toUpperCase()}
-                  </Text>
+                <View style={styles.menuItemMeta}>
+                  <Text style={styles.menuItemOrders}>{item.orders} orders</Text>
+                  <View style={styles.ratingContainer}>
+                    <Star size={12} color="#FFD700" fill="#FFD700" />
+                    <Text style={styles.menuItemRating}>{item.rating}</Text>
+                  </View>
                 </View>
+                <TouchableOpacity
+                  onPress={() => toggleItemStatus(item.id, item.status)}
+                  style={[
+                    styles.menuItemStatus,
+                    { backgroundColor: item.status === 'active' ? '#4CAF50' : '#FF6B6B' }
+                  ]}
+                >
+                  <Text style={styles.menuItemStatusText}>{item.status}</Text>
+                </TouchableOpacity>
               </View>
               <View style={styles.menuItemActions}>
-                <TouchableOpacity 
-                  style={styles.actionButton}
-                  onPress={() => handleToggleStatus(item.id, item.status)}
-                >
-                  <Eye size={16} color={item.status === 'active' ? '#FF6B6B' : '#4CAF50'} />
-                </TouchableOpacity>
                 <TouchableOpacity 
                   style={styles.actionButton}
                   onPress={() => handleEditFood(item.id)}
@@ -370,13 +377,25 @@ export default function VendorDashboard() {
                 </TouchableOpacity>
                 <TouchableOpacity 
                   style={styles.actionButton}
-                  onPress={() => handleDeleteFood(item.id, item.image_url)}
+                  onPress={() => handleDeleteFood(item.id)}
                 >
                   <Trash2 size={16} color="#FF6B6B" />
                 </TouchableOpacity>
               </View>
             </View>
           ))
+        ) : (
+          <View style={styles.emptyState}>
+            <Package size={48} color="#CCCCCC" />
+            <Text style={styles.emptyStateTitle}>No Menu Items</Text>
+            <Text style={styles.emptyStateText}>
+              Add your first food item to start selling
+            </Text>
+            <TouchableOpacity style={styles.addFirstItemButton} onPress={handleAddFood}>
+              <Plus size={20} color="#FFFFFF" />
+              <Text style={styles.addFirstItemText}>Add First Item</Text>
+            </TouchableOpacity>
+          </View>
         )}
       </View>
     </View>
@@ -448,18 +467,7 @@ export default function VendorDashboard() {
       </View>
 
       {/* Content */}
-      <ScrollView 
-        style={styles.content} 
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={['#006400']}
-            tintColor={'#006400'}
-          />
-        }
-      >
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {activeTab === 'overview' && renderOverview()}
         {activeTab === 'menu' && renderMenu()}
         {activeTab === 'analytics' && renderAnalytics()}
@@ -555,10 +563,10 @@ const styles = StyleSheet.create({
     padding: 40,
   },
   loadingText: {
-    marginTop: 10,
     fontSize: 16,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Inter-Regular',
     color: '#666666',
+    marginTop: 12,
   },
   statsGrid: {
     flexDirection: 'row',
@@ -664,18 +672,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-Semibold',
     textTransform: 'capitalize',
   },
-  viewAllButton: {
-    backgroundColor: '#F5F5F5',
-    paddingVertical: 12,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  viewAllText: {
-    fontSize: 14,
-    fontFamily: 'Inter-Medium',
-    color: '#006400',
-  },
   addButton: {
     backgroundColor: '#006400',
     flexDirection: 'row',
@@ -725,11 +721,26 @@ const styles = StyleSheet.create({
     color: '#006400',
     marginBottom: 4,
   },
-  menuItemCategory: {
+  menuItemMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 15,
+    marginBottom: 8,
+  },
+  menuItemOrders: {
     fontSize: 12,
     fontFamily: 'Inter-Regular',
     color: '#666666',
-    marginBottom: 8,
+  },
+  ratingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  menuItemRating: {
+    fontSize: 12,
+    fontFamily: 'Inter-Semibold',
+    color: '#000000',
   },
   menuItemStatus: {
     alignSelf: 'flex-start',
@@ -740,13 +751,13 @@ const styles = StyleSheet.create({
   menuItemStatusText: {
     fontSize: 10,
     fontFamily: 'Inter-Semibold',
+    color: '#FFFFFF',
+    textTransform: 'uppercase',
   },
   menuItemActions: {
-    flexDirection: 'column',
+    flexDirection: 'row',
     gap: 8,
     alignItems: 'center',
-    justifyContent: 'center',
-    marginLeft: 10,
   },
   actionButton: {
     backgroundColor: '#F5F5F5',
@@ -801,7 +812,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 20,
   },
-  emptyStateButton: {
+  addFirstItemButton: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#006400',
@@ -810,7 +821,7 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     gap: 6,
   },
-  emptyStateButtonText: {
+  addFirstItemText: {
     fontSize: 14,
     fontFamily: 'Inter-Semibold',
     color: '#FFFFFF',

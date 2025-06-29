@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Image, Alert, ActivityIndicator, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { ArrowLeft, Camera, MapPin, Clock, DollarSign, Package, FileText, Image as ImageIcon } from 'lucide-react-native';
+import { ArrowLeft, Camera, MapPin, Clock, DollarSign, Package, FileText } from 'lucide-react-native';
 import CustomLogo from '@/components/CustomLogo';
 import * as ImagePicker from 'expo-image-picker';
-import { supabase, uploadFoodImage } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
+import ImageWithFallback from '@/components/ImageWithFallback';
+import { IMAGES } from '@/constants/Images';
 
 export default function AddFoodItem() {
   const [foodName, setFoodName] = useState('');
@@ -15,10 +17,8 @@ export default function AddFoodItem() {
   const [category, setCategory] = useState('main-course');
   const [prepTime, setPrepTime] = useState('');
   const [ingredients, setIngredients] = useState('');
-  const [imageUri, setImageUri] = useState<string | null>(null);
+  const [imageUri, setImageUri] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
-
   const { user } = useAuth();
 
   const categories = [
@@ -40,25 +40,19 @@ export default function AddFoodItem() {
       return false;
     }
 
-    if (!imageUri) {
-      Alert.alert('Error', 'Please add an image of your food item');
-      return false;
-    }
-
     return true;
   };
 
   const handleImagePicker = async () => {
     try {
       // Request permissions
-      if (Platform.OS !== 'web') {
-        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-        if (status !== 'granted') {
-          Alert.alert('Permission Denied', 'We need camera roll permissions to upload images');
-          return;
-        }
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      
+      if (status !== 'granted') {
+        Alert.alert('Permission Denied', 'We need camera roll permissions to upload images');
+        return;
       }
-
+      
       // Launch image picker
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -66,40 +60,16 @@ export default function AddFoodItem() {
         aspect: [4, 3],
         quality: 0.8,
       });
-
+      
       if (!result.canceled && result.assets && result.assets.length > 0) {
         setImageUri(result.assets[0].uri);
       }
     } catch (error) {
       console.error('Error picking image:', error);
       Alert.alert('Error', 'Failed to pick image. Please try again.');
-    }
-  };
-
-  const handleCameraCapture = async () => {
-    try {
-      // Request permissions
-      if (Platform.OS !== 'web') {
-        const { status } = await ImagePicker.requestCameraPermissionsAsync();
-        if (status !== 'granted') {
-          Alert.alert('Permission Denied', 'We need camera permissions to take photos');
-          return;
-        }
-      }
-
-      // Launch camera
-      const result = await ImagePicker.launchCameraAsync({
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 0.8,
-      });
-
-      if (!result.canceled && result.assets && result.assets.length > 0) {
-        setImageUri(result.assets[0].uri);
-      }
-    } catch (error) {
-      console.error('Error capturing image:', error);
-      Alert.alert('Error', 'Failed to capture image. Please try again.');
+      
+      // For demo purposes, set a placeholder image
+      setImageUri(IMAGES.DEFAULT_FOOD);
     }
   };
 
@@ -111,58 +81,43 @@ export default function AddFoodItem() {
     }
 
     setIsLoading(true);
-    setIsUploading(true);
 
     try {
-      // First upload the image
-      let imageUrl = null;
+      // Convert price to integer (kobo)
+      const priceInKobo = Math.round(parseFloat(price) * 100);
       
-      if (imageUri) {
-        const fileName = `food_${Date.now()}`;
-        const { url, error: uploadError } = await uploadFoodImage(
-          imageUri,
-          category,
-          fileName
-        );
-        
-        if (uploadError) {
-          throw new Error(`Failed to upload image: ${uploadError.message}`);
-        }
-        
-        imageUrl = url;
-        setIsUploading(false);
-      }
-
-      // Then save the food item data
-      const { error } = await supabase
+      // Add food item to database
+      const { data, error } = await supabase
         .from('food_items')
         .insert({
           vendor_id: user.id,
           name: foodName,
           description: description,
-          price: parseInt(price) * 100, // Convert to kobo (smallest currency unit)
+          price: priceInKobo,
           category: category,
-          image_url: imageUrl,
+          image_url: imageUri || IMAGES.DEFAULT_FOOD,
           prep_time: prepTime,
           ingredients: ingredients,
-          status: 'active',
-        });
-
+          status: 'active'
+        })
+        .select();
+      
       if (error) {
-        throw new Error(`Failed to save food item: ${error.message}`);
+        console.error('Error adding food item:', error);
+        Alert.alert('Error', 'Failed to add food item: ' + error.message);
+        return;
       }
       
       Alert.alert(
         'Success!',
         'Food item has been added to your menu successfully.',
-        [{ text: 'OK', onPress: () => router.push('/vendor-dashboard') }]
+        [{ text: 'OK', onPress: () => router.back() }]
       );
     } catch (error) {
-      console.error('Error saving food item:', error);
-      Alert.alert('Error', error instanceof Error ? error.message : 'Failed to add food item. Please try again.');
+      console.error('Unexpected error:', error);
+      Alert.alert('Error', 'Failed to add food item. Please try again.');
     } finally {
       setIsLoading(false);
-      setIsUploading(false);
     }
   };
 
@@ -187,32 +142,17 @@ export default function AddFoodItem() {
         {/* Image Upload */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Food Image</Text>
-          <TouchableOpacity 
-            style={styles.imageUpload} 
-            onPress={() => {
-              Alert.alert(
-                'Add Image',
-                'Choose an option',
-                [
-                  { text: 'Take Photo', onPress: handleCameraCapture },
-                  { text: 'Choose from Gallery', onPress: handleImagePicker },
-                  { text: 'Cancel', style: 'cancel' }
-                ]
-              );
-            }}
-          >
+          <TouchableOpacity style={styles.imageUpload} onPress={handleImagePicker}>
             {imageUri ? (
-              <Image source={{ uri: imageUri }} style={styles.uploadedImage} />
+              <ImageWithFallback 
+                source={imageUri} 
+                style={styles.uploadedImage}
+                fallback={IMAGES.DEFAULT_FOOD}
+              />
             ) : (
               <View style={styles.imagePlaceholder}>
-                <ImageIcon size={32} color="#666666" />
+                <Camera size={32} color="#666666" />
                 <Text style={styles.imagePlaceholderText}>Tap to add image</Text>
-              </View>
-            )}
-            {isUploading && (
-              <View style={styles.uploadingOverlay}>
-                <ActivityIndicator size="large" color="#FFFFFF" />
-                <Text style={styles.uploadingText}>Uploading...</Text>
               </View>
             )}
           </TouchableOpacity>
@@ -410,7 +350,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
-    position: 'relative',
   },
   imagePlaceholder: {
     alignItems: 'center',
@@ -424,22 +363,6 @@ const styles = StyleSheet.create({
   uploadedImage: {
     width: '100%',
     height: '100%',
-  },
-  uploadingOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  uploadingText: {
-    color: '#FFFFFF',
-    marginTop: 10,
-    fontSize: 16,
-    fontFamily: 'Inter-Medium',
   },
   inputContainer: {
     flexDirection: 'row',
