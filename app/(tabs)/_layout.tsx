@@ -1,6 +1,6 @@
 import { Tabs } from 'expo-router';
 import { Utensils, Grid3x3 as Grid3X3, Lightbulb, DollarSign, User } from 'lucide-react-native';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Image } from 'react-native';
 
 export default function TabLayout() {
   return (
@@ -8,7 +8,7 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: styles.tabBar,
-        tabBarActiveTintColor: '#7CB342',
+        tabBarActiveTintColor: '#32CD32',
         tabBarInactiveTintColor: '#666666',
         tabBarLabelStyle: styles.tabLabel,
         tabBarItemStyle: styles.tabItem,

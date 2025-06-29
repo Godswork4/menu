@@ -1,12 +1,31 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Image } from 'react-native';
 
 interface CustomLogoProps {
   size?: 'small' | 'medium' | 'large';
   color?: string;
+  useImage?: boolean;
 }
 
-export default function CustomLogo({ size = 'medium', color = '#FFFFFF' }: CustomLogoProps) {
+export default function CustomLogo({ size = 'medium', color = '#FFFFFF', useImage = false }: CustomLogoProps) {
+  if (useImage) {
+    const logoSizes = {
+      small: { width: 24, height: 24 },
+      medium: { width: 32, height: 32 },
+      large: { width: 48, height: 48 },
+    };
+    
+    return (
+      <View style={styles.logoContainer}>
+        <Image 
+          source={require('../assets/images/menulogo copy.webp')} 
+          style={[styles.logoImage, logoSizes[size]]}
+          resizeMode="contain"
+        />
+      </View>
+    );
+  }
+
   const sizeStyles = {
     small: { fontSize: 18 },
     medium: { fontSize: 24 },
@@ -46,5 +65,9 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-Medium',
     fontWeight: '500',
     opacity: 0.8,
+  },
+  logoImage: {
+    width: 32,
+    height: 32,
   },
 });

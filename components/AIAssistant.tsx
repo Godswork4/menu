@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal, ScrollView, TextInput, Animated, Easing } from 'react-native';
-import { MessageCircle, X, Send, ChefHat, Heart, DollarSign, Lightbulb, Sparkles } from 'lucide-react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Modal, ScrollView, TextInput, Animated, Easing, Image } from 'react-native';
+import { X, Send, ChefHat, Heart, DollarSign, Lightbulb } from 'lucide-react-native';
 
 interface Message {
   id: number;
@@ -161,7 +161,11 @@ export default function AIAssistant() {
             ]}
           />
           <View style={styles.iconContainer}>
-            <Sparkles size={24} color="#FFFFFF" />
+            <Image 
+              source={require('../assets/images/menulogo copy.webp')} 
+              style={styles.menuLogo} 
+              resizeMode="contain"
+            />
           </View>
         </TouchableOpacity>
       </Animated.View>
@@ -179,10 +183,14 @@ export default function AIAssistant() {
             <View style={styles.chatHeader}>
               <View style={styles.aiInfo}>
                 <View style={styles.aiAvatar}>
-                  <Sparkles size={20} color="#FFFFFF" />
+                  <Image 
+                    source={require('../assets/images/menulogo copy.webp')} 
+                    style={styles.menuLogoSmall} 
+                    resizeMode="contain"
+                  />
                 </View>
                 <View>
-                  <Text style={styles.aiName}>Food AI Assistant</Text>
+                  <Text style={styles.aiName}>Menu AI Assistant</Text>
                   <Text style={styles.aiStatus}>Online • Ready to help</Text>
                 </View>
               </View>
@@ -293,7 +301,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#7CB342',
+    backgroundColor: '#32CD32',
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 8,
@@ -319,9 +327,16 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  menuLogo: {
+    width: 40,
+    height: 40,
+  },
+  menuLogoSmall: {
+    width: 30,
+    height: 30,
   },
   modalOverlay: {
     flex: 1,
@@ -353,7 +368,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#7CB342',
+    backgroundColor: '#32CD32',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -365,7 +380,7 @@ const styles = StyleSheet.create({
   aiStatus: {
     fontSize: 12,
     fontFamily: 'Inter-Regular',
-    color: '#7CB342',
+    color: '#32CD32',
   },
   closeButton: {
     padding: 8,
@@ -391,7 +406,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
   },
   userMessage: {
-    backgroundColor: '#7CB342',
+    backgroundColor: '#32CD32',
     borderBottomRightRadius: 4,
   },
   aiMessage: {
@@ -490,7 +505,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#7CB342',
+    backgroundColor: '#32CD32',
     justifyContent: 'center',
     alignItems: 'center',
   },
