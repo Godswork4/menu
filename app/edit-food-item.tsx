@@ -1,14 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Image, Alert, ActivityIndicator, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
-import { ArrowLeft, Camera, MapPin, Clock, DollarSign, Package, FileText, Image as ImageIcon } from 'lucide-react-native';
+import { router, useLocalSearchParams } from 'expo-router';
+import { ArrowLeft, Camera, MapPin, Clock, DollarSign, Package, FileText, Image as ImageIcon, Save } from 'lucide-react-native';
 import CustomLogo from '@/components/CustomLogo';
 import * as ImagePicker from 'expo-image-picker';
-import { supabase, uploadFoodImage } from '@/lib/supabase';
+import { supabase, uploadFoodImage, deleteFoodImage } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
+import ImageWithFallback from '@/components/ImageWithFallback';
+import { IMAGES } from '@/constants/Images';
 
-export default function AddFoodItem() {
+export default function EditFoodItem() {
+  const { id } = useLocalSearchParams();
   const [foodName, setFoodName] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
@@ -16,8 +19,11 @@ export default function AddFoodItem() {
   const [prepTime, setPrepTime] = useState('');
   const [ingredients, setIngredients] = useState('');
   const [imageUri, setImageUri] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [originalImageUrl, setOriginalImageUrl] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isImageChanged, setIsImageChanged] = useState(false);
 
   const { user } = useAuth();
 
@@ -28,6 +34,45 @@ export default function AddFoodItem() {
     { id: 'beverage', name: 'Beverage', icon: '🥤' },
     { id: 'snack', name: 'Snack', icon: '🍿' },
   ];
+
+  useEffect(() => {
+    if (id) {
+      fetchFoodItem();
+    }
+  }, [id]);
+
+  const fetchFoodItem = async () => {
+    try {
+      setIsLoading(true);
+      
+      const { data, error } = await supabase
+        .from('food_items')
+        .select('*')
+        .eq('id', id)
+        .single();
+      
+      if (error) {
+        throw error;
+      }
+      
+      if (data) {
+        setFoodName(data.name);
+        setDescription(data.description || '');
+        setPrice(String(data.price / 100)); // Convert from kobo to naira
+        setCategory(data.category);
+        setPrepTime(data.prep_time || '');
+        setIngredients(data.ingredients || '');
+        setImageUri(data.image_url);
+        setOriginalImageUrl(data.image_url);
+      }
+    } catch (error) {
+      console.error('Error fetching food item:', error);
+      Alert.alert('Error', 'Failed to load food item details');
+      router.back();
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const validateForm = () => {
     if (!foodName || !description || !price || !prepTime) {
@@ -69,6 +114,7 @@ export default function AddFoodItem() {
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
         setImageUri(result.assets[0].uri);
+        setIsImageChanged(true);
       }
     } catch (error) {
       console.error('Error picking image:', error);
@@ -96,6 +142,7 @@ export default function AddFoodItem() {
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
         setImageUri(result.assets[0].uri);
+        setIsImageChanged(true);
       }
     } catch (error) {
       console.error('Error capturing image:', error);
@@ -103,21 +150,28 @@ export default function AddFoodItem() {
     }
   };
 
-  const handleSaveItem = async () => {
+  const handleUpdateItem = async () => {
     if (!validateForm()) return;
     if (!user) {
-      Alert.alert('Error', 'You must be logged in to add food items');
+      Alert.alert('Error', 'You must be logged in to update food items');
       return;
     }
 
-    setIsLoading(true);
-    setIsUploading(true);
+    setIsSaving(true);
 
     try {
-      // First upload the image
-      let imageUrl = null;
+      let imageUrl = originalImageUrl;
       
-      if (imageUri) {
+      // If image was changed, upload the new one
+      if (isImageChanged && imageUri) {
+        setIsUploading(true);
+        
+        // Delete the old image if it exists
+        if (originalImageUrl) {
+          await deleteFoodImage(originalImageUrl);
+        }
+        
+        // Upload the new image
         const fileName = `food_${Date.now()}`;
         const { url, error: uploadError } = await uploadFoodImage(
           imageUri,
@@ -133,38 +187,57 @@ export default function AddFoodItem() {
         setIsUploading(false);
       }
 
-      // Then save the food item data
+      // Update the food item data
       const { error } = await supabase
         .from('food_items')
-        .insert({
-          vendor_id: user.id,
+        .update({
           name: foodName,
           description: description,
-          price: parseInt(price) * 100, // Convert to kobo (smallest currency unit)
+          price: parseInt(price) * 100, // Convert to kobo
           category: category,
           image_url: imageUrl,
           prep_time: prepTime,
           ingredients: ingredients,
-          status: 'active',
-        });
+        })
+        .eq('id', id);
 
       if (error) {
-        throw new Error(`Failed to save food item: ${error.message}`);
+        throw new Error(`Failed to update food item: ${error.message}`);
       }
       
       Alert.alert(
         'Success!',
-        'Food item has been added to your menu successfully.',
+        'Food item has been updated successfully.',
         [{ text: 'OK', onPress: () => router.push('/vendor-dashboard') }]
       );
     } catch (error) {
-      console.error('Error saving food item:', error);
-      Alert.alert('Error', error instanceof Error ? error.message : 'Failed to add food item. Please try again.');
+      console.error('Error updating food item:', error);
+      Alert.alert('Error', error instanceof Error ? error.message : 'Failed to update food item. Please try again.');
     } finally {
-      setIsLoading(false);
-      setIsUploading(false);
+      setIsSaving(false);
     }
   };
+
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+            <ArrowLeft size={24} color="#FFFFFF" />
+          </TouchableOpacity>
+          <View style={styles.headerContent}>
+            <CustomLogo size="medium" color="#FFFFFF" />
+            <Text style={styles.headerTitle}>Edit Food Item</Text>
+          </View>
+          <View style={styles.placeholder} />
+        </View>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#006400" />
+          <Text style={styles.loadingText}>Loading food item details...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -175,14 +248,14 @@ export default function AddFoodItem() {
         </TouchableOpacity>
         <View style={styles.headerContent}>
           <CustomLogo size="medium" color="#FFFFFF" />
-          <Text style={styles.headerTitle}>Add Food Item</Text>
+          <Text style={styles.headerTitle}>Edit Food Item</Text>
         </View>
         <View style={styles.placeholder} />
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        <Text style={styles.title}>Add New Food Item</Text>
-        <Text style={styles.subtitle}>Fill in the details to add a new item to your menu</Text>
+        <Text style={styles.title}>Edit Food Item</Text>
+        <Text style={styles.subtitle}>Update the details of your menu item</Text>
 
         {/* Image Upload */}
         <View style={styles.section}>
@@ -191,7 +264,7 @@ export default function AddFoodItem() {
             style={styles.imageUpload} 
             onPress={() => {
               Alert.alert(
-                'Add Image',
+                'Update Image',
                 'Choose an option',
                 [
                   { text: 'Take Photo', onPress: handleCameraCapture },
@@ -202,7 +275,11 @@ export default function AddFoodItem() {
             }}
           >
             {imageUri ? (
-              <Image source={{ uri: imageUri }} style={styles.uploadedImage} />
+              <ImageWithFallback 
+                source={imageUri} 
+                style={styles.uploadedImage}
+                fallback={IMAGES.DEFAULT_FOOD}
+              />
             ) : (
               <View style={styles.imagePlaceholder}>
                 <ImageIcon size={32} color="#666666" />
@@ -229,7 +306,7 @@ export default function AddFoodItem() {
               placeholder="Food name (e.g., Jollof Rice Special)"
               value={foodName}
               onChangeText={setFoodName}
-              editable={!isLoading}
+              editable={!isSaving}
             />
           </View>
 
@@ -242,7 +319,7 @@ export default function AddFoodItem() {
               onChangeText={setDescription}
               multiline
               numberOfLines={3}
-              editable={!isLoading}
+              editable={!isSaving}
             />
           </View>
 
@@ -255,7 +332,7 @@ export default function AddFoodItem() {
               value={price}
               onChangeText={setPrice}
               keyboardType="numeric"
-              editable={!isLoading}
+              editable={!isSaving}
             />
           </View>
 
@@ -266,7 +343,7 @@ export default function AddFoodItem() {
               placeholder="Preparation time (e.g., 20 minutes)"
               value={prepTime}
               onChangeText={setPrepTime}
-              editable={!isLoading}
+              editable={!isSaving}
             />
           </View>
         </View>
@@ -283,7 +360,7 @@ export default function AddFoodItem() {
                   category === cat.id && styles.categoryCardActive
                 ]}
                 onPress={() => setCategory(cat.id)}
-                disabled={isLoading}
+                disabled={isSaving}
               >
                 <Text style={styles.categoryIcon}>{cat.icon}</Text>
                 <Text style={[
@@ -309,35 +386,29 @@ export default function AddFoodItem() {
               onChangeText={setIngredients}
               multiline
               numberOfLines={2}
-              editable={!isLoading}
+              editable={!isSaving}
             />
           </View>
         </View>
 
-        {/* Save Button */}
+        {/* Update Button */}
         <TouchableOpacity 
-          style={[styles.saveButton, isLoading && styles.saveButtonDisabled]} 
-          onPress={handleSaveItem}
-          disabled={isLoading}
+          style={[styles.updateButton, isSaving && styles.updateButtonDisabled]} 
+          onPress={handleUpdateItem}
+          disabled={isSaving}
         >
-          {isLoading ? (
+          {isSaving ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="small" color="#FFFFFF" />
-              <Text style={styles.loadingText}>Adding Item...</Text>
+              <Text style={styles.loadingText}>Updating Item...</Text>
             </View>
           ) : (
-            <Text style={styles.saveButtonText}>Add to Menu</Text>
+            <View style={styles.updateButtonContent}>
+              <Save size={20} color="#FFFFFF" />
+              <Text style={styles.updateButtonText}>Update Item</Text>
+            </View>
           )}
         </TouchableOpacity>
-
-        {/* Tips */}
-        <View style={styles.tipsContainer}>
-          <Text style={styles.tipsTitle}>💡 Tips for better sales:</Text>
-          <Text style={styles.tipText}>• Use high-quality, appetizing photos</Text>
-          <Text style={styles.tipText}>• Write detailed, mouth-watering descriptions</Text>
-          <Text style={styles.tipText}>• Price competitively based on your area</Text>
-          <Text style={styles.tipText}>• Keep preparation times realistic</Text>
-        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -370,6 +441,18 @@ const styles = StyleSheet.create({
   },
   placeholder: {
     width: 40,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 40,
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    fontFamily: 'Inter-Medium',
+    color: '#666666',
   },
   content: {
     flex: 1,
@@ -500,48 +583,24 @@ const styles = StyleSheet.create({
     color: '#006400',
     fontFamily: 'Inter-Semibold',
   },
-  saveButton: {
+  updateButton: {
     backgroundColor: '#006400',
     paddingVertical: 18,
     borderRadius: 12,
     alignItems: 'center',
     marginBottom: 30,
   },
-  saveButtonDisabled: {
+  updateButtonDisabled: {
     opacity: 0.7,
   },
-  loadingContainer: {
+  updateButtonContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 8,
   },
-  loadingText: {
+  updateButtonText: {
     fontSize: 16,
     fontFamily: 'Inter-Semibold',
     color: '#FFFFFF',
-  },
-  saveButtonText: {
-    fontSize: 16,
-    fontFamily: 'Inter-Semibold',
-    color: '#FFFFFF',
-  },
-  tipsContainer: {
-    backgroundColor: '#FFF9E6',
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 30,
-  },
-  tipsTitle: {
-    fontSize: 16,
-    fontFamily: 'Inter-Semibold',
-    color: '#FF8F00',
-    marginBottom: 12,
-  },
-  tipText: {
-    fontSize: 14,
-    fontFamily: 'Inter-Regular',
-    color: '#333333',
-    marginBottom: 6,
-    lineHeight: 20,
   },
 });

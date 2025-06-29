@@ -205,4 +205,86 @@ export interface Database {
       vendor_order_status: 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivered' | 'cancelled';
     };
   };
+  storage: {
+    Buckets: {
+      [_ in 'food-images']: {
+        Row: {
+          id: string;
+          name: string;
+          owner: string | null;
+          created_at: string | null;
+          updated_at: string | null;
+          public: boolean | null;
+          avif_autodetection: boolean | null;
+          file_size_limit: number | null;
+          allowed_mime_types: string[] | null;
+          owner_id: string | null;
+        };
+        Insert: {
+          id: string;
+          name: string;
+          owner?: string | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+          public?: boolean | null;
+          avif_autodetection?: boolean | null;
+          file_size_limit?: number | null;
+          allowed_mime_types?: string[] | null;
+          owner_id?: string | null;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          owner?: string | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+          public?: boolean | null;
+          avif_autodetection?: boolean | null;
+          file_size_limit?: number | null;
+          allowed_mime_types?: string[] | null;
+          owner_id?: string | null;
+        };
+      };
+    };
+    Objects: {
+      [_ in 'food-images']: {
+        Row: {
+          name: string;
+          bucket_id: string | null;
+          owner: string | null;
+          created_at: string | null;
+          updated_at: string | null;
+          last_accessed_at: string | null;
+          metadata: Record<string, any> | null;
+          id: string;
+          version: string | null;
+          owner_id: string | null;
+        };
+        Insert: {
+          name: string;
+          bucket_id?: string | null;
+          owner?: string | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+          last_accessed_at?: string | null;
+          metadata?: Record<string, any> | null;
+          id?: string;
+          version?: string | null;
+          owner_id?: string | null;
+        };
+        Update: {
+          name?: string;
+          bucket_id?: string | null;
+          owner?: string | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+          last_accessed_at?: string | null;
+          metadata?: Record<string, any> | null;
+          id?: string;
+          version?: string | null;
+          owner_id?: string | null;
+        };
+      };
+    };
+  };
 }
