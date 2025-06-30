@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Alert, Modal } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { ArrowLeft, Search, Plus, Minus, ShoppingCart, Filter, MapPin, Calendar, Clock, Info, X } from 'lucide-react-native';
 import AIAssistant from '@/components/AIAssistant';
+import ImageWithFallback from '@/components/ImageWithFallback';
+import { IMAGES } from '@/constants/Images';
 
 export default function Market() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -106,7 +108,7 @@ export default function Market() {
     },
     {
       id: 8,
-      name: 'Groundnut Oil (1L)',
+      name: 'Groundnut Oil (1kg)',
       category: 'Oils',
       price: 2200,
       image: 'https://images.pexels.com/photos/4110251/pexels-photo-4110251.jpeg',
@@ -339,7 +341,11 @@ export default function Market() {
           <View style={styles.productsGrid}>
             {filteredItems.map((item) => (
               <View key={item.id} style={styles.productCard}>
-                <Image source={{ uri: item.image }} style={styles.productImage} />
+                <ImageWithFallback 
+                  source={item.image} 
+                  style={styles.productImage}
+                  fallback={IMAGES.DEFAULT_FOOD}
+                />
                 <View style={styles.productInfo}>
                   <Text style={styles.productName}>{item.name}</Text>
                   <Text style={styles.productDescription}>{item.description}</Text>
@@ -456,7 +462,11 @@ export default function Market() {
             {selectedItem && (
               <View style={styles.scheduleContent}>
                 <View style={styles.scheduleItemInfo}>
-                  <Image source={{ uri: selectedItem.image }} style={styles.scheduleItemImage} />
+                  <ImageWithFallback 
+                    source={selectedItem.image} 
+                    style={styles.scheduleItemImage}
+                    fallback={IMAGES.DEFAULT_FOOD}
+                  />
                   <View style={styles.scheduleItemDetails}>
                     <Text style={styles.scheduleItemName}>{selectedItem.name}</Text>
                     <Text style={styles.scheduleItemVendor}>{selectedItem.vendor}</Text>

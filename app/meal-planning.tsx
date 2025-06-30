@@ -1,361 +1,271 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Modal, Alert, ActivityIndicator, RefreshControl, Image } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Modal, Alert, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { ArrowLeft, Plus, Calendar, Clock, ChefHat, Star, MapPin, CreditCard as Edit3, Trash2, Bell, X, Search, Heart } from 'lucide-react-native';
+import { ArrowLeft, Plus, Calendar, Clock, ChevronRight, ChevronLeft, X, Search, MapPin, Star, Heart, DollarSign } from 'lucide-react-native';
 import CustomLogo from '@/components/CustomLogo';
+import { useAuth } from '@/contexts/AuthContext';
 import ImageWithFallback from '@/components/ImageWithFallback';
 import { IMAGES } from '@/constants/Images';
-import { useAuth } from '@/contexts/AuthContext';
-import { fetchMealPlans, createMealPlan, updateMealPlan, deleteMealPlan, MealPlan } from '@/lib/mealPlanning';
+
+interface MealPlan {
+  id: number;
+  date: string;
+  mealType: string;
+  foodName: string;
+  restaurant: string;
+  price: number;
+  image: string;
+  time: string;
+}
 
 export default function MealPlanning() {
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
-  const [selectedMealType, setSelectedMealType] = useState<string>('lunch');
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [showScheduleModal, setShowScheduleModal] = useState(false);
-  const [selectedMealPlan, setSelectedMealPlan] = useState<MealPlan | null>(null);
-  const [mealPlans, setMealPlans] = useState<MealPlan[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  // Form state for new meal plan
-  const [newMealName, setNewMealName] = useState('');
-  const [newMealRestaurant, setNewMealRestaurant] = useState('');
-  const [newMealPrice, setNewMealPrice] = useState('');
-  const [newMealTime, setNewMealTime] = useState('12:00');
-  const [newMealNotes, setNewMealNotes] = useState('');
-  const [newMealRecurring, setNewMealRecurring] = useState(false);
-  
-  // Advanced meal planning
-  const [showRestaurantSelector, setShowRestaurantSelector] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedRestaurant, setSelectedRestaurant] = useState<any>(null);
-  const [selectedFoodItem, setSelectedFoodItem] = useState<any>(null);
-  const [showFoodSelector, setShowFoodSelector] = useState(false);
-
   const { user } = useAuth();
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedMealType, setSelectedMealType] = useState('');
+  const [showAddMealModal, setShowAddMealModal] = useState(false);
+  const [showFoodSelectionModal, setShowFoodSelectionModal] = useState(false);
+  const [showRestaurantSelectionModal, setShowRestaurantSelectionModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  // Form state
+  const [selectedFood, setSelectedFood] = useState<any>(null);
+  const [selectedRestaurant, setSelectedRestaurant] = useState<any>(null);
+  const [scheduledTime, setScheduledTime] = useState('');
+  const [specialInstructions, setSpecialInstructions] = useState('');
+  
+  // Meal plans state
+  const [mealPlans, setMealPlans] = useState<MealPlan[]>([]);
 
-  useEffect(() => {
-    if (user) {
-      loadMealPlans();
-    }
-  }, [user, selectedDate]);
-
-  const loadMealPlans = async () => {
-    if (!user) return;
-    
-    try {
-      setIsLoading(true);
-      const { data, error } = await fetchMealPlans(user.id, { date: selectedDate });
-      
-      if (error) throw error;
-      
-      setMealPlans(data || []);
-    } catch (error) {
-      console.error('Error loading meal plans:', error);
-      Alert.alert('Error', 'Failed to load your meal plans. Please try again.');
-    } finally {
-      setIsLoading(false);
-      setRefreshing(false);
-    }
-  };
-
-  const onRefresh = () => {
-    setRefreshing(true);
-    loadMealPlans();
-  };
-
+  // Sample data
   const mealTypes = [
-    { id: 'breakfast', name: 'Breakfast', icon: '🌅', color: '#FFD700' },
-    { id: 'lunch', name: 'Lunch', icon: '☀️', color: '#FF6B6B' },
-    { id: 'dinner', name: 'Dinner', icon: '🌙', color: '#4ECDC4' },
-    { id: 'snack', name: 'Snack', icon: '🍿', color: '#FFA726' },
+    { id: 'breakfast', name: 'Breakfast', icon: '🍳' },
+    { id: 'lunch', name: 'Lunch', icon: '🍱' },
+    { id: 'dinner', name: 'Dinner', icon: '🍽️' },
+    { id: 'snack', name: 'Snack', icon: '🍿' },
   ];
 
-  // Sample restaurants data
+  const foodItems = [
+    {
+      id: 1,
+      name: 'Jollof Rice Special',
+      restaurant: 'Lagos Kitchen',
+      price: 4500,
+      image: 'https://images.pexels.com/photos/5695880/pexels-photo-5695880.jpeg',
+      rating: 4.8,
+    },
+    {
+      id: 2,
+      name: 'Grilled Chicken Deluxe',
+      restaurant: 'Spice Garden',
+      price: 6500,
+      image: 'https://images.pexels.com/photos/2338407/pexels-photo-2338407.jpeg',
+      rating: 4.9,
+    },
+    {
+      id: 3,
+      name: 'Pepper Soup',
+      restaurant: 'Traditional Taste',
+      price: 3200,
+      image: 'https://images.pexels.com/photos/539451/pexels-photo-539451.jpeg',
+      rating: 4.7,
+    },
+    {
+      id: 4,
+      name: 'Fried Rice',
+      restaurant: 'Rice Haven',
+      price: 4800,
+      image: 'https://images.pexels.com/photos/723198/pexels-photo-723198.jpeg',
+      rating: 4.7,
+    },
+    {
+      id: 5,
+      name: 'Suya Platter',
+      restaurant: 'Suya Spot',
+      price: 6500,
+      image: 'https://images.pexels.com/photos/1251198/pexels-photo-1251198.jpeg',
+      rating: 4.8,
+    },
+  ];
+
   const restaurants = [
     {
       id: 1,
       name: 'Lagos Kitchen',
       cuisine: 'Nigerian',
       rating: 4.8,
+      deliveryTime: '20-30 min',
       image: 'https://images.pexels.com/photos/260922/pexels-photo-260922.jpeg',
-      menu: [
-        { id: 101, name: 'Jollof Rice Special', price: 4500, image: 'https://images.pexels.com/photos/5695880/pexels-photo-5695880.jpeg' },
-        { id: 102, name: 'Egusi Soup with Pounded Yam', price: 5500, image: 'https://images.pexels.com/photos/5835350/pexels-photo-5835350.jpeg' },
-        { id: 103, name: 'Pepper Soup', price: 3200, image: 'https://images.pexels.com/photos/539451/pexels-photo-539451.jpeg' },
-      ]
     },
     {
       id: 2,
       name: 'Spice Garden',
       cuisine: 'Continental',
       rating: 4.6,
+      deliveryTime: '25-35 min',
       image: 'https://images.pexels.com/photos/1267320/pexels-photo-1267320.jpeg',
-      menu: [
-        { id: 201, name: 'Grilled Chicken', price: 6500, image: 'https://images.pexels.com/photos/2338407/pexels-photo-2338407.jpeg' },
-        { id: 202, name: 'Pasta Alfredo', price: 4800, image: 'https://images.pexels.com/photos/1527603/pexels-photo-1527603.jpeg' },
-      ]
     },
     {
       id: 3,
-      name: 'Ocean Fresh',
-      cuisine: 'Seafood',
+      name: 'Traditional Taste',
+      cuisine: 'Nigerian',
       rating: 4.9,
+      deliveryTime: '30-40 min',
       image: 'https://images.pexels.com/photos/262959/pexels-photo-262959.jpeg',
-      menu: [
-        { id: 301, name: 'Grilled Fish', price: 7500, image: 'https://images.pexels.com/photos/842142/pexels-photo-842142.jpeg' },
-        { id: 302, name: 'Seafood Platter', price: 12000, image: 'https://images.pexels.com/photos/566345/pexels-photo-566345.jpeg' },
-      ]
+    },
+    {
+      id: 4,
+      name: 'Rice Haven',
+      cuisine: 'Rice Dishes',
+      rating: 4.6,
+      deliveryTime: '20-30 min',
+      image: 'https://images.pexels.com/photos/1267320/pexels-photo-1267320.jpeg',
+    },
+    {
+      id: 5,
+      name: 'Suya Spot',
+      cuisine: 'Grilled',
+      rating: 4.7,
+      deliveryTime: '15-25 min',
+      image: 'https://images.pexels.com/photos/1251198/pexels-photo-1251198.jpeg',
     },
   ];
 
-  const formatPrice = (price: number) => {
-    return `₦${(price / 100).toLocaleString()}`; // Convert from kobo to naira
-  };
-
-  const formatTime = (time: string) => {
-    return new Date(`2024-01-01T${time}`).toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true,
-    });
-  };
-
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('en-US', {
-      weekday: 'long',
-      month: 'short',
-      day: 'numeric',
-    });
-  };
-
-  const getWeekDates = () => {
-    const today = new Date();
-    const week = [];
+  // Get week days for calendar
+  const getWeekDays = () => {
+    const days = [];
+    const currentDate = new Date(selectedDate);
+    const firstDayOfWeek = new Date(currentDate);
+    const day = currentDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
     
+    // Set to the first day of the week (Sunday)
+    firstDayOfWeek.setDate(currentDate.getDate() - day);
+    
+    // Get 7 days starting from Sunday
     for (let i = 0; i < 7; i++) {
-      const date = new Date(today);
-      date.setDate(today.getDate() + i);
-      week.push(date.toISOString().split('T')[0]);
+      const date = new Date(firstDayOfWeek);
+      date.setDate(firstDayOfWeek.getDate() + i);
+      days.push(date);
     }
     
-    return week;
+    return days;
   };
 
-  const getMealsForDate = (date: string) => {
-    return mealPlans.filter(meal => meal.date === date);
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
-  const getMealsForDateAndType = (date: string, mealType: string) => {
-    return mealPlans.filter(meal => meal.date === date && meal.meal_type === mealType);
+  const formatDayName = (date: Date) => {
+    return date.toLocaleDateString('en-US', { weekday: 'short' });
   };
 
-  const handleScheduleOrder = (mealPlan: MealPlan) => {
-    setSelectedMealPlan(mealPlan);
-    setShowScheduleModal(true);
+  const formatPrice = (price: number) => {
+    return `₦${price.toLocaleString()}`;
   };
 
-  const handleDeleteMealPlan = async (mealPlanId: string) => {
+  const isToday = (date: Date) => {
+    const today = new Date();
+    return date.getDate() === today.getDate() &&
+      date.getMonth() === today.getMonth() &&
+      date.getFullYear() === today.getFullYear();
+  };
+
+  const isSameDay = (date1: Date, date2: Date) => {
+    return date1.getDate() === date2.getDate() &&
+      date1.getMonth() === date2.getMonth() &&
+      date1.getFullYear() === date2.getFullYear();
+  };
+
+  const handleDateSelect = (date: Date) => {
+    setSelectedDate(date);
+  };
+
+  const handlePreviousWeek = () => {
+    const newDate = new Date(selectedDate);
+    newDate.setDate(newDate.getDate() - 7);
+    setSelectedDate(newDate);
+  };
+
+  const handleNextWeek = () => {
+    const newDate = new Date(selectedDate);
+    newDate.setDate(newDate.getDate() + 7);
+    setSelectedDate(newDate);
+  };
+
+  const handleMealTypeSelect = (mealType: string) => {
+    setSelectedMealType(mealType);
+    setShowAddMealModal(true);
+  };
+
+  const handleAddMeal = () => {
+    if (!selectedFood || !selectedRestaurant || !scheduledTime) {
+      Alert.alert('Missing Information', 'Please select food, restaurant, and scheduled time');
+      return;
+    }
+
+    const newMeal: MealPlan = {
+      id: Date.now(),
+      date: selectedDate.toISOString().split('T')[0],
+      mealType: selectedMealType,
+      foodName: selectedFood.name,
+      restaurant: selectedRestaurant.name,
+      price: selectedFood.price,
+      image: selectedFood.image,
+      time: scheduledTime,
+    };
+
+    setMealPlans([...mealPlans, newMeal]);
+    
+    // Reset form
+    setSelectedFood(null);
+    setSelectedRestaurant(null);
+    setScheduledTime('');
+    setSpecialInstructions('');
+    setShowAddMealModal(false);
+    
+    Alert.alert('Success', 'Meal has been added to your plan');
+  };
+
+  const getMealsForSelectedDate = () => {
+    return mealPlans.filter(meal => {
+      const mealDate = new Date(meal.date);
+      return isSameDay(mealDate, selectedDate);
+    });
+  };
+
+  const getMealsForSelectedDateAndType = (mealType: string) => {
+    return mealPlans.filter(meal => {
+      const mealDate = new Date(meal.date);
+      return isSameDay(mealDate, selectedDate) && meal.mealType === mealType;
+    });
+  };
+
+  const handleDeleteMeal = (mealId: number) => {
     Alert.alert(
-      'Delete Meal Plan',
+      'Delete Meal',
       'Are you sure you want to remove this meal from your plan?',
       [
         { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
+        { 
+          text: 'Delete', 
           style: 'destructive',
-          onPress: async () => {
-            try {
-              const { error } = await deleteMealPlan(mealPlanId);
-              
-              if (error) throw error;
-              
-              setMealPlans(mealPlans.filter(m => m.id !== mealPlanId));
-              Alert.alert('Success', 'Meal plan deleted successfully');
-            } catch (error) {
-              console.error('Error deleting meal plan:', error);
-              Alert.alert('Error', 'Failed to delete meal plan. Please try again.');
-            }
-          },
-        },
+          onPress: () => {
+            setMealPlans(mealPlans.filter(meal => meal.id !== mealId));
+          }
+        }
       ]
     );
   };
 
-  const confirmScheduleOrder = async () => {
-    if (!selectedMealPlan || !user) return;
-
-    setIsSubmitting(true);
-
-    try {
-      // Update the meal plan to mark it as ordered
-      const { error } = await updateMealPlan(selectedMealPlan.id, {
-        is_ordered: true
-      });
-      
-      if (error) throw error;
-      
-      // Update local state
-      setMealPlans(mealPlans.map(plan => 
-        plan.id === selectedMealPlan.id 
-          ? { ...plan, is_ordered: true } 
-          : plan
-      ));
-      
-      setShowScheduleModal(false);
-      setSelectedMealPlan(null);
-      
-      Alert.alert('Success', 'Order has been scheduled successfully!');
-    } catch (error) {
-      console.error('Error scheduling order:', error);
-      Alert.alert('Error', 'Failed to schedule order. Please try again.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleAddMealPlan = async () => {
-    if (!user) {
-      Alert.alert('Error', 'You must be logged in to add meal plans');
-      return;
-    }
-    
-    // If using restaurant selector
-    if (showRestaurantSelector && selectedFoodItem) {
-      setIsSubmitting(true);
-      
-      try {
-        const { data, error } = await createMealPlan(user.id, {
-          date: selectedDate,
-          meal_type: selectedMealType,
-          food_name: selectedFoodItem.name,
-          restaurant: selectedRestaurant.name,
-          price: selectedFoodItem.price * 100, // Convert to kobo
-          image_url: selectedFoodItem.image,
-          scheduled_time: newMealTime,
-          is_ordered: false,
-          is_recurring: newMealRecurring,
-          notes: newMealNotes || undefined,
-        });
-        
-        if (error) throw error;
-        
-        setMealPlans([...mealPlans, data]);
-        resetForm();
-        setShowAddModal(false);
-        
-        Alert.alert('Success', 'Meal plan added successfully!');
-      } catch (error) {
-        console.error('Error adding meal plan:', error);
-        Alert.alert('Error', 'Failed to add meal plan. Please try again.');
-      } finally {
-        setIsSubmitting(false);
-      }
-      return;
-    }
-    
-    // Manual entry
-    if (!newMealName || !newMealRestaurant || !newMealPrice || !newMealTime) {
-      Alert.alert('Error', 'Please fill in all required fields');
-      return;
-    }
-
-    const price = parseFloat(newMealPrice);
-    if (isNaN(price) || price <= 0) {
-      Alert.alert('Error', 'Please enter a valid price');
-      return;
-    }
-
-    // Validate time format (HH:MM)
-    const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
-    if (!timeRegex.test(newMealTime)) {
-      Alert.alert('Error', 'Please enter a valid time in HH:MM format');
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      const { data, error } = await createMealPlan(user.id, {
-        date: selectedDate,
-        meal_type: selectedMealType,
-        food_name: newMealName,
-        restaurant: newMealRestaurant,
-        price: Math.round(price * 100), // Convert to kobo
-        image_url: null, // We could add image selection in the future
-        scheduled_time: newMealTime,
-        is_ordered: false,
-        is_recurring: newMealRecurring,
-        notes: newMealNotes || undefined,
-      });
-      
-      if (error) throw error;
-      
-      setMealPlans([...mealPlans, data]);
-      resetForm();
-      setShowAddModal(false);
-      
-      Alert.alert('Success', 'Meal plan added successfully!');
-    } catch (error) {
-      console.error('Error adding meal plan:', error);
-      Alert.alert('Error', 'Failed to add meal plan. Please try again.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const resetForm = () => {
-    setNewMealName('');
-    setNewMealRestaurant('');
-    setNewMealPrice('');
-    setNewMealTime('12:00');
-    setNewMealNotes('');
-    setNewMealRecurring(false);
-    setSelectedRestaurant(null);
-    setSelectedFoodItem(null);
-    setShowRestaurantSelector(false);
-    setShowFoodSelector(false);
-    setSearchQuery('');
-  };
-
-  const getUpcomingOrders = () => {
-    return mealPlans
-      .filter(plan => plan.is_ordered)
-      .sort((a, b) => {
-        const dateA = new Date(`${a.date}T${a.scheduled_time}`);
-        const dateB = new Date(`${b.date}T${b.scheduled_time}`);
-        return dateA.getTime() - dateB.getTime();
-      })
-      .slice(0, 3);
-  };
-
-  const filteredRestaurants = restaurants.filter(restaurant => 
-    restaurant.name.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredFoodItems = foodItems.filter(item => 
+    item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    item.restaurant.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  if (isLoading && !refreshing) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-            <ArrowLeft size={24} color="#FFFFFF" />
-          </TouchableOpacity>
-          <View style={styles.headerContent}>
-            <CustomLogo size="medium" color="#FFFFFF" />
-            <Text style={styles.headerTitle}>Meal Planning</Text>
-          </View>
-          <View style={styles.placeholder} />
-        </View>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#006400" />
-          <Text style={styles.loadingText}>Loading your meal plans...</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
+  const filteredRestaurants = restaurants.filter(restaurant => 
+    restaurant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    restaurant.cuisine.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -368,633 +278,409 @@ export default function MealPlanning() {
           <CustomLogo size="medium" color="#FFFFFF" />
           <Text style={styles.headerTitle}>Meal Planning</Text>
         </View>
-        <TouchableOpacity style={styles.addButton} onPress={() => setShowAddModal(true)}>
-          <Plus size={24} color="#FFFFFF" />
+        <TouchableOpacity style={styles.addButton} onPress={() => router.push('/scheduled-orders')}>
+          <Calendar size={24} color="#FFFFFF" />
         </TouchableOpacity>
       </View>
 
-      <ScrollView 
-        style={styles.content} 
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={['#006400']}
-            tintColor={'#006400'}
-          />
-        }
-      >
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Week Calendar */}
-        <View style={styles.calendarSection}>
-          <Text style={styles.sectionTitle}>This Week</Text>
+        <View style={styles.calendarContainer}>
+          <View style={styles.calendarHeader}>
+            <Text style={styles.calendarTitle}>This Week</Text>
+            <View style={styles.calendarControls}>
+              <TouchableOpacity style={styles.calendarControl} onPress={handlePreviousWeek}>
+                <ChevronLeft size={20} color="#006400" />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.calendarControl} onPress={handleNextWeek}>
+                <ChevronRight size={20} color="#006400" />
+              </TouchableOpacity>
+            </View>
+          </View>
+          
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {getWeekDates().map((date) => {
-              const isSelected = date === selectedDate;
-              const isToday = date === new Date().toISOString().split('T')[0];
-              const mealsCount = getMealsForDate(date).length;
-              const dateObj = new Date(date);
-              const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
-              const dayNumber = dateObj.getDate();
-
-              return (
+            <View style={styles.daysContainer}>
+              {getWeekDays().map((date, index) => (
                 <TouchableOpacity
-                  key={date}
+                  key={index}
                   style={[
-                    styles.dateCard,
-                    isSelected && styles.dateCardSelected,
-                    isToday && styles.dateCardToday,
+                    styles.dayCard,
+                    isSameDay(date, selectedDate) && styles.selectedDayCard,
+                    isToday(date) && styles.todayCard
                   ]}
-                  onPress={() => setSelectedDate(date)}
+                  onPress={() => handleDateSelect(date)}
                 >
                   <Text style={[
-                    styles.dateDay,
-                    isSelected && styles.dateDaySelected,
+                    styles.dayName,
+                    isSameDay(date, selectedDate) && styles.selectedDayText,
+                    isToday(date) && styles.todayText
                   ]}>
-                    {dayName}
+                    {formatDayName(date)}
                   </Text>
                   <Text style={[
-                    styles.dateNumber,
-                    isSelected && styles.dateNumberSelected,
+                    styles.dayNumber,
+                    isSameDay(date, selectedDate) && styles.selectedDayText,
+                    isToday(date) && styles.todayText
                   ]}>
-                    {dayNumber}
+                    {date.getDate()}
                   </Text>
-                  {mealsCount > 0 && (
-                    <View style={styles.mealIndicator}>
-                      <Text style={styles.mealCount}>{mealsCount}</Text>
-                    </View>
-                  )}
                 </TouchableOpacity>
-              );
-            })}
+              ))}
+            </View>
           </ScrollView>
         </View>
 
-        {/* Meal Type Filter */}
-        <View style={styles.mealTypeSection}>
+        {/* Meal Types */}
+        <View style={styles.mealTypesContainer}>
           <Text style={styles.sectionTitle}>Meal Type</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {mealTypes.map((mealType) => {
-              const isSelected = mealType.id === selectedMealType;
-              const mealsCount = getMealsForDateAndType(selectedDate, mealType.id).length;
-
-              return (
-                <TouchableOpacity
-                  key={mealType.id}
-                  style={[
-                    styles.mealTypeCard,
-                    isSelected && styles.mealTypeCardSelected,
-                    { borderColor: mealType.color },
-                  ]}
-                  onPress={() => setSelectedMealType(mealType.id)}
-                >
-                  <Text style={styles.mealTypeIcon}>{mealType.icon}</Text>
-                  <Text style={[
-                    styles.mealTypeName,
-                    isSelected && styles.mealTypeNameSelected,
-                  ]}>
-                    {mealType.name}
-                  </Text>
-                  {mealsCount > 0 && (
-                    <View style={[styles.mealTypeBadge, { backgroundColor: mealType.color }]}>
-                      <Text style={styles.mealTypeBadgeText}>{mealsCount}</Text>
-                    </View>
-                  )}
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
+          <View style={styles.mealTypesGrid}>
+            {mealTypes.map((type) => (
+              <TouchableOpacity
+                key={type.id}
+                style={styles.mealTypeCard}
+                onPress={() => handleMealTypeSelect(type.id)}
+              >
+                <Text style={styles.mealTypeIcon}>{type.icon}</Text>
+                <Text style={styles.mealTypeName}>{type.name}</Text>
+                {getMealsForSelectedDateAndType(type.id).length > 0 && (
+                  <View style={styles.mealTypeBadge}>
+                    <Text style={styles.mealTypeBadgeText}>
+                      {getMealsForSelectedDateAndType(type.id).length}
+                    </Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            ))}
+          </View>
         </View>
 
         {/* Planned Meals */}
-        <View style={styles.plannedMealsSection}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>
-              {formatDate(selectedDate)} - {mealTypes.find(m => m.id === selectedMealType)?.name}
-            </Text>
-            <TouchableOpacity onPress={() => setShowAddModal(true)}>
-              <Plus size={20} color="#006400" />
-            </TouchableOpacity>
-          </View>
-
-          {getMealsForDateAndType(selectedDate, selectedMealType).map((meal) => (
-            <View key={meal.id} style={styles.mealCard}>
-              <ImageWithFallback 
-                source={meal.image_url} 
-                style={styles.mealImage}
-                fallback={IMAGES.DEFAULT_FOOD}
+        <View style={styles.plannedMealsContainer}>
+          <Text style={styles.sectionTitle}>
+            {formatDate(selectedDate)} - {selectedMealType ? mealTypes.find(t => t.id === selectedMealType)?.name : 'All Meals'}
+          </Text>
+          
+          {getMealsForSelectedDate().length === 0 ? (
+            <View style={styles.emptyState}>
+              <Image 
+                source={require('../assets/images/menulogo copy copy.webp')} 
+                style={styles.emptyStateIcon}
               />
-              <View style={styles.mealInfo}>
-                <Text style={styles.mealName}>{meal.food_name}</Text>
-                <Text style={styles.mealRestaurant}>{meal.restaurant}</Text>
-                <View style={styles.mealMeta}>
-                  <View style={styles.mealTime}>
-                    <Clock size={14} color="#666666" />
-                    <Text style={styles.mealTimeText}>{formatTime(meal.scheduled_time)}</Text>
+              <Text style={styles.emptyStateTitle}>No meals planned</Text>
+              <Text style={styles.emptyStateText}>
+                Add a meal to your {formatDate(selectedDate)} plan
+              </Text>
+            </View>
+          ) : (
+            getMealsForSelectedDate().map((meal) => (
+              <View key={meal.id} style={styles.mealCard}>
+                <ImageWithFallback 
+                  source={meal.image} 
+                  style={styles.mealImage}
+                  fallback={IMAGES.DEFAULT_FOOD}
+                />
+                <View style={styles.mealInfo}>
+                  <Text style={styles.mealName}>{meal.foodName}</Text>
+                  <Text style={styles.mealRestaurant}>{meal.restaurant}</Text>
+                  <View style={styles.mealMeta}>
+                    <View style={styles.mealTypeTag}>
+                      <Text style={styles.mealTypeTagText}>
+                        {mealTypes.find(t => t.id === meal.mealType)?.name}
+                      </Text>
+                    </View>
+                    <View style={styles.mealTimeTag}>
+                      <Clock size={12} color="#006400" />
+                      <Text style={styles.mealTimeText}>{meal.time}</Text>
+                    </View>
                   </View>
                   <Text style={styles.mealPrice}>{formatPrice(meal.price)}</Text>
                 </View>
-                {meal.notes && (
-                  <Text style={styles.mealNotes}>Note: {meal.notes}</Text>
-                )}
-                <View style={styles.mealBadges}>
-                  {meal.is_recurring && (
-                    <View style={styles.recurringBadge}>
-                      <Text style={styles.recurringText}>Recurring</Text>
-                    </View>
-                  )}
-                  {meal.is_ordered && (
-                    <View style={styles.orderedBadge}>
-                      <Text style={styles.orderedText}>Ordered</Text>
-                    </View>
-                  )}
-                </View>
-              </View>
-              <View style={styles.mealActions}>
                 <TouchableOpacity 
-                  style={styles.actionButton}
-                  onPress={() => handleScheduleOrder(meal)}
-                  disabled={meal.is_ordered}
+                  style={styles.deleteMealButton}
+                  onPress={() => handleDeleteMeal(meal.id)}
                 >
-                  <Calendar size={16} color={meal.is_ordered ? "#CCCCCC" : "#006400"} />
+                  <X size={16} color="#FF6B6B" />
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.actionButton}>
-                  <Edit3 size={16} color="#666666" />
-                </TouchableOpacity>
-                <TouchableOpacity 
-                  style={styles.actionButton}
-                  onPress={() => handleDeleteMealPlan(meal.id)}
-                >
-                  <Trash2 size={16} color="#FF6B6B" />
-                </TouchableOpacity>
-              </View>
-            </View>
-          ))}
-
-          {getMealsForDateAndType(selectedDate, selectedMealType).length === 0 && (
-            <View style={styles.emptyState}>
-              <Text style={styles.emptyStateIcon}>🍽️</Text>
-              <Text style={styles.emptyStateTitle}>No meals planned</Text>
-              <Text style={styles.emptyStateText}>
-                Add a meal to your {mealTypes.find(m => m.id === selectedMealType)?.name.toLowerCase()} plan
-              </Text>
-              <TouchableOpacity 
-                style={styles.addMealButton}
-                onPress={() => setShowAddModal(true)}
-              >
-                <Plus size={16} color="#FFFFFF" />
-                <Text style={styles.addMealButtonText}>Add Meal</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-        </View>
-
-        {/* Upcoming Scheduled Orders */}
-        <View style={styles.upcomingSection}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Upcoming Orders</Text>
-            <TouchableOpacity onPress={() => router.push('/scheduled-orders')}>
-              <Text style={styles.seeAllText}>See All</Text>
-            </TouchableOpacity>
-          </View>
-
-          {getUpcomingOrders().length > 0 ? (
-            getUpcomingOrders().map((order) => (
-              <View key={order.id} style={styles.upcomingCard}>
-                <View style={styles.upcomingTime}>
-                  <Text style={styles.upcomingDate}>
-                    {formatDate(order.date)}
-                  </Text>
-                  <Text style={styles.upcomingTimeText}>
-                    {formatTime(order.scheduled_time)}
-                  </Text>
-                </View>
-                <View style={styles.upcomingInfo}>
-                  <Text style={styles.upcomingMeal}>{order.food_name}</Text>
-                  <Text style={styles.upcomingRestaurant}>{order.restaurant}</Text>
-                  <Text style={styles.upcomingPrice}>{formatPrice(order.price)}</Text>
-                </View>
-                <View style={styles.upcomingActions}>
-                  <View style={[styles.statusBadge, { backgroundColor: '#4CAF5020' }]}>
-                    <Text style={[styles.statusText, { color: '#4CAF50' }]}>Scheduled</Text>
-                  </View>
-                </View>
               </View>
             ))
-          ) : (
-            <View style={styles.emptyUpcoming}>
-              <Text style={styles.emptyUpcomingText}>No upcoming orders scheduled</Text>
-            </View>
           )}
+          
+          <TouchableOpacity 
+            style={styles.addMealButton}
+            onPress={() => setShowAddMealModal(true)}
+          >
+            <Plus size={20} color="#FFFFFF" />
+            <Text style={styles.addMealText}>Add Meal</Text>
+          </TouchableOpacity>
         </View>
 
-        {/* Quick Actions */}
-        <View style={styles.quickActionsSection}>
-          <Text style={styles.sectionTitle}>Quick Actions</Text>
-          <View style={styles.quickActionsGrid}>
-            <TouchableOpacity 
-              style={styles.quickActionCard}
-              onPress={() => setShowAddModal(true)}
-            >
-              <Plus size={24} color="#4CAF50" />
-              <Text style={styles.quickActionText}>Add Meal</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              style={styles.quickActionCard}
-              onPress={() => router.push('/meal-templates')}
-            >
-              <ChefHat size={24} color="#FF6B6B" />
-              <Text style={styles.quickActionText}>Templates</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              style={styles.quickActionCard}
-              onPress={() => router.push('/scheduled-orders')}
-            >
-              <Calendar size={24} color="#FFA726" />
-              <Text style={styles.quickActionText}>Scheduled</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              style={styles.quickActionCard}
-              onPress={() => router.push('/meal-history')}
-            >
-              <Clock size={24} color="#3F51B5" />
-              <Text style={styles.quickActionText}>History</Text>
-            </TouchableOpacity>
+        {/* Tips */}
+        <View style={styles.tipsContainer}>
+          <Text style={styles.tipsTitle}>Meal Planning Tips</Text>
+          <View style={styles.tipCard}>
+            <Text style={styles.tipIcon}>🍽️</Text>
+            <View style={styles.tipContent}>
+              <Text style={styles.tipTitle}>Balance Your Meals</Text>
+              <Text style={styles.tipText}>
+                Include proteins, carbs, and vegetables in each meal for balanced nutrition.
+              </Text>
+            </View>
+          </View>
+          <View style={styles.tipCard}>
+            <Text style={styles.tipIcon}>💰</Text>
+            <View style={styles.tipContent}>
+              <Text style={styles.tipTitle}>Budget-Friendly Options</Text>
+              <Text style={styles.tipText}>
+                Plan meals around sales and seasonal ingredients to save money.
+              </Text>
+            </View>
           </View>
         </View>
       </ScrollView>
 
       {/* Add Meal Modal */}
       <Modal
-        visible={showAddModal}
-        animationType="slide"
+        visible={showAddMealModal}
         transparent={true}
-        onRequestClose={() => {
-          resetForm();
-          setShowAddModal(false);
-        }}
+        animationType="slide"
+        onRequestClose={() => setShowAddMealModal(false)}
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Add New Meal</Text>
-              <TouchableOpacity onPress={() => {
-                resetForm();
-                setShowAddModal(false);
-              }}>
-                <Text style={styles.modalClose}>✕</Text>
+              <Text style={styles.modalTitle}>Add Meal</Text>
+              <TouchableOpacity onPress={() => setShowAddMealModal(false)}>
+                <X size={24} color="#666666" />
               </TouchableOpacity>
             </View>
-
+            
             <ScrollView style={styles.modalBody}>
-              {/* Toggle between manual entry and restaurant selection */}
-              <View style={styles.entryToggle}>
-                <TouchableOpacity 
-                  style={[
-                    styles.entryToggleButton, 
-                    !showRestaurantSelector && styles.entryToggleButtonActive
-                  ]}
-                  onPress={() => setShowRestaurantSelector(false)}
-                >
-                  <Text style={[
-                    styles.entryToggleText,
-                    !showRestaurantSelector && styles.entryToggleTextActive
-                  ]}>
-                    Manual Entry
+              {/* Selected Date and Meal Type */}
+              <View style={styles.selectedInfo}>
+                <View style={styles.selectedDate}>
+                  <Calendar size={16} color="#006400" />
+                  <Text style={styles.selectedDateText}>{formatDate(selectedDate)}</Text>
+                </View>
+                <View style={styles.selectedMealType}>
+                  <Text style={styles.selectedMealTypeText}>
+                    {selectedMealType ? mealTypes.find(t => t.id === selectedMealType)?.name : 'Select Meal Type'}
                   </Text>
-                </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* Food Selection */}
+              <View style={styles.formGroup}>
+                <Text style={styles.formLabel}>Select Food</Text>
                 <TouchableOpacity 
-                  style={[
-                    styles.entryToggleButton, 
-                    showRestaurantSelector && styles.entryToggleButtonActive
-                  ]}
-                  onPress={() => setShowRestaurantSelector(true)}
+                  style={styles.selectionButton}
+                  onPress={() => setShowFoodSelectionModal(true)}
                 >
-                  <Text style={[
-                    styles.entryToggleText,
-                    showRestaurantSelector && styles.entryToggleTextActive
-                  ]}>
-                    Choose Restaurant
-                  </Text>
+                  {selectedFood ? (
+                    <View style={styles.selectedItem}>
+                      <ImageWithFallback 
+                        source={selectedFood.image} 
+                        style={styles.selectedItemImage}
+                        fallback={IMAGES.DEFAULT_FOOD}
+                      />
+                      <View style={styles.selectedItemInfo}>
+                        <Text style={styles.selectedItemName}>{selectedFood.name}</Text>
+                        <Text style={styles.selectedItemPrice}>{formatPrice(selectedFood.price)}</Text>
+                      </View>
+                      <ChevronRight size={20} color="#666666" />
+                    </View>
+                  ) : (
+                    <Text style={styles.selectionPlaceholder}>Choose a food item</Text>
+                  )}
                 </TouchableOpacity>
               </View>
 
-              {showRestaurantSelector ? (
-                // Restaurant and Food Selection
-                <>
-                  {!selectedRestaurant ? (
-                    // Restaurant Selection
-                    <View style={styles.restaurantSelector}>
-                      <Text style={styles.formLabel}>Select Restaurant</Text>
-                      <View style={styles.searchContainer}>
-                        <Search size={20} color="#666666" />
-                        <TextInput
-                          style={styles.searchInput}
-                          placeholder="Search restaurants..."
-                          value={searchQuery}
-                          onChangeText={setSearchQuery}
-                        />
+              {/* Restaurant Selection */}
+              <View style={styles.formGroup}>
+                <Text style={styles.formLabel}>Select Restaurant</Text>
+                <TouchableOpacity 
+                  style={styles.selectionButton}
+                  onPress={() => setShowRestaurantSelectionModal(true)}
+                >
+                  {selectedRestaurant ? (
+                    <View style={styles.selectedItem}>
+                      <ImageWithFallback 
+                        source={selectedRestaurant.image} 
+                        style={styles.selectedItemImage}
+                        fallback={IMAGES.DEFAULT_RESTAURANT}
+                      />
+                      <View style={styles.selectedItemInfo}>
+                        <Text style={styles.selectedItemName}>{selectedRestaurant.name}</Text>
+                        <Text style={styles.selectedItemSubtext}>{selectedRestaurant.cuisine}</Text>
                       </View>
-                      
-                      <ScrollView style={styles.restaurantList}>
-                        {filteredRestaurants.map((restaurant) => (
-                          <TouchableOpacity
-                            key={restaurant.id}
-                            style={styles.restaurantItem}
-                            onPress={() => setSelectedRestaurant(restaurant)}
-                          >
-                            <Image 
-                              source={{ uri: restaurant.image }} 
-                              style={styles.restaurantImage} 
-                            />
-                            <View style={styles.restaurantInfo}>
-                              <Text style={styles.restaurantName}>{restaurant.name}</Text>
-                              <Text style={styles.restaurantCuisine}>{restaurant.cuisine}</Text>
-                              <View style={styles.ratingContainer}>
-                                <Star size={14} color="#FFD700" fill="#FFD700" />
-                                <Text style={styles.ratingText}>{restaurant.rating}</Text>
-                              </View>
-                            </View>
-                            <ChefHat size={20} color="#006400" />
-                          </TouchableOpacity>
-                        ))}
-                      </ScrollView>
-                    </View>
-                  ) : !selectedFoodItem ? (
-                    // Food Item Selection
-                    <View style={styles.foodSelector}>
-                      <View style={styles.selectedRestaurantHeader}>
-                        <TouchableOpacity 
-                          style={styles.backToRestaurants}
-                          onPress={() => setSelectedRestaurant(null)}
-                        >
-                          <ArrowLeft size={16} color="#006400" />
-                          <Text style={styles.backText}>Back to Restaurants</Text>
-                        </TouchableOpacity>
-                        <Text style={styles.selectedRestaurantName}>{selectedRestaurant.name}</Text>
-                      </View>
-                      
-                      <Text style={styles.formLabel}>Select Food Item</Text>
-                      <View style={styles.foodItemList}>
-                        {selectedRestaurant.menu.map((item: any) => (
-                          <TouchableOpacity
-                            key={item.id}
-                            style={styles.foodItem}
-                            onPress={() => setSelectedFoodItem(item)}
-                          >
-                            <Image 
-                              source={{ uri: item.image }} 
-                              style={styles.foodItemImage} 
-                            />
-                            <View style={styles.foodItemInfo}>
-                              <Text style={styles.foodItemName}>{item.name}</Text>
-                              <Text style={styles.foodItemPrice}>₦{item.price.toLocaleString()}</Text>
-                            </View>
-                            <TouchableOpacity style={styles.favoriteButton}>
-                              <Heart size={16} color="#E91E63" />
-                            </TouchableOpacity>
-                          </TouchableOpacity>
-                        ))}
-                      </View>
+                      <ChevronRight size={20} color="#666666" />
                     </View>
                   ) : (
-                    // Selected Food Item Details
-                    <View style={styles.selectedFoodDetails}>
-                      <TouchableOpacity 
-                        style={styles.backToFoods}
-                        onPress={() => setSelectedFoodItem(null)}
-                      >
-                        <ArrowLeft size={16} color="#006400" />
-                        <Text style={styles.backText}>Back to Menu</Text>
-                      </TouchableOpacity>
-                      
-                      <View style={styles.selectedFoodCard}>
-                        <Image 
-                          source={{ uri: selectedFoodItem.image }} 
-                          style={styles.selectedFoodImage} 
-                        />
-                        <View style={styles.selectedFoodInfo}>
-                          <Text style={styles.selectedFoodName}>{selectedFoodItem.name}</Text>
-                          <Text style={styles.selectedFoodRestaurant}>{selectedRestaurant.name}</Text>
-                          <Text style={styles.selectedFoodPrice}>₦{selectedFoodItem.price.toLocaleString()}</Text>
-                        </View>
-                      </View>
-                      
-                      <View style={styles.formGroup}>
-                        <Text style={styles.formLabel}>Scheduled Time</Text>
-                        <TextInput
-                          style={styles.formInput}
-                          placeholder="HH:MM (e.g., 12:30)"
-                          value={newMealTime}
-                          onChangeText={setNewMealTime}
-                          editable={!isSubmitting}
-                        />
-                      </View>
-
-                      <View style={styles.formGroup}>
-                        <Text style={styles.formLabel}>Notes (Optional)</Text>
-                        <TextInput
-                          style={[styles.formInput, styles.textArea]}
-                          placeholder="Any special instructions or notes"
-                          value={newMealNotes}
-                          onChangeText={setNewMealNotes}
-                          multiline
-                          numberOfLines={3}
-                          editable={!isSubmitting}
-                        />
-                      </View>
-
-                      <View style={styles.formGroup}>
-                        <TouchableOpacity
-                          style={styles.checkboxContainer}
-                          onPress={() => setNewMealRecurring(!newMealRecurring)}
-                          disabled={isSubmitting}
-                        >
-                          <View style={[
-                            styles.checkbox,
-                            newMealRecurring && styles.checkboxChecked
-                          ]}>
-                            {newMealRecurring && <Text style={styles.checkmark}>✓</Text>}
-                          </View>
-                          <Text style={styles.checkboxLabel}>Make this a recurring meal</Text>
-                        </TouchableOpacity>
-                      </View>
-                    </View>
+                    <Text style={styles.selectionPlaceholder}>Choose a restaurant</Text>
                   )}
-                </>
-              ) : (
-                // Manual Entry Form
-                <>
-                  <View style={styles.formGroup}>
-                    <Text style={styles.formLabel}>Meal Name</Text>
-                    <TextInput
-                      style={styles.formInput}
-                      placeholder="e.g., Jollof Rice Special"
-                      value={newMealName}
-                      onChangeText={setNewMealName}
-                      editable={!isSubmitting}
-                    />
-                  </View>
+                </TouchableOpacity>
+              </View>
 
-                  <View style={styles.formGroup}>
-                    <Text style={styles.formLabel}>Restaurant</Text>
-                    <TextInput
-                      style={styles.formInput}
-                      placeholder="e.g., Lagos Kitchen"
-                      value={newMealRestaurant}
-                      onChangeText={setNewMealRestaurant}
-                      editable={!isSubmitting}
-                    />
-                  </View>
+              {/* Time Selection */}
+              <View style={styles.formGroup}>
+                <Text style={styles.formLabel}>Scheduled Time</Text>
+                <View style={styles.timeInputContainer}>
+                  <Clock size={20} color="#666666" />
+                  <TextInput
+                    style={styles.timeInput}
+                    placeholder="e.g., 12:30 PM"
+                    value={scheduledTime}
+                    onChangeText={setScheduledTime}
+                  />
+                </View>
+              </View>
 
-                  <View style={styles.formGroup}>
-                    <Text style={styles.formLabel}>Price (₦)</Text>
-                    <TextInput
-                      style={styles.formInput}
-                      placeholder="e.g., 4500"
-                      value={newMealPrice}
-                      onChangeText={setNewMealPrice}
-                      keyboardType="numeric"
-                      editable={!isSubmitting}
-                    />
-                  </View>
+              {/* Special Instructions */}
+              <View style={styles.formGroup}>
+                <Text style={styles.formLabel}>Special Instructions (Optional)</Text>
+                <TextInput
+                  style={styles.instructionsInput}
+                  placeholder="Any special requests or notes"
+                  value={specialInstructions}
+                  onChangeText={setSpecialInstructions}
+                  multiline
+                  numberOfLines={3}
+                />
+              </View>
 
-                  <View style={styles.formGroup}>
-                    <Text style={styles.formLabel}>Scheduled Time</Text>
-                    <TextInput
-                      style={styles.formInput}
-                      placeholder="HH:MM (e.g., 12:30)"
-                      value={newMealTime}
-                      onChangeText={setNewMealTime}
-                      editable={!isSubmitting}
-                    />
-                  </View>
-
-                  <View style={styles.formGroup}>
-                    <Text style={styles.formLabel}>Notes (Optional)</Text>
-                    <TextInput
-                      style={[styles.formInput, styles.textArea]}
-                      placeholder="Any special instructions or notes"
-                      value={newMealNotes}
-                      onChangeText={setNewMealNotes}
-                      multiline
-                      numberOfLines={3}
-                      editable={!isSubmitting}
-                    />
-                  </View>
-
-                  <View style={styles.formGroup}>
-                    <TouchableOpacity
-                      style={styles.checkboxContainer}
-                      onPress={() => setNewMealRecurring(!newMealRecurring)}
-                      disabled={isSubmitting}
-                    >
-                      <View style={[
-                        styles.checkbox,
-                        newMealRecurring && styles.checkboxChecked
-                      ]}>
-                        {newMealRecurring && <Text style={styles.checkmark}>✓</Text>}
-                      </View>
-                      <Text style={styles.checkboxLabel}>Make this a recurring meal</Text>
-                    </TouchableOpacity>
-                  </View>
-                </>
-              )}
+              {/* Add Button */}
+              <TouchableOpacity 
+                style={styles.addButton}
+                onPress={handleAddMeal}
+              >
+                <Text style={styles.addButtonText}>Add to Meal Plan</Text>
+              </TouchableOpacity>
             </ScrollView>
-
-            <View style={styles.modalFooter}>
-              <TouchableOpacity 
-                style={styles.cancelButton}
-                onPress={() => {
-                  resetForm();
-                  setShowAddModal(false);
-                }}
-                disabled={isSubmitting}
-              >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={[styles.addButton, isSubmitting && styles.addButtonDisabled]}
-                onPress={handleAddMealPlan}
-                disabled={isSubmitting || (showRestaurantSelector && !selectedFoodItem)}
-              >
-                {isSubmitting ? (
-                  <ActivityIndicator size="small" color="#FFFFFF" />
-                ) : (
-                  <Text style={styles.addButtonText}>Add Meal</Text>
-                )}
-              </TouchableOpacity>
-            </View>
           </View>
         </View>
       </Modal>
 
-      {/* Schedule Order Modal */}
+      {/* Food Selection Modal */}
       <Modal
-        visible={showScheduleModal}
-        animationType="slide"
+        visible={showFoodSelectionModal}
         transparent={true}
-        onRequestClose={() => setShowScheduleModal(false)}
+        animationType="slide"
+        onRequestClose={() => setShowFoodSelectionModal(false)}
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Schedule Order</Text>
-              <TouchableOpacity onPress={() => setShowScheduleModal(false)}>
-                <Text style={styles.modalClose}>✕</Text>
+              <Text style={styles.modalTitle}>Select Food</Text>
+              <TouchableOpacity onPress={() => setShowFoodSelectionModal(false)}>
+                <X size={24} color="#666666" />
               </TouchableOpacity>
             </View>
-
-            {selectedMealPlan && (
-              <View style={styles.modalBody}>
-                <View style={styles.scheduleInfo}>
+            
+            <View style={styles.searchContainer}>
+              <Search size={20} color="#666666" />
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Search for food..."
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+              />
+            </View>
+            
+            <ScrollView style={styles.selectionList}>
+              {filteredFoodItems.map((item) => (
+                <TouchableOpacity
+                  key={item.id}
+                  style={styles.selectionItem}
+                  onPress={() => {
+                    setSelectedFood(item);
+                    setShowFoodSelectionModal(false);
+                    // Auto-select the restaurant if it matches
+                    const matchingRestaurant = restaurants.find(r => r.name === item.restaurant);
+                    if (matchingRestaurant) {
+                      setSelectedRestaurant(matchingRestaurant);
+                    }
+                  }}
+                >
                   <ImageWithFallback 
-                    source={selectedMealPlan.image_url} 
-                    style={styles.scheduleImage}
+                    source={item.image} 
+                    style={styles.selectionItemImage}
                     fallback={IMAGES.DEFAULT_FOOD}
                   />
-                  <View style={styles.scheduleDetails}>
-                    <Text style={styles.scheduleName}>{selectedMealPlan.food_name}</Text>
-                    <Text style={styles.scheduleRestaurant}>{selectedMealPlan.restaurant}</Text>
-                    <Text style={styles.schedulePrice}>{formatPrice(selectedMealPlan.price)}</Text>
+                  <View style={styles.selectionItemInfo}>
+                    <Text style={styles.selectionItemName}>{item.name}</Text>
+                    <Text style={styles.selectionItemSubtext}>{item.restaurant}</Text>
+                    <View style={styles.selectionItemMeta}>
+                      <Text style={styles.selectionItemPrice}>{formatPrice(item.price)}</Text>
+                      <View style={styles.ratingContainer}>
+                        <Star size={12} color="#FFD700" fill="#FFD700" />
+                        <Text style={styles.ratingText}>{item.rating}</Text>
+                      </View>
+                    </View>
                   </View>
-                </View>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
 
-                <View style={styles.scheduleOptions}>
-                  <Text style={styles.scheduleOptionTitle}>Order will be placed:</Text>
-                  <Text style={styles.scheduleOptionText}>
-                    30 minutes before meal time ({formatTime(selectedMealPlan.scheduled_time)})
-                  </Text>
-                  <Text style={styles.scheduleOptionSubtext}>
-                    You'll receive a notification before the order is placed
-                  </Text>
-                </View>
-              </View>
-            )}
-
-            <View style={styles.modalFooter}>
-              <TouchableOpacity 
-                style={styles.cancelButton}
-                onPress={() => setShowScheduleModal(false)}
-                disabled={isSubmitting}
-              >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={[styles.confirmButton, isSubmitting && styles.confirmButtonDisabled]}
-                onPress={confirmScheduleOrder}
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? (
-                  <ActivityIndicator size="small" color="#FFFFFF" />
-                ) : (
-                  <Text style={styles.confirmButtonText}>Schedule Order</Text>
-                )}
+      {/* Restaurant Selection Modal */}
+      <Modal
+        visible={showRestaurantSelectionModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowRestaurantSelectionModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Select Restaurant</Text>
+              <TouchableOpacity onPress={() => setShowRestaurantSelectionModal(false)}>
+                <X size={24} color="#666666" />
               </TouchableOpacity>
             </View>
+            
+            <View style={styles.searchContainer}>
+              <Search size={20} color="#666666" />
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Search for restaurants..."
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+              />
+            </View>
+            
+            <ScrollView style={styles.selectionList}>
+              {filteredRestaurants.map((restaurant) => (
+                <TouchableOpacity
+                  key={restaurant.id}
+                  style={styles.selectionItem}
+                  onPress={() => {
+                    setSelectedRestaurant(restaurant);
+                    setShowRestaurantSelectionModal(false);
+                  }}
+                >
+                  <ImageWithFallback 
+                    source={restaurant.image} 
+                    style={styles.selectionItemImage}
+                    fallback={IMAGES.DEFAULT_RESTAURANT}
+                  />
+                  <View style={styles.selectionItemInfo}>
+                    <Text style={styles.selectionItemName}>{restaurant.name}</Text>
+                    <Text style={styles.selectionItemSubtext}>{restaurant.cuisine}</Text>
+                    <View style={styles.selectionItemMeta}>
+                      <View style={styles.ratingContainer}>
+                        <Star size={12} color="#FFD700" fill="#FFD700" />
+                        <Text style={styles.ratingText}>{restaurant.rating}</Text>
+                      </View>
+                      <View style={styles.deliveryTimeContainer}>
+                        <Clock size={12} color="#666666" />
+                        <Text style={styles.deliveryTimeText}>{restaurant.deliveryTime}</Text>
+                      </View>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
           </View>
         </View>
       </Modal>
@@ -1005,7 +691,7 @@ export default function MealPlanning() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: '#FFFFFF',
   },
   header: {
     backgroundColor: '#006400',
@@ -1017,8 +703,6 @@ const styles = StyleSheet.create({
   },
   backButton: {
     padding: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: 8,
   },
   headerContent: {
     alignItems: 'center',
@@ -1034,27 +718,79 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 8,
   },
-  placeholder: {
-    width: 40,
-  },
-  loadingContainer: {
+  content: {
     flex: 1,
+    paddingTop: 20,
+  },
+  calendarContainer: {
+    paddingHorizontal: 20,
+    marginBottom: 20,
+  },
+  calendarHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  calendarTitle: {
+    fontSize: 18,
+    fontFamily: 'Inter-Semibold',
+    color: '#000000',
+  },
+  calendarControls: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  calendarControl: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: '#F5F5F5',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  loadingText: {
-    marginTop: 10,
-    fontSize: 16,
+  daysContainer: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  dayCard: {
+    width: 60,
+    height: 70,
+    borderRadius: 12,
+    backgroundColor: '#F5F5F5',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  selectedDayCard: {
+    backgroundColor: '#006400',
+    borderColor: '#006400',
+  },
+  todayCard: {
+    borderColor: '#FFD700',
+    borderWidth: 2,
+  },
+  dayName: {
+    fontSize: 12,
     fontFamily: 'Inter-Medium',
     color: '#666666',
+    marginBottom: 4,
   },
-  content: {
-    flex: 1,
+  dayNumber: {
+    fontSize: 18,
+    fontFamily: 'Inter-Bold',
+    color: '#000000',
+  },
+  selectedDayText: {
+    color: '#FFFFFF',
+  },
+  todayText: {
+    color: '#000000',
+  },
+  mealTypesContainer: {
     paddingHorizontal: 20,
-    paddingTop: 20,
-  },
-  calendarSection: {
-    marginBottom: 25,
+    marginBottom: 20,
   },
   sectionTitle: {
     fontSize: 18,
@@ -1062,94 +798,38 @@ const styles = StyleSheet.create({
     color: '#000000',
     marginBottom: 15,
   },
-  dateCard: {
+  mealTypesGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 10,
+  },
+  mealTypeCard: {
+    flex: 1,
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 15,
-    marginRight: 12,
     alignItems: 'center',
-    minWidth: 70,
-    borderWidth: 2,
-    borderColor: 'transparent',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
     position: 'relative',
-  },
-  dateCardSelected: {
-    borderColor: '#006400',
-    backgroundColor: '#E8F5E8',
-  },
-  dateCardToday: {
-    backgroundColor: '#FFF3E0',
-  },
-  dateDay: {
-    fontSize: 12,
-    fontFamily: 'Inter-Regular',
-    color: '#666666',
-    marginBottom: 4,
-  },
-  dateDaySelected: {
-    color: '#006400',
-    fontFamily: 'Inter-Semibold',
-  },
-  dateNumber: {
-    fontSize: 18,
-    fontFamily: 'Inter-Bold',
-    color: '#000000',
-  },
-  dateNumberSelected: {
-    color: '#006400',
-  },
-  mealIndicator: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    backgroundColor: '#FF6B6B',
-    borderRadius: 8,
-    width: 16,
-    height: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  mealCount: {
-    fontSize: 10,
-    fontFamily: 'Inter-Bold',
-    color: '#FFFFFF',
-  },
-  mealTypeSection: {
-    marginBottom: 25,
-  },
-  mealTypeCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 12,
-    marginRight: 12,
-    alignItems: 'center',
-    minWidth: 80,
-    borderWidth: 2,
-    position: 'relative',
-  },
-  mealTypeCardSelected: {
-    backgroundColor: '#E8F5E8',
   },
   mealTypeIcon: {
     fontSize: 24,
-    marginBottom: 6,
+    marginBottom: 8,
   },
   mealTypeName: {
     fontSize: 12,
     fontFamily: 'Inter-Medium',
-    color: '#666666',
-  },
-  mealTypeNameSelected: {
-    color: '#006400',
-    fontFamily: 'Inter-Semibold',
+    color: '#000000',
   },
   mealTypeBadge: {
     position: 'absolute',
-    top: 6,
-    right: 6,
-    borderRadius: 8,
-    width: 16,
-    height: 16,
+    top: -5,
+    right: -5,
+    backgroundColor: '#32CD32',
+    width: 20,
+    height: 20,
+    borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -1158,35 +838,59 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-Bold',
     color: '#FFFFFF',
   },
-  plannedMealsSection: {
-    marginBottom: 25,
+  plannedMealsContainer: {
+    paddingHorizontal: 20,
+    marginBottom: 20,
   },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  emptyState: {
+    backgroundColor: '#F8F9FA',
+    borderRadius: 12,
+    padding: 30,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderStyle: 'dashed',
+  },
+  emptyStateIcon: {
+    width: 60,
+    height: 60,
     marginBottom: 15,
+    opacity: 0.5,
+  },
+  emptyStateTitle: {
+    fontSize: 18,
+    fontFamily: 'Inter-Semibold',
+    color: '#000000',
+    marginBottom: 8,
+  },
+  emptyStateText: {
+    fontSize: 14,
+    fontFamily: 'Inter-Regular',
+    color: '#666666',
+    textAlign: 'center',
   },
   mealCard: {
     flexDirection: 'row',
     backgroundColor: '#FFFFFF',
-    borderRadius: 15,
-    padding: 15,
+    borderRadius: 12,
+    padding: 12,
     marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
     elevation: 2,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowRadius: 2,
   },
   mealImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 12,
+    width: 70,
+    height: 70,
+    borderRadius: 8,
   },
   mealInfo: {
     flex: 1,
-    marginLeft: 15,
+    marginLeft: 12,
   },
   mealName: {
     fontSize: 16,
@@ -1202,212 +906,91 @@ const styles = StyleSheet.create({
   },
   mealMeta: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    gap: 8,
+    marginBottom: 4,
   },
-  mealTime: {
+  mealTypeTag: {
+    backgroundColor: '#E8F5E8',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+  },
+  mealTypeTagText: {
+    fontSize: 10,
+    fontFamily: 'Inter-Medium',
+    color: '#006400',
+  },
+  mealTimeTag: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
   },
   mealTimeText: {
-    fontSize: 12,
-    fontFamily: 'Inter-Regular',
-    color: '#666666',
+    fontSize: 10,
+    fontFamily: 'Inter-Medium',
+    color: '#006400',
   },
   mealPrice: {
-    fontSize: 16,
+    fontSize: 14,
     fontFamily: 'Inter-Bold',
     color: '#006400',
   },
-  mealNotes: {
-    fontSize: 11,
-    fontFamily: 'Inter-Regular',
-    color: '#999999',
-    fontStyle: 'italic',
-    marginBottom: 8,
-  },
-  mealBadges: {
-    flexDirection: 'row',
-    gap: 6,
-  },
-  recurringBadge: {
-    backgroundColor: '#4CAF5020',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 8,
-  },
-  recurringText: {
-    fontSize: 10,
-    fontFamily: 'Inter-Semibold',
-    color: '#4CAF50',
-  },
-  orderedBadge: {
-    backgroundColor: '#FF6B6B20',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 8,
-  },
-  orderedText: {
-    fontSize: 10,
-    fontFamily: 'Inter-Semibold',
-    color: '#FF6B6B',
-  },
-  mealActions: {
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginLeft: 10,
-  },
-  actionButton: {
+  deleteMealButton: {
     padding: 8,
-  },
-  emptyState: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 15,
-    padding: 40,
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#F0F0F0',
-    borderStyle: 'dashed',
-  },
-  emptyStateIcon: {
-    fontSize: 48,
-    marginBottom: 15,
-  },
-  emptyStateTitle: {
-    fontSize: 18,
-    fontFamily: 'Inter-Semibold',
-    color: '#000000',
-    marginBottom: 8,
-  },
-  emptyStateText: {
-    fontSize: 14,
-    fontFamily: 'Inter-Regular',
-    color: '#666666',
-    textAlign: 'center',
-    marginBottom: 20,
   },
   addMealButton: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: '#006400',
-    paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 25,
-    gap: 6,
+    gap: 8,
+    marginTop: 10,
   },
-  addMealButtonText: {
-    fontSize: 14,
+  addMealText: {
+    fontSize: 16,
     fontFamily: 'Inter-Semibold',
     color: '#FFFFFF',
   },
-  upcomingSection: {
-    marginBottom: 25,
+  tipsContainer: {
+    paddingHorizontal: 20,
+    marginBottom: 30,
   },
-  seeAllText: {
-    fontSize: 14,
-    fontFamily: 'Inter-Medium',
-    color: '#006400',
+  tipsTitle: {
+    fontSize: 18,
+    fontFamily: 'Inter-Semibold',
+    color: '#000000',
+    marginBottom: 15,
   },
-  upcomingCard: {
+  tipCard: {
     flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#FFF9E6',
     borderRadius: 12,
     padding: 15,
     marginBottom: 10,
-    alignItems: 'center',
-    elevation: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+    borderLeftWidth: 4,
+    borderLeftColor: '#FFD700',
   },
-  upcomingTime: {
+  tipIcon: {
+    fontSize: 24,
     marginRight: 15,
-    alignItems: 'center',
   },
-  upcomingDate: {
-    fontSize: 10,
-    fontFamily: 'Inter-Regular',
-    color: '#666666',
-    marginBottom: 2,
-  },
-  upcomingTimeText: {
-    fontSize: 14,
-    fontFamily: 'Inter-Bold',
-    color: '#000000',
-  },
-  upcomingInfo: {
+  tipContent: {
     flex: 1,
   },
-  upcomingMeal: {
-    fontSize: 14,
+  tipTitle: {
+    fontSize: 16,
     fontFamily: 'Inter-Semibold',
-    color: '#000000',
-    marginBottom: 2,
+    color: '#333333',
+    marginBottom: 4,
   },
-  upcomingRestaurant: {
-    fontSize: 12,
-    fontFamily: 'Inter-Regular',
-    color: '#666666',
-    marginBottom: 2,
-  },
-  upcomingPrice: {
-    fontSize: 12,
-    fontFamily: 'Inter-Bold',
-    color: '#006400',
-  },
-  upcomingActions: {
-    alignItems: 'flex-end',
-    gap: 6,
-  },
-  statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  statusText: {
-    fontSize: 10,
-    fontFamily: 'Inter-Semibold',
-  },
-  emptyUpcoming: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 20,
-    alignItems: 'center',
-  },
-  emptyUpcomingText: {
+  tipText: {
     fontSize: 14,
     fontFamily: 'Inter-Regular',
     color: '#666666',
-  },
-  quickActionsSection: {
-    marginBottom: 30,
-  },
-  quickActionsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-  },
-  quickActionCard: {
-    width: '47%',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 20,
-    alignItems: 'center',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  quickActionText: {
-    fontSize: 12,
-    fontFamily: 'Inter-Medium',
-    color: '#000000',
-    marginTop: 8,
-    textAlign: 'center',
+    lineHeight: 20,
   },
   modalOverlay: {
     flex: 1,
@@ -1418,7 +1001,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    maxHeight: '90%',
+    maxHeight: '80%',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -1433,37 +1016,37 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-Semibold',
     color: '#000000',
   },
-  modalClose: {
-    fontSize: 20,
-    color: '#666666',
-  },
   modalBody: {
     padding: 20,
   },
-  entryToggle: {
+  selectedInfo: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     marginBottom: 20,
+    backgroundColor: '#F8F9FA',
+    padding: 12,
     borderRadius: 12,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
   },
-  entryToggleButton: {
-    flex: 1,
-    paddingVertical: 12,
+  selectedDate: {
+    flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F5F5F5',
+    gap: 6,
   },
-  entryToggleButtonActive: {
-    backgroundColor: '#006400',
-  },
-  entryToggleText: {
+  selectedDateText: {
     fontSize: 14,
     fontFamily: 'Inter-Medium',
-    color: '#666666',
+    color: '#000000',
   },
-  entryToggleTextActive: {
-    color: '#FFFFFF',
+  selectedMealType: {
+    backgroundColor: '#E8F5E8',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  selectedMealTypeText: {
+    fontSize: 12,
+    fontFamily: 'Inter-Medium',
+    color: '#006400',
   },
   formGroup: {
     marginBottom: 20,
@@ -1474,192 +1057,152 @@ const styles = StyleSheet.create({
     color: '#000000',
     marginBottom: 8,
   },
-  formInput: {
+  selectionButton: {
     backgroundColor: '#F5F5F5',
     borderRadius: 12,
-    paddingHorizontal: 15,
-    paddingVertical: 12,
-    fontSize: 16,
-    fontFamily: 'Inter-Regular',
-    color: '#000000',
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
   },
-  textArea: {
-    minHeight: 80,
-    textAlignVertical: 'top',
-  },
-  checkboxContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 6,
-    borderWidth: 2,
-    borderColor: '#D3D3D3',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  checkboxChecked: {
-    backgroundColor: '#006400',
-    borderColor: '#006400',
-  },
-  checkmark: {
-    color: '#FFFFFF',
-    fontSize: 16,
-  },
-  checkboxLabel: {
+  selectionPlaceholder: {
     fontSize: 14,
     fontFamily: 'Inter-Regular',
-    color: '#000000',
+    color: '#999999',
   },
-  scheduleInfo: {
+  selectedItem: {
     flexDirection: 'row',
-    marginBottom: 20,
+    alignItems: 'center',
   },
-  scheduleImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 12,
+  selectedItemImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
+    marginRight: 12,
   },
-  scheduleDetails: {
+  selectedItemInfo: {
     flex: 1,
-    marginLeft: 15,
-    justifyContent: 'center',
   },
-  scheduleName: {
-    fontSize: 16,
+  selectedItemName: {
+    fontSize: 14,
     fontFamily: 'Inter-Semibold',
     color: '#000000',
-    marginBottom: 4,
+    marginBottom: 2,
   },
-  scheduleRestaurant: {
+  selectedItemPrice: {
     fontSize: 12,
-    fontFamily: 'Inter-Regular',
-    color: '#666666',
-    marginBottom: 4,
-  },
-  schedulePrice: {
-    fontSize: 16,
     fontFamily: 'Inter-Bold',
     color: '#006400',
   },
-  scheduleOptions: {
-    backgroundColor: '#F8F9FA',
-    borderRadius: 12,
-    padding: 15,
-  },
-  scheduleOptionTitle: {
-    fontSize: 14,
-    fontFamily: 'Inter-Semibold',
-    color: '#000000',
-    marginBottom: 6,
-  },
-  scheduleOptionText: {
-    fontSize: 14,
-    fontFamily: 'Inter-Regular',
-    color: '#333333',
-    marginBottom: 4,
-  },
-  scheduleOptionSubtext: {
+  selectedItemSubtext: {
     fontSize: 12,
     fontFamily: 'Inter-Regular',
     color: '#666666',
   },
-  modalFooter: {
+  timeInputContainer: {
     flexDirection: 'row',
-    padding: 20,
-    gap: 12,
+    alignItems: 'center',
+    backgroundColor: '#F5F5F5',
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    gap: 10,
   },
-  cancelButton: {
+  timeInput: {
     flex: 1,
+    fontSize: 14,
+    fontFamily: 'Inter-Regular',
+    color: '#000000',
+  },
+  instructionsInput: {
     backgroundColor: '#F5F5F5',
     borderRadius: 12,
-    paddingVertical: 15,
-    alignItems: 'center',
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    fontSize: 14,
+    fontFamily: 'Inter-Regular',
+    color: '#000000',
+    textAlignVertical: 'top',
+    minHeight: 80,
   },
-  cancelButtonText: {
-    fontSize: 16,
-    fontFamily: 'Inter-Medium',
-    color: '#666666',
-  },
-  confirmButton: {
-    flex: 1,
+  addButton: {
     backgroundColor: '#006400',
-    borderRadius: 12,
     paddingVertical: 15,
+    borderRadius: 12,
     alignItems: 'center',
-  },
-  confirmButtonDisabled: {
-    opacity: 0.7,
-  },
-  confirmButtonText: {
-    fontSize: 16,
-    fontFamily: 'Inter-Semibold',
-    color: '#FFFFFF',
-  },
-  addButtonDisabled: {
-    opacity: 0.7,
+    marginTop: 10,
   },
   addButtonText: {
     fontSize: 16,
     fontFamily: 'Inter-Semibold',
     color: '#FFFFFF',
   },
-  // Restaurant selector styles
-  restaurantSelector: {
-    marginBottom: 20,
-  },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#F5F5F5',
+    margin: 20,
     paddingHorizontal: 15,
-    paddingVertical: 12,
+    paddingVertical: 10,
     borderRadius: 12,
-    marginBottom: 15,
     gap: 10,
   },
   searchInput: {
     flex: 1,
-    fontSize: 16,
+    fontSize: 14,
     fontFamily: 'Inter-Regular',
     color: '#000000',
   },
-  restaurantList: {
-    maxHeight: 300,
+  selectionList: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
   },
-  restaurantItem: {
+  selectionItem: {
     flexDirection: 'row',
-    alignItems: 'center',
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 12,
-    marginBottom: 10,
+    marginBottom: 12,
     borderWidth: 1,
     borderColor: '#E0E0E0',
+    elevation: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 1,
   },
-  restaurantImage: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+  selectionItemImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 8,
     marginRight: 12,
   },
-  restaurantInfo: {
+  selectionItemInfo: {
     flex: 1,
   },
-  restaurantName: {
+  selectionItemName: {
     fontSize: 16,
     fontFamily: 'Inter-Semibold',
     color: '#000000',
-    marginBottom: 2,
+    marginBottom: 4,
   },
-  restaurantCuisine: {
+  selectionItemSubtext: {
     fontSize: 12,
     fontFamily: 'Inter-Regular',
     color: '#666666',
-    marginBottom: 4,
+    marginBottom: 6,
+  },
+  selectionItemMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  selectionItemPrice: {
+    fontSize: 14,
+    fontFamily: 'Inter-Bold',
+    color: '#006400',
   },
   ratingContainer: {
     flexDirection: 'row',
@@ -1668,109 +1211,17 @@ const styles = StyleSheet.create({
   },
   ratingText: {
     fontSize: 12,
-    fontFamily: 'Inter-Medium',
-    color: '#000000',
-  },
-  // Food selector styles
-  foodSelector: {
-    marginBottom: 20,
-  },
-  selectedRestaurantHeader: {
-    marginBottom: 15,
-  },
-  backToRestaurants: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginBottom: 8,
-  },
-  backText: {
-    fontSize: 14,
-    fontFamily: 'Inter-Medium',
-    color: '#006400',
-  },
-  selectedRestaurantName: {
-    fontSize: 18,
-    fontFamily: 'Inter-Bold',
-    color: '#000000',
-  },
-  foodItemList: {
-    gap: 10,
-  },
-  foodItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-  },
-  foodItemImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 8,
-    marginRight: 12,
-  },
-  foodItemInfo: {
-    flex: 1,
-  },
-  foodItemName: {
-    fontSize: 16,
     fontFamily: 'Inter-Semibold',
     color: '#000000',
-    marginBottom: 4,
   },
-  foodItemPrice: {
-    fontSize: 14,
-    fontFamily: 'Inter-Bold',
-    color: '#006400',
-  },
-  favoriteButton: {
-    padding: 8,
-  },
-  // Selected food details
-  selectedFoodDetails: {
-    marginBottom: 20,
-  },
-  backToFoods: {
+  deliveryTimeContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    marginBottom: 15,
   },
-  selectedFoodCard: {
-    flexDirection: 'row',
-    backgroundColor: '#F8F9FA',
-    borderRadius: 12,
-    padding: 15,
-    marginBottom: 20,
-  },
-  selectedFoodImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 8,
-    marginRight: 15,
-  },
-  selectedFoodInfo: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  selectedFoodName: {
-    fontSize: 18,
-    fontFamily: 'Inter-Bold',
-    color: '#000000',
-    marginBottom: 4,
-  },
-  selectedFoodRestaurant: {
-    fontSize: 14,
+  deliveryTimeText: {
+    fontSize: 12,
     fontFamily: 'Inter-Regular',
     color: '#666666',
-    marginBottom: 6,
-  },
-  selectedFoodPrice: {
-    fontSize: 16,
-    fontFamily: 'Inter-Bold',
-    color: '#006400',
   },
 });

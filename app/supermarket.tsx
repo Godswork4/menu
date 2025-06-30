@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Modal, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Modal, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { ArrowLeft, Search, Plus, Minus, ShoppingCart, Filter, Calendar, Clock, Info, X } from 'lucide-react-native';
 import AIAssistant from '@/components/AIAssistant';
+import ImageWithFallback from '@/components/ImageWithFallback';
+import { IMAGES } from '@/constants/Images';
 
 export default function Supermarket() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -315,7 +317,11 @@ export default function Supermarket() {
           <View style={styles.productsGrid}>
             {filteredItems.map((item) => (
               <View key={item.id} style={styles.productCard}>
-                <Image source={{ uri: item.image }} style={styles.productImage} />
+                <ImageWithFallback 
+                  source={item.image} 
+                  style={styles.productImage}
+                  fallback={IMAGES.DEFAULT_FOOD}
+                />
                 <View style={styles.productInfo}>
                   <Text style={styles.productName}>{item.name}</Text>
                   <Text style={styles.productDescription}>{item.description}</Text>
@@ -424,7 +430,11 @@ export default function Supermarket() {
             {selectedItem && (
               <View style={styles.scheduleContent}>
                 <View style={styles.scheduleItemInfo}>
-                  <Image source={{ uri: selectedItem.image }} style={styles.scheduleItemImage} />
+                  <ImageWithFallback 
+                    source={selectedItem.image} 
+                    style={styles.scheduleItemImage}
+                    fallback={IMAGES.DEFAULT_FOOD}
+                  />
                   <View style={styles.scheduleItemDetails}>
                     <Text style={styles.scheduleItemName}>{selectedItem.name}</Text>
                     <Text style={styles.scheduleItemPrice}>{formatPrice(selectedItem.price)}</Text>

@@ -126,6 +126,14 @@ export default function Home() {
     });
   };
 
+  const handleOrderNow = () => {
+    if (!user) {
+      router.push('/auth');
+    } else {
+      Alert.alert('Order Placed', 'Your order has been placed successfully!');
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -227,7 +235,7 @@ export default function Home() {
                 </Text>
               </View>
             </View>
-            <TouchableOpacity style={styles.orderButton}>
+            <TouchableOpacity style={styles.orderButton} onPress={handleOrderNow}>
               <Text style={styles.orderButtonText}>Order Now</Text>
             </TouchableOpacity>
           </View>
