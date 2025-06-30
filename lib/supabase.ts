@@ -2,6 +2,7 @@ import 'react-native-url-polyfill/auto';
 import { createClient } from '@supabase/supabase-js';
 import { Database } from '@/types/database';
 import * as FileSystem from 'expo-file-system';
+import { Buffer } from 'buffer';
 
 // Replace these with your actual Supabase URL and anon key
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || 'https://qosqokjkcsiyoepfclii.supabase.co';

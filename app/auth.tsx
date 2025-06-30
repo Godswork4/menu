@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert, ActivityIndicator, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert, ActivityIndicator, ScrollView, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { User, Truck, Store, Mail, Lock, Eye, EyeOff, ArrowLeft, Wifi, ChefHat } from 'lucide-react-native';
-import CustomLogo from '@/components/CustomLogo';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function Auth() {
@@ -166,7 +165,11 @@ export default function Auth() {
           <ArrowLeft size={24} color="#FFFFFF" />
         </TouchableOpacity>
         <View style={styles.headerContent}>
-          <CustomLogo size="large" color="#FFFFFF" />
+          <Image 
+            source={require('../assets/images/menulogo copy copy copy.webp')} 
+            style={styles.logoImage}
+            resizeMode="contain"
+          />
           <Text style={styles.tagline}>Your Food Explorer</Text>
         </View>
         <View style={styles.placeholder} />
@@ -392,6 +395,11 @@ const styles = StyleSheet.create({
   },
   headerContent: {
     alignItems: 'center',
+  },
+  logoImage: {
+    width: 60,
+    height: 60,
+    marginBottom: 5,
   },
   tagline: {
     fontSize: 14,

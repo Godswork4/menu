@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { Database } from '@/types/database';
+import { Alert } from 'react-native';
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
 
@@ -112,7 +113,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('📝 AuthProvider: Starting sign up process for:', email, 'with role:', role);
       
       // First check if user already exists
-      const { data: existingUser } = await supabase.auth.signInWithPassword({
+      const { data: existingUser, error: checkError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
@@ -130,7 +131,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             full_name: fullName,
             role: role,
           },
-          emailRedirectTo: undefined, // Disable email confirmation for now
         },
       });
 
@@ -174,6 +174,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             hint: profileError.hint || 'No hint',
             code: profileError.code || 'No code'
           });
+          
+          // Even if profile creation fails, we still want to return success for the signup
+          // The profile will be created by the trigger function in the database
         } else {
           console.log('✅ AuthProvider: Profile created successfully');
         }
@@ -234,6 +237,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('✅ AuthProvider: Sign out successful');
     } catch (error) {
       console.error('❌ AuthProvider: Error signing out:', error);
+      Alert.alert('Error', 'Failed to sign out. Please try again.');
     } finally {
       setLoading(false);
     }
