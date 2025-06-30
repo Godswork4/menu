@@ -64,9 +64,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         // Handle navigation based on auth events
         if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
-          // Redirect based on user role after a short delay to ensure profile is loaded
+          // Get the profile to determine role
+          const { data } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', session.user.id)
+            .single();
+            
+          // Redirect based on user role
           setTimeout(() => {
-            if (profile?.role === 'vendor') {
+            if (data?.role === 'vendor') {
               router.replace('/vendor-dashboard');
             } else {
               router.replace('/(tabs)');
