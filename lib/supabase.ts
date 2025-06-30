@@ -3,8 +3,9 @@ import { createClient } from '@supabase/supabase-js';
 import { Database } from '@/types/database';
 import * as FileSystem from 'expo-file-system';
 
-const supabaseUrl = 'https://qosqokjkcsiyoepfclii.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFvc3Fva2prY3NpeW9lcGZjbGlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyODkzODQsImV4cCI6MjA2NTg2NTM4NH0.U2toIKLOJUSCdU0d3-knot658OBw3hQ_9rP9Q5lavQU';
+// Replace these with your actual Supabase URL and anon key
+const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || 'https://qosqokjkcsiyoepfclii.supabase.co';
+const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFvc3Fva2prY3NpeW9lcGZjbGlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyODkzODQsImV4cCI6MjA2NTg2NTM4NH0.U2toIKLOJUSCdU0d3-knot658OBw3hQ_9rP9Q5lavQU';
 
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {

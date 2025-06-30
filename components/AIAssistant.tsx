@@ -197,7 +197,7 @@ export default function AIAssistant() {
           activeOpacity={0.8}
         >
           <Image 
-            source={require('../assets/images/menulogo copy copy.webp')} 
+            source={require('../assets/images/menulogo copy copy copy.webp')} 
             style={styles.logoImage}
             resizeMode="contain"
           />
@@ -218,7 +218,7 @@ export default function AIAssistant() {
               <View style={styles.aiInfo}>
                 <View style={styles.aiAvatar}>
                   <Image 
-                    source={require('../assets/images/menulogo copy copy.webp')} 
+                    source={require('../assets/images/menulogo copy copy copy.webp')} 
                     style={styles.avatarImage}
                     resizeMode="contain"
                   />
