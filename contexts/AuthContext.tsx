@@ -112,17 +112,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(true);
       console.log('📝 AuthProvider: Starting sign up process for:', email, 'with role:', role);
       
-      // First check if user already exists
-      const { data: existingUser, error: checkError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (existingUser.user) {
-        console.log('⚠️ AuthProvider: User already exists, signing them in instead');
-        return { error: null };
-      }
-
+      // Sign up with email and password directly (no email confirmation required)
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -131,6 +121,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             full_name: fullName,
             role: role,
           },
+          // Disable email confirmation
+          emailRedirectTo: `${window.location.origin}/(tabs)`,
         },
       });
 
@@ -179,6 +171,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // The profile will be created by the trigger function in the database
         } else {
           console.log('✅ AuthProvider: Profile created successfully');
+        }
+        
+        // Automatically sign in the user after signup
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        
+        if (signInError) {
+          console.error('❌ AuthProvider: Auto sign-in error after signup:', signInError);
+          // We don't return this error as the signup was successful
+        } else {
+          console.log('✅ AuthProvider: Auto sign-in successful after signup');
         }
       }
 
