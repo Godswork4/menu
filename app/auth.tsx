@@ -73,7 +73,7 @@ export default function Auth() {
         console.error('❌ Auth: Sign in failed:', error);
         
         // Provide user-friendly error messages
-        let errorMessage = 'Failed to sign in. Please check your credentials and try again.';
+        let errorMessage = 'Failed to sign in. Please try again.';
         
         if (error.message?.includes('Invalid login credentials')) {
           errorMessage = 'Invalid email or password. Please check your credentials and try again.';
@@ -84,8 +84,10 @@ export default function Auth() {
         }
         
         Alert.alert('Sign In Failed', errorMessage);
+      } else {
+        console.log('✅ Auth: Sign in successful, redirecting to home');
+        // Navigation is handled in the AuthContext
       }
-      // No need for success alert or manual navigation - handled by AuthContext
     } catch (error) {
       console.error('💥 Auth: Unexpected error:', error);
       Alert.alert('Connection Error', 'Unable to connect to our servers. Please check your internet connection and try again.');

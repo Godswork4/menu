@@ -44,7 +44,6 @@ export default function RootLayout() {
         <Stack.Screen name="onboarding" />
         <Stack.Screen name="auth" />
         <Stack.Screen name="signup-step1" />
-        <Stack.Screen name="signup-step2" />
         <Stack.Screen name="vendor-signup" />
         <Stack.Screen name="vendor-dashboard" />
         <Stack.Screen name="add-food-item" />
@@ -53,6 +52,24 @@ export default function RootLayout() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="food-detail" />
         <Stack.Screen name="category-detail" />
+        <Stack.Screen name="settings" />
+        <Stack.Screen name="settings/profile" />
+        <Stack.Screen name="settings/addresses" />
+        <Stack.Screen name="settings/notifications" />
+        <Stack.Screen name="settings/payments" />
+        <Stack.Screen name="settings/appearance" />
+        <Stack.Screen name="settings/language" />
+        <Stack.Screen name="settings/security" />
+        <Stack.Screen name="settings/device" />
+        <Stack.Screen name="settings/help" />
+        <Stack.Screen name="settings/about" />
+        <Stack.Screen name="budget-analytics" />
+        <Stack.Screen name="budget-goals" />
+        <Stack.Screen name="budget-management" />
+        <Stack.Screen name="meal-planning" />
+        <Stack.Screen name="scheduled-orders" />
+        <Stack.Screen name="market" />
+        <Stack.Screen name="supermarket" />
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style="light" backgroundColor="#006400" />

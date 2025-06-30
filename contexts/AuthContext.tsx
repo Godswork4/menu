@@ -63,22 +63,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await fetchProfile(session.user.id);
         
         // Handle navigation based on auth events
-        if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
-          // Get the profile to determine role
-          const { data } = await supabase
+        if (event === 'SIGNED_IN') {
+          // Check if profile exists to determine where to navigate
+          const { data: profile } = await supabase
             .from('profiles')
-            .select('role')
+            .select('*')
             .eq('id', session.user.id)
             .single();
             
-          // Redirect based on user role
-          setTimeout(() => {
-            if (data?.role === 'vendor') {
+          if (profile) {
+            if (profile.role === 'vendor') {
               router.replace('/vendor-dashboard');
             } else {
               router.replace('/(tabs)');
             }
-          }, 500);
+          }
         }
       } else {
         setProfile(null);
@@ -136,7 +135,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(true);
       console.log('📝 AuthProvider: Starting sign up process for:', email, 'with role:', role);
       
-      // Sign up with email and password directly (no email confirmation required)
+      // First check if user already exists
+      const { data: existingUser, error: checkError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (existingUser.user) {
+        console.log('⚠️ AuthProvider: User already exists, signing them in instead');
+        return { error: null };
+      }
+
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -145,8 +154,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             full_name: fullName,
             role: role,
           },
-          // Disable email confirmation
-          emailRedirectTo: window.location.origin,
         },
       });
 
@@ -196,19 +203,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } else {
           console.log('✅ AuthProvider: Profile created successfully');
         }
-        
-        // Automatically sign in the user after signup
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        
-        if (signInError) {
-          console.error('❌ AuthProvider: Auto sign-in error after signup:', signInError);
-          // We don't return this error as the signup was successful
-        } else {
-          console.log('✅ AuthProvider: Auto sign-in successful after signup');
-        }
       }
 
       return { error: null };
@@ -246,9 +240,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         session_expires: data.session?.expires_at
       });
       
-      // Fetch the user profile to determine the role
+      // Fetch profile to determine where to navigate
       if (data.user) {
-        await fetchProfile(data.user.id);
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', data.user.id)
+          .single();
+          
+        if (profile) {
+          if (profile.role === 'vendor') {
+            router.replace('/vendor-dashboard');
+          } else {
+            router.replace('/(tabs)');
+          }
+        } else {
+          // If no profile exists, create one
+          await supabase
+            .from('profiles')
+            .insert({
+              id: data.user.id,
+              email: data.user.email!,
+              full_name: data.user.user_metadata.full_name || '',
+              role: data.user.user_metadata.role || 'customer',
+              total_orders: 0,
+              points: 0,
+              rating: 0,
+              member_since: new Date().toISOString(),
+            });
+            
+          router.replace('/(tabs)');
+        }
       }
       
       return { error: null };
@@ -269,8 +291,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setProfile(null);
       
       console.log('✅ AuthProvider: Sign out successful');
-      
-      // Navigate to auth screen after sign out
       router.replace('/auth');
     } catch (error) {
       console.error('❌ AuthProvider: Error signing out:', error);
