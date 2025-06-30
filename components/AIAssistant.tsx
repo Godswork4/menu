@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Modal, ScrollView, TextInput, Animated, Easing, Image } from 'react-native';
-import { MessageCircle, X, Send, ChefHat, Heart, DollarSign, Lightbulb } from 'lucide-react-native';
+import { X, Send, ChefHat, Heart, DollarSign, Lightbulb } from 'lucide-react-native';
 
 interface Message {
   id: number;

@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
-import { ArrowLeft, Star, Clock, Heart, ShoppingCart, Plus, Minus, MapPin, Phone, ChefHat } from 'lucide-react-native';
+import { ArrowLeft, Star, Clock, User, Heart, ShoppingCart, Plus, Minus, MapPin, Phone, ChefHat } from 'lucide-react-native';
+import ImageWithFallback from '@/components/ImageWithFallback';
+import { IMAGES } from '@/constants/Images';
 
 // Comprehensive food database with Adobe Stock style images
 const foodDatabase: { [key: number]: any } = {
@@ -1239,18 +1241,20 @@ const styles = StyleSheet.create({
   addToCartButton: {
     flex: 1,
     flexDirection: 'row',
-    backgroundColor: '#32CD32',
+    backgroundColor: '#F5F5F5',
     paddingVertical: 15,
     paddingHorizontal: 20,
     borderRadius: 25,
     justifyContent: 'center',
     alignItems: 'center',
     gap: 8,
+    borderWidth: 1,
+    borderColor: '#006400',
   },
   addToCartText: {
     fontSize: 16,
     fontFamily: 'Inter-Semibold',
-    color: '#FFFFFF',
+    color: '#006400',
   },
   orderNowButton: {
     flex: 2,
