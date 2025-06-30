@@ -18,7 +18,7 @@ export default function CustomLogo({ size = 'medium', color = '#FFFFFF', useImag
     return (
       <View style={styles.logoContainer}>
         <Image 
-          source={require('../assets/images/menulogo copy.webp')} 
+          source={require('../assets/images/menulogo copy copy.webp')} 
           style={[styles.logoImage, logoSizes[size]]}
           resizeMode="contain"
         />

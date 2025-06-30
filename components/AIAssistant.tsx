@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal, ScrollView, TextInput, Animated, Easing } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Modal, ScrollView, TextInput, Animated, Easing, Image } from 'react-native';
 import { MessageCircle, X, Send, ChefHat, Heart, DollarSign, Lightbulb } from 'lucide-react-native';
-import CustomLogo from '@/components/CustomLogo';
 
 interface Message {
   id: number;
@@ -197,9 +196,11 @@ export default function AIAssistant() {
           onPress={() => setIsVisible(true)}
           activeOpacity={0.8}
         >
-          <View style={styles.logoContainer}>
-            <CustomLogo size="small" color="#FFFFFF" useImage={true} />
-          </View>
+          <Image 
+            source={require('../assets/images/menulogo copy copy.webp')} 
+            style={styles.logoImage}
+            resizeMode="contain"
+          />
         </TouchableOpacity>
       </Animated.View>
 
@@ -216,7 +217,11 @@ export default function AIAssistant() {
             <View style={styles.chatHeader}>
               <View style={styles.aiInfo}>
                 <View style={styles.aiAvatar}>
-                  <CustomLogo size="small" color="#FFFFFF" useImage={true} />
+                  <Image 
+                    source={require('../assets/images/menulogo copy copy.webp')} 
+                    style={styles.avatarImage}
+                    resizeMode="contain"
+                  />
                 </View>
                 <View>
                   <Text style={styles.aiName}>Menu AI Assistant</Text>
@@ -329,7 +334,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#006400',
+    backgroundColor: '#32CD32',
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 8,
@@ -338,9 +343,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
   },
-  logoContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
+  logoImage: {
+    width: 40,
+    height: 40,
   },
   modalOverlay: {
     flex: 1,
@@ -372,9 +377,14 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#006400',
+    backgroundColor: '#32CD32',
     justifyContent: 'center',
     alignItems: 'center',
+    overflow: 'hidden',
+  },
+  avatarImage: {
+    width: 30,
+    height: 30,
   },
   aiName: {
     fontSize: 16,
@@ -384,7 +394,7 @@ const styles = StyleSheet.create({
   aiStatus: {
     fontSize: 12,
     fontFamily: 'Inter-Regular',
-    color: '#006400',
+    color: '#32CD32',
   },
   closeButton: {
     padding: 8,
@@ -412,7 +422,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
   },
   userMessage: {
-    backgroundColor: '#006400',
+    backgroundColor: '#32CD32',
     borderBottomRightRadius: 4,
   },
   aiMessage: {
@@ -449,7 +459,7 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#006400',
+    backgroundColor: '#32CD32',
   },
   quickActionsContainer: {
     paddingHorizontal: 20,
@@ -502,7 +512,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#006400',
+    backgroundColor: '#32CD32',
     justifyContent: 'center',
     alignItems: 'center',
   },
