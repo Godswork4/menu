@@ -145,6 +145,10 @@ export default function AIAssistant() {
       return "For quick meals, try fried rice (15 mins), noodles with vegetables, or simple pasta dishes. Meal prep on weekends can also save time during busy weekdays!";
     }
     
+    if (message.includes('age') || message.includes('restriction') || message.includes('alcohol')) {
+      return "Menu app has age restrictions for certain products. We don't offer alcohol or age-restricted items. We focus on providing wholesome food options suitable for all ages!";
+    }
+    
     return "That's an interesting question! I'm here to help with all things food-related. Feel free to ask about recipes, nutrition, cooking tips, or meal planning. What specific food topic interests you most?";
   };
 
@@ -197,7 +201,7 @@ export default function AIAssistant() {
           activeOpacity={0.8}
         >
           <Image 
-            source={require('../assets/images/menulogo copy copy copy.webp')} 
+            source={require('../assets/images/menulogo copy copy copy copy.webp')} 
             style={styles.logoImage}
             resizeMode="contain"
           />
@@ -218,7 +222,7 @@ export default function AIAssistant() {
               <View style={styles.aiInfo}>
                 <View style={styles.aiAvatar}>
                   <Image 
-                    source={require('../assets/images/menulogo copy copy copy.webp')} 
+                    source={require('../assets/images/menulogo copy copy copy copy.webp')} 
                     style={styles.avatarImage}
                     resizeMode="contain"
                   />

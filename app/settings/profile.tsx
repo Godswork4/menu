@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, ActivityIndicator, Image, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { ArrowLeft, User, Mail, Phone, Camera, Save } from 'lucide-react-native';
+import { ArrowLeft, User, Mail, Phone, Camera, Save, X } from 'lucide-react-native';
 import CustomLogo from '@/components/CustomLogo';
 import { useAuth } from '@/contexts/AuthContext';
 import ImageWithFallback from '@/components/ImageWithFallback';
 import { IMAGES } from '@/constants/Images';
+import * as ImagePicker from 'expo-image-picker';
+import { supabase, uploadFoodImage } from '@/lib/supabase';
 
 export default function ProfileSettings() {
   const { user, profile, updateProfile } = useAuth();
@@ -16,6 +18,8 @@ export default function ProfileSettings() {
   const [phone, setPhone] = useState(profile?.phone || '');
   const [avatarUrl, setAvatarUrl] = useState(profile?.avatar_url || '');
   const [isLoading, setIsLoading] = useState(false);
+  const [showImagePicker, setShowImagePicker] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   const handleSaveProfile = async () => {
     if (!fullName) {
@@ -45,13 +49,103 @@ export default function ProfileSettings() {
     }
   };
 
-  const handleChangeAvatar = () => {
-    // In a real app, this would open image picker
-    Alert.alert(
-      'Change Profile Picture',
-      'This feature is not available in the demo version',
-      [{ text: 'OK' }]
-    );
+  const handleImagePicker = async () => {
+    try {
+      setShowImagePicker(false);
+      
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+      
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        setIsUploading(true);
+        
+        // Upload image to Supabase storage
+        const fileName = `avatar_${Date.now()}`;
+        const { url, error } = await uploadFoodImage(
+          result.assets[0].uri,
+          'avatars',
+          fileName
+        );
+        
+        if (error) {
+          Alert.alert('Error', 'Failed to upload image');
+          console.error('Image upload error:', error);
+        } else if (url) {
+          setAvatarUrl(url);
+          
+          // Update profile with new avatar URL
+          const { error: updateError } = await updateProfile({
+            avatar_url: url,
+          });
+          
+          if (updateError) {
+            Alert.alert('Error', 'Failed to update profile with new image');
+          }
+        }
+        
+        setIsUploading(false);
+      }
+    } catch (error) {
+      console.error('Image picker error:', error);
+      Alert.alert('Error', 'Failed to pick image');
+      setIsUploading(false);
+    }
+  };
+
+  const handleCameraCapture = async () => {
+    try {
+      setShowImagePicker(false);
+      
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Denied', 'We need camera permissions to take photos');
+        return;
+      }
+      
+      const result = await ImagePicker.launchCameraAsync({
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+      
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        setIsUploading(true);
+        
+        // Upload image to Supabase storage
+        const fileName = `avatar_${Date.now()}`;
+        const { url, error } = await uploadFoodImage(
+          result.assets[0].uri,
+          'avatars',
+          fileName
+        );
+        
+        if (error) {
+          Alert.alert('Error', 'Failed to upload image');
+          console.error('Image upload error:', error);
+        } else if (url) {
+          setAvatarUrl(url);
+          
+          // Update profile with new avatar URL
+          const { error: updateError } = await updateProfile({
+            avatar_url: url,
+          });
+          
+          if (updateError) {
+            Alert.alert('Error', 'Failed to update profile with new image');
+          }
+        }
+        
+        setIsUploading(false);
+      }
+    } catch (error) {
+      console.error('Camera capture error:', error);
+      Alert.alert('Error', 'Failed to capture image');
+      setIsUploading(false);
+    }
   };
 
   return (
@@ -71,14 +165,22 @@ export default function ProfileSettings() {
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Profile Picture */}
         <View style={styles.avatarContainer}>
-          <ImageWithFallback 
-            source={avatarUrl} 
-            style={styles.avatar}
-            fallback={IMAGES.DEFAULT_CHEF}
-          />
+          {isUploading ? (
+            <View style={styles.uploadingContainer}>
+              <ActivityIndicator size="large" color="#006400" />
+              <Text style={styles.uploadingText}>Uploading...</Text>
+            </View>
+          ) : (
+            <ImageWithFallback 
+              source={avatarUrl} 
+              style={styles.avatar}
+              fallback={IMAGES.DEFAULT_CHEF}
+            />
+          )}
           <TouchableOpacity 
             style={styles.changeAvatarButton}
-            onPress={handleChangeAvatar}
+            onPress={() => setShowImagePicker(true)}
+            disabled={isUploading}
           >
             <Camera size={20} color="#FFFFFF" />
           </TouchableOpacity>
@@ -148,6 +250,57 @@ export default function ProfileSettings() {
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      {/* Image Picker Modal */}
+      <Modal
+        visible={showImagePicker}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowImagePicker(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.imagePickerModal}>
+            <View style={styles.imagePickerHeader}>
+              <Text style={styles.imagePickerTitle}>Change Profile Picture</Text>
+              <TouchableOpacity onPress={() => setShowImagePicker(false)}>
+                <X size={24} color="#666666" />
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.imagePickerOptions}>
+              <TouchableOpacity 
+                style={styles.imagePickerOption}
+                onPress={handleCameraCapture}
+              >
+                <View style={styles.imagePickerIconContainer}>
+                  <Camera size={24} color="#FFFFFF" />
+                </View>
+                <Text style={styles.imagePickerOptionText}>Take Photo</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={styles.imagePickerOption}
+                onPress={handleImagePicker}
+              >
+                <View style={[styles.imagePickerIconContainer, { backgroundColor: '#4CAF50' }]}>
+                  <Image 
+                    source={require('../../assets/images/menulogo copy copy copy copy.webp')} 
+                    style={styles.galleryIcon}
+                  />
+                </View>
+                <Text style={styles.imagePickerOptionText}>Choose from Gallery</Text>
+              </TouchableOpacity>
+            </View>
+            
+            <TouchableOpacity 
+              style={styles.cancelButton}
+              onPress={() => setShowImagePicker(false)}
+            >
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -196,6 +349,19 @@ const styles = StyleSheet.create({
     borderRadius: 60,
     borderWidth: 3,
     borderColor: '#FFFFFF',
+  },
+  uploadingContainer: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: 'rgba(0,0,0,0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  uploadingText: {
+    marginTop: 10,
+    color: '#006400',
+    fontFamily: 'Inter-Medium',
   },
   changeAvatarButton: {
     position: 'absolute',
@@ -262,5 +428,66 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: 'Inter-Semibold',
     color: '#FFFFFF',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  imagePickerModal: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+  },
+  imagePickerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  imagePickerTitle: {
+    fontSize: 18,
+    fontFamily: 'Inter-Semibold',
+    color: '#000000',
+  },
+  imagePickerOptions: {
+    marginBottom: 20,
+  },
+  imagePickerOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
+  },
+  imagePickerIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#006400',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 15,
+  },
+  galleryIcon: {
+    width: 24,
+    height: 24,
+  },
+  imagePickerOptionText: {
+    fontSize: 16,
+    fontFamily: 'Inter-Medium',
+    color: '#333333',
+  },
+  cancelButton: {
+    backgroundColor: '#F5F5F5',
+    paddingVertical: 15,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  cancelButtonText: {
+    fontSize: 16,
+    fontFamily: 'Inter-Medium',
+    color: '#666666',
   },
 });

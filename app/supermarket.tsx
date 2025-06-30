@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Modal, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { ArrowLeft, Search, Plus, Minus, ShoppingCart, Filter } from 'lucide-react-native';
+import { ArrowLeft, Search, Plus, Minus, ShoppingCart, Filter, Calendar, Clock, Info } from 'lucide-react-native';
 import AIAssistant from '@/components/AIAssistant';
 
 export default function Supermarket() {
@@ -11,6 +11,11 @@ export default function Supermarket() {
   const [cart, setCart] = useState<{[key: number]: number}>({});
   const [shoppingList, setShoppingList] = useState<string[]>([]);
   const [newListItem, setNewListItem] = useState('');
+  const [showAgeRestrictionModal, setShowAgeRestrictionModal] = useState(false);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [scheduledDate, setScheduledDate] = useState('');
+  const [scheduledTime, setScheduledTime] = useState('');
 
   const categories = ['All', 'Groceries', 'Beverages', 'Snacks', 'Household', 'Personal Care'];
 
@@ -20,108 +25,120 @@ export default function Supermarket() {
       name: 'Rice (5kg)',
       category: 'Groceries',
       price: 8500,
-      image: 'https://img.freepik.com/free-photo/raw-rice-bag-wooden-scoop_1150-35450.jpg',
+      image: 'https://images.pexels.com/photos/4110251/pexels-photo-4110251.jpeg',
       description: 'Premium quality long grain rice',
       unit: 'bag',
+      ageRestricted: false
     },
     {
       id: 2,
       name: 'Bread (Loaf)',
       category: 'Groceries',
       price: 800,
-      image: 'https://img.freepik.com/free-photo/sliced-bread-cutting-board_1150-35451.jpg',
+      image: 'https://images.pexels.com/photos/1775043/pexels-photo-1775043.jpeg',
       description: 'Fresh baked white bread',
       unit: 'loaf',
+      ageRestricted: false
     },
     {
       id: 3,
       name: 'Milk (1L)',
       category: 'Beverages',
       price: 1200,
-      image: 'https://img.freepik.com/free-photo/milk-bottle-with-glass_1150-35452.jpg',
+      image: 'https://images.pexels.com/photos/248412/pexels-photo-248412.jpeg',
       description: 'Fresh whole milk',
       unit: 'bottle',
+      ageRestricted: false
     },
     {
       id: 4,
       name: 'Eggs (12 pieces)',
       category: 'Groceries',
       price: 1800,
-      image: 'https://img.freepik.com/free-photo/fresh-eggs-carton_1150-35453.jpg',
+      image: 'https://images.pexels.com/photos/162712/egg-white-food-protein-162712.jpeg',
       description: 'Farm fresh eggs',
       unit: 'carton',
+      ageRestricted: false
     },
     {
       id: 5,
       name: 'Cooking Oil (1L)',
       category: 'Groceries',
       price: 2500,
-      image: 'https://img.freepik.com/free-photo/cooking-oil-bottle_1150-35454.jpg',
+      image: 'https://images.pexels.com/photos/4110251/pexels-photo-4110251.jpeg',
       description: 'Pure vegetable cooking oil',
       unit: 'bottle',
+      ageRestricted: false
     },
     {
       id: 6,
       name: 'Soft Drink (500ml)',
       category: 'Beverages',
       price: 400,
-      image: 'https://img.freepik.com/free-photo/soda-bottles-cans_1150-35455.jpg',
+      image: 'https://images.pexels.com/photos/2983100/pexels-photo-2983100.jpeg',
       description: 'Refreshing cola drink',
       unit: 'bottle',
+      ageRestricted: false
     },
     {
       id: 7,
       name: 'Biscuits Pack',
       category: 'Snacks',
       price: 600,
-      image: 'https://img.freepik.com/free-photo/assorted-biscuits-package_1150-35456.jpg',
+      image: 'https://images.pexels.com/photos/230325/pexels-photo-230325.jpeg',
       description: 'Crunchy chocolate biscuits',
       unit: 'pack',
+      ageRestricted: false
     },
     {
       id: 8,
       name: 'Detergent (1kg)',
       category: 'Household',
       price: 1500,
-      image: 'https://img.freepik.com/free-photo/laundry-detergent-powder-scoop_1150-35457.jpg',
+      image: 'https://images.pexels.com/photos/4239013/pexels-photo-4239013.jpeg',
       description: 'Powerful cleaning detergent',
       unit: 'pack',
+      ageRestricted: false
     },
     {
       id: 9,
       name: 'Toothpaste',
       category: 'Personal Care',
       price: 800,
-      image: 'https://img.freepik.com/free-photo/toothpaste-toothbrush_1150-35458.jpg',
+      image: 'https://images.pexels.com/photos/3785927/pexels-photo-3785927.jpeg',
       description: 'Fluoride toothpaste for healthy teeth',
       unit: 'tube',
+      ageRestricted: false
     },
     {
       id: 10,
       name: 'Soap Bar',
       category: 'Personal Care',
       price: 300,
-      image: 'https://img.freepik.com/free-photo/natural-soap-bars-towel_1150-35459.jpg',
+      image: 'https://images.pexels.com/photos/3997309/pexels-photo-3997309.jpeg',
       description: 'Moisturizing bath soap',
       unit: 'bar',
+      ageRestricted: false
     },
     {
       id: 11,
       name: 'Noodles (Pack)',
       category: 'Groceries',
       price: 200,
-      image: 'https://img.freepik.com/free-photo/instant-noodles-packages_1150-35460.jpg',
+      image: 'https://images.pexels.com/photos/1907227/pexels-photo-1907227.jpeg',
       description: 'Instant noodles - chicken flavor',
       unit: 'pack',
+      ageRestricted: false
     },
     {
       id: 12,
       name: 'Tissue Paper',
       category: 'Household',
       price: 500,
-      image: 'https://img.freepik.com/free-photo/toilet-paper-rolls_1150-35461.jpg',
+      image: 'https://images.pexels.com/photos/4239091/pexels-photo-4239091.jpeg',
       description: 'Soft tissue paper roll',
       unit: 'roll',
+      ageRestricted: false
     },
   ];
 
@@ -136,6 +153,12 @@ export default function Supermarket() {
   });
 
   const addToCart = (itemId: number) => {
+    const item = supermarketItems.find(i => i.id === itemId);
+    if (item?.ageRestricted) {
+      setShowAgeRestrictionModal(true);
+      return;
+    }
+    
     setCart(prev => ({
       ...prev,
       [itemId]: (prev[itemId] || 0) + 1
@@ -174,6 +197,25 @@ export default function Supermarket() {
 
   const removeFromShoppingList = (index: number) => {
     setShoppingList(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleScheduleOrder = (item: any) => {
+    setSelectedItem(item);
+    setShowScheduleModal(true);
+  };
+
+  const confirmScheduleOrder = () => {
+    if (!scheduledDate || !scheduledTime) {
+      Alert.alert('Error', 'Please select both date and time for your scheduled order');
+      return;
+    }
+
+    // In a real app, this would save to a database
+    Alert.alert(
+      'Order Scheduled!',
+      `Your order for ${selectedItem.name} has been scheduled for ${scheduledDate} at ${scheduledTime}`,
+      [{ text: 'OK', onPress: () => setShowScheduleModal(false) }]
+    );
   };
 
   return (
@@ -298,13 +340,21 @@ export default function Supermarket() {
                         </TouchableOpacity>
                       </View>
                     ) : (
-                      <TouchableOpacity 
-                        style={styles.addToCartButton}
-                        onPress={() => addToCart(item.id)}
-                      >
-                        <Plus size={16} color="#FFFFFF" />
-                        <Text style={styles.addToCartText}>Add</Text>
-                      </TouchableOpacity>
+                      <View style={styles.actionButtons}>
+                        <TouchableOpacity 
+                          style={styles.scheduleButton}
+                          onPress={() => handleScheduleOrder(item)}
+                        >
+                          <Calendar size={16} color="#9C27B0" />
+                        </TouchableOpacity>
+                        <TouchableOpacity 
+                          style={styles.addToCartButton}
+                          onPress={() => addToCart(item.id)}
+                        >
+                          <Plus size={16} color="#FFFFFF" />
+                          <Text style={styles.addToCartText}>Add</Text>
+                        </TouchableOpacity>
+                      </View>
                     )}
                   </View>
                 </View>
@@ -328,6 +378,94 @@ export default function Supermarket() {
           </TouchableOpacity>
         </View>
       )}
+
+      {/* Age Restriction Modal */}
+      <Modal
+        visible={showAgeRestrictionModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowAgeRestrictionModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.restrictionModal}>
+            <View style={styles.restrictionIconContainer}>
+              <Info size={40} color="#9C27B0" />
+            </View>
+            <Text style={styles.restrictionTitle}>Age Restricted Item</Text>
+            <Text style={styles.restrictionText}>
+              This item is age-restricted and requires age verification. Menu app does not offer age-restricted products.
+            </Text>
+            <TouchableOpacity 
+              style={styles.restrictionButton}
+              onPress={() => setShowAgeRestrictionModal(false)}
+            >
+              <Text style={styles.restrictionButtonText}>Understood</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Schedule Order Modal */}
+      <Modal
+        visible={showScheduleModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowScheduleModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.scheduleModal}>
+            <View style={styles.scheduleHeader}>
+              <Text style={styles.scheduleTitle}>Schedule Order</Text>
+              <TouchableOpacity onPress={() => setShowScheduleModal(false)}>
+                <X size={24} color="#666666" />
+              </TouchableOpacity>
+            </View>
+            
+            {selectedItem && (
+              <View style={styles.scheduleContent}>
+                <View style={styles.scheduleItemInfo}>
+                  <Image source={{ uri: selectedItem.image }} style={styles.scheduleItemImage} />
+                  <View style={styles.scheduleItemDetails}>
+                    <Text style={styles.scheduleItemName}>{selectedItem.name}</Text>
+                    <Text style={styles.scheduleItemPrice}>{formatPrice(selectedItem.price)}</Text>
+                  </View>
+                </View>
+                
+                <View style={styles.scheduleForm}>
+                  <Text style={styles.scheduleFormLabel}>Select Date:</Text>
+                  <View style={styles.scheduleInput}>
+                    <Calendar size={20} color="#9C27B0" />
+                    <TextInput
+                      style={styles.scheduleTextInput}
+                      placeholder="YYYY-MM-DD"
+                      value={scheduledDate}
+                      onChangeText={setScheduledDate}
+                    />
+                  </View>
+                  
+                  <Text style={styles.scheduleFormLabel}>Select Time:</Text>
+                  <View style={styles.scheduleInput}>
+                    <Clock size={20} color="#9C27B0" />
+                    <TextInput
+                      style={styles.scheduleTextInput}
+                      placeholder="HH:MM"
+                      value={scheduledTime}
+                      onChangeText={setScheduledTime}
+                    />
+                  </View>
+                </View>
+                
+                <TouchableOpacity 
+                  style={styles.confirmScheduleButton}
+                  onPress={confirmScheduleOrder}
+                >
+                  <Text style={styles.confirmScheduleText}>Confirm Schedule</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        </View>
+      </Modal>
 
       {/* AI Assistant */}
       <AIAssistant />
@@ -539,6 +677,19 @@ const styles = StyleSheet.create({
   cartControls: {
     alignItems: 'center',
   },
+  actionButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    width: '100%',
+  },
+  scheduleButton: {
+    backgroundColor: '#F3E5F5',
+    borderRadius: 15,
+    padding: 8,
+    borderWidth: 1,
+    borderColor: '#9C27B0',
+  },
   quantityControls: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -561,8 +712,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
   },
   addToCartButton: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: '#9C27B0',
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -602,5 +755,132 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: 'Inter-Bold',
     color: '#9C27B0',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  restrictionModal: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 15,
+    padding: 20,
+    width: '80%',
+    alignItems: 'center',
+  },
+  restrictionIconContainer: {
+    backgroundColor: '#F3E5F5',
+    borderRadius: 50,
+    padding: 15,
+    marginBottom: 15,
+  },
+  restrictionTitle: {
+    fontSize: 18,
+    fontFamily: 'Inter-Bold',
+    color: '#000000',
+    marginBottom: 10,
+  },
+  restrictionText: {
+    fontSize: 14,
+    fontFamily: 'Inter-Regular',
+    color: '#666666',
+    textAlign: 'center',
+    marginBottom: 20,
+    lineHeight: 20,
+  },
+  restrictionButton: {
+    backgroundColor: '#9C27B0',
+    paddingHorizontal: 30,
+    paddingVertical: 12,
+    borderRadius: 25,
+  },
+  restrictionButtonText: {
+    fontSize: 16,
+    fontFamily: 'Inter-Semibold',
+    color: '#FFFFFF',
+  },
+  scheduleModal: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 15,
+    width: '90%',
+    maxHeight: '80%',
+  },
+  scheduleHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
+  },
+  scheduleTitle: {
+    fontSize: 18,
+    fontFamily: 'Inter-Semibold',
+    color: '#000000',
+  },
+  scheduleContent: {
+    padding: 20,
+  },
+  scheduleItemInfo: {
+    flexDirection: 'row',
+    marginBottom: 20,
+  },
+  scheduleItemImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 10,
+  },
+  scheduleItemDetails: {
+    flex: 1,
+    marginLeft: 15,
+    justifyContent: 'center',
+  },
+  scheduleItemName: {
+    fontSize: 16,
+    fontFamily: 'Inter-Semibold',
+    color: '#000000',
+    marginBottom: 4,
+  },
+  scheduleItemPrice: {
+    fontSize: 16,
+    fontFamily: 'Inter-Bold',
+    color: '#9C27B0',
+  },
+  scheduleForm: {
+    marginBottom: 20,
+  },
+  scheduleFormLabel: {
+    fontSize: 14,
+    fontFamily: 'Inter-Medium',
+    color: '#000000',
+    marginBottom: 8,
+  },
+  scheduleInput: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F5F5F5',
+    paddingHorizontal: 15,
+    paddingVertical: 12,
+    borderRadius: 12,
+    marginBottom: 15,
+    gap: 12,
+  },
+  scheduleTextInput: {
+    flex: 1,
+    fontSize: 16,
+    fontFamily: 'Inter-Regular',
+    color: '#000000',
+  },
+  confirmScheduleButton: {
+    backgroundColor: '#9C27B0',
+    paddingVertical: 15,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  confirmScheduleText: {
+    fontSize: 16,
+    fontFamily: 'Inter-Semibold',
+    color: '#FFFFFF',
   },
 });

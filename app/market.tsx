@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Alert, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { ArrowLeft, Search, Plus, Minus, ShoppingCart, Filter, MapPin } from 'lucide-react-native';
+import { ArrowLeft, Search, Plus, Minus, ShoppingCart, Filter, MapPin, Calendar, Clock, Info } from 'lucide-react-native';
 import AIAssistant from '@/components/AIAssistant';
 
 export default function Market() {
@@ -11,6 +11,11 @@ export default function Market() {
   const [cart, setCart] = useState<{[key: number]: number}>({});
   const [shoppingList, setShoppingList] = useState<string[]>([]);
   const [newListItem, setNewListItem] = useState('');
+  const [showAgeRestrictionModal, setShowAgeRestrictionModal] = useState(false);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [scheduledDate, setScheduledDate] = useState('');
+  const [scheduledTime, setScheduledTime] = useState('');
 
   const categories = ['All', 'Grains', 'Proteins', 'Spices', 'Oils', 'Vegetables', 'Seafood'];
 
@@ -20,132 +25,144 @@ export default function Market() {
       name: 'Palm Oil (1L)',
       category: 'Oils',
       price: 3500,
-      image: 'https://img.freepik.com/free-photo/red-palm-oil-wooden-bowl_1150-45815.jpg',
+      image: 'https://images.pexels.com/photos/4110251/pexels-photo-4110251.jpeg',
       description: 'Fresh red palm oil from local farms',
       unit: 'bottle',
       vendor: 'Mama Kemi',
       location: 'Mile 12 Market',
+      ageRestricted: false
     },
     {
       id: 2,
       name: 'Fresh Fish (Tilapia)',
       category: 'Seafood',
       price: 2800,
-      image: 'https://img.freepik.com/free-photo/fresh-raw-fish-tilapia-with-spices-cooking_1150-45160.jpg',
+      image: 'https://images.pexels.com/photos/3298203/pexels-photo-3298203.jpeg',
       description: 'Fresh tilapia fish, cleaned and ready',
       unit: 'kg',
       vendor: 'Fish Seller John',
       location: 'Alaba Market',
+      ageRestricted: false
     },
     {
       id: 3,
       name: 'Crayfish (Ground)',
       category: 'Spices',
       price: 1500,
-      image: 'https://img.freepik.com/free-photo/dried-crayfish-wooden-bowl-table_1150-45820.jpg',
+      image: 'https://images.pexels.com/photos/1327838/pexels-photo-1327838.jpeg',
       description: 'Freshly ground crayfish for seasoning',
       unit: 'cup',
       vendor: 'Spice Mama',
       location: 'Oshodi Market',
+      ageRestricted: false
     },
     {
       id: 4,
       name: 'Local Rice (5kg)',
       category: 'Grains',
       price: 12000,
-      image: 'https://img.freepik.com/free-photo/raw-rice-wooden-bowl_1150-45818.jpg',
+      image: 'https://images.pexels.com/photos/4110251/pexels-photo-4110251.jpeg',
       description: 'Premium local Ofada rice',
       unit: 'bag',
       vendor: 'Rice Merchant',
       location: 'Mushin Market',
+      ageRestricted: false
     },
     {
       id: 5,
       name: 'Beans (Brown)',
       category: 'Grains',
       price: 4500,
-      image: 'https://img.freepik.com/free-photo/brown-beans-wooden-bowl_1150-45816.jpg',
+      image: 'https://images.pexels.com/photos/1537169/pexels-photo-1537169.jpeg',
       description: 'Quality brown honey beans',
       unit: 'kg',
       vendor: 'Grain Seller',
       location: 'Oyingbo Market',
+      ageRestricted: false
     },
     {
       id: 6,
       name: 'Stockfish',
       category: 'Proteins',
       price: 8500,
-      image: 'https://img.freepik.com/free-photo/dried-stockfish-wooden-surface_1150-45819.jpg',
+      image: 'https://images.pexels.com/photos/3298203/pexels-photo-3298203.jpeg',
       description: 'Premium dried stockfish',
       unit: 'piece',
       vendor: 'Fish Vendor',
       location: 'Lagos Island',
+      ageRestricted: false
     },
     {
       id: 7,
       name: 'Pepper (Scotch Bonnet)',
       category: 'Spices',
       price: 800,
-      image: 'https://img.freepik.com/free-photo/scotch-bonnet-peppers-basket_1150-45817.jpg',
+      image: 'https://images.pexels.com/photos/1435904/pexels-photo-1435904.jpeg',
       description: 'Fresh hot scotch bonnet peppers',
       unit: 'cup',
       vendor: 'Pepper Seller',
       location: 'Ikeja Market',
+      ageRestricted: false
     },
     {
       id: 8,
       name: 'Groundnut Oil (1L)',
       category: 'Oils',
       price: 2200,
-      image: 'https://img.freepik.com/free-photo/groundnut-oil-glass-bottle_1150-45814.jpg',
+      image: 'https://images.pexels.com/photos/4110251/pexels-photo-4110251.jpeg',
       description: 'Pure groundnut oil, locally processed',
       unit: 'bottle',
       vendor: 'Oil Merchant',
       location: 'Ketu Market',
+      ageRestricted: false
     },
     {
       id: 9,
       name: 'Dried Fish (Panla)',
       category: 'Seafood',
       price: 3200,
-      image: 'https://img.freepik.com/free-photo/dried-fish-basket-market_1150-45821.jpg',
+      image: 'https://images.pexels.com/photos/3298203/pexels-photo-3298203.jpeg',
       description: 'Smoked and dried panla fish',
       unit: 'piece',
       vendor: 'Dried Fish Seller',
       location: 'Agege Market',
+      ageRestricted: false
     },
     {
       id: 10,
       name: 'Locust Beans (Iru)',
       category: 'Spices',
       price: 600,
-      image: 'https://img.freepik.com/free-photo/locust-beans-wooden-bowl_1150-45822.jpg',
+      image: 'https://images.pexels.com/photos/1435904/pexels-photo-1435904.jpeg',
       description: 'Traditional locust beans seasoning',
       unit: 'wrap',
       vendor: 'Traditional Seller',
       location: 'Balogun Market',
+      ageRestricted: false
     },
     {
       id: 11,
       name: 'Yam (Tuber)',
       category: 'Vegetables',
       price: 1800,
-      image: 'https://img.freepik.com/free-photo/fresh-yam-tuber-market-stall_1150-45823.jpg',
+      image: 'https://images.pexels.com/photos/144248/potatoes-vegetables-erdfrucht-bio-144248.jpeg',
       description: 'Fresh yam tuber, medium size',
       unit: 'tuber',
       vendor: 'Yam Seller',
       location: 'Tejuosho Market',
+      ageRestricted: false
     },
     {
       id: 12,
       name: 'Garri (White)',
       category: 'Grains',
       price: 1200,
-      image: 'https://img.freepik.com/free-photo/white-garri-sack-market_1150-45824.jpg',
+      image: 'https://images.pexels.com/photos/1537169/pexels-photo-1537169.jpeg',
       description: 'Quality white garri from cassava',
       unit: 'kg',
       vendor: 'Garri Seller',
       location: 'Computer Village',
+      ageRestricted: false
     },
   ];
 
@@ -160,6 +177,12 @@ export default function Market() {
   });
 
   const addToCart = (itemId: number) => {
+    const item = marketItems.find(i => i.id === itemId);
+    if (item?.ageRestricted) {
+      setShowAgeRestrictionModal(true);
+      return;
+    }
+    
     setCart(prev => ({
       ...prev,
       [itemId]: (prev[itemId] || 0) + 1
@@ -198,6 +221,25 @@ export default function Market() {
 
   const removeFromShoppingList = (index: number) => {
     setShoppingList(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleScheduleOrder = (item: any) => {
+    setSelectedItem(item);
+    setShowScheduleModal(true);
+  };
+
+  const confirmScheduleOrder = () => {
+    if (!scheduledDate || !scheduledTime) {
+      Alert.alert('Error', 'Please select both date and time for your scheduled order');
+      return;
+    }
+
+    // In a real app, this would save to a database
+    Alert.alert(
+      'Order Scheduled!',
+      `Your order for ${selectedItem.name} has been scheduled for ${scheduledDate} at ${scheduledTime}`,
+      [{ text: 'OK', onPress: () => setShowScheduleModal(false) }]
+    );
   };
 
   return (
@@ -330,13 +372,21 @@ export default function Market() {
                         </TouchableOpacity>
                       </View>
                     ) : (
-                      <TouchableOpacity 
-                        style={styles.addToCartButton}
-                        onPress={() => addToCart(item.id)}
-                      >
-                        <Plus size={16} color="#FFFFFF" />
-                        <Text style={styles.addToCartText}>Add</Text>
-                      </TouchableOpacity>
+                      <View style={styles.actionButtons}>
+                        <TouchableOpacity 
+                          style={styles.scheduleButton}
+                          onPress={() => handleScheduleOrder(item)}
+                        >
+                          <Calendar size={16} color="#FF5722" />
+                        </TouchableOpacity>
+                        <TouchableOpacity 
+                          style={styles.addToCartButton}
+                          onPress={() => addToCart(item.id)}
+                        >
+                          <Plus size={16} color="#FFFFFF" />
+                          <Text style={styles.addToCartText}>Add</Text>
+                        </TouchableOpacity>
+                      </View>
                     )}
                   </View>
                 </View>
@@ -360,6 +410,95 @@ export default function Market() {
           </TouchableOpacity>
         </View>
       )}
+
+      {/* Age Restriction Modal */}
+      <Modal
+        visible={showAgeRestrictionModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowAgeRestrictionModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.restrictionModal}>
+            <View style={styles.restrictionIconContainer}>
+              <Info size={40} color="#FF5722" />
+            </View>
+            <Text style={styles.restrictionTitle}>Age Restricted Item</Text>
+            <Text style={styles.restrictionText}>
+              This item is age-restricted and requires age verification. Menu app does not offer age-restricted products.
+            </Text>
+            <TouchableOpacity 
+              style={styles.restrictionButton}
+              onPress={() => setShowAgeRestrictionModal(false)}
+            >
+              <Text style={styles.restrictionButtonText}>Understood</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Schedule Order Modal */}
+      <Modal
+        visible={showScheduleModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowScheduleModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.scheduleModal}>
+            <View style={styles.scheduleHeader}>
+              <Text style={styles.scheduleTitle}>Schedule Order</Text>
+              <TouchableOpacity onPress={() => setShowScheduleModal(false)}>
+                <X size={24} color="#666666" />
+              </TouchableOpacity>
+            </View>
+            
+            {selectedItem && (
+              <View style={styles.scheduleContent}>
+                <View style={styles.scheduleItemInfo}>
+                  <Image source={{ uri: selectedItem.image }} style={styles.scheduleItemImage} />
+                  <View style={styles.scheduleItemDetails}>
+                    <Text style={styles.scheduleItemName}>{selectedItem.name}</Text>
+                    <Text style={styles.scheduleItemVendor}>{selectedItem.vendor}</Text>
+                    <Text style={styles.scheduleItemPrice}>{formatPrice(selectedItem.price)}</Text>
+                  </View>
+                </View>
+                
+                <View style={styles.scheduleForm}>
+                  <Text style={styles.scheduleFormLabel}>Select Date:</Text>
+                  <View style={styles.scheduleInput}>
+                    <Calendar size={20} color="#FF5722" />
+                    <TextInput
+                      style={styles.scheduleTextInput}
+                      placeholder="YYYY-MM-DD"
+                      value={scheduledDate}
+                      onChangeText={setScheduledDate}
+                    />
+                  </View>
+                  
+                  <Text style={styles.scheduleFormLabel}>Select Time:</Text>
+                  <View style={styles.scheduleInput}>
+                    <Clock size={20} color="#FF5722" />
+                    <TextInput
+                      style={styles.scheduleTextInput}
+                      placeholder="HH:MM"
+                      value={scheduledTime}
+                      onChangeText={setScheduledTime}
+                    />
+                  </View>
+                </View>
+                
+                <TouchableOpacity 
+                  style={styles.confirmScheduleButton}
+                  onPress={confirmScheduleOrder}
+                >
+                  <Text style={styles.confirmScheduleText}>Confirm Schedule</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        </View>
+      </Modal>
 
       {/* AI Assistant */}
       <AIAssistant />
@@ -590,6 +729,19 @@ const styles = StyleSheet.create({
   cartControls: {
     alignItems: 'center',
   },
+  actionButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    width: '100%',
+  },
+  scheduleButton: {
+    backgroundColor: '#FFF3E0',
+    borderRadius: 15,
+    padding: 8,
+    borderWidth: 1,
+    borderColor: '#FF5722',
+  },
   quantityControls: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -612,8 +764,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
   },
   addToCartButton: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: '#FF5722',
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -653,5 +807,138 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: 'Inter-Bold',
     color: '#FF5722',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  restrictionModal: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 15,
+    padding: 20,
+    width: '80%',
+    alignItems: 'center',
+  },
+  restrictionIconContainer: {
+    backgroundColor: '#FFF3E0',
+    borderRadius: 50,
+    padding: 15,
+    marginBottom: 15,
+  },
+  restrictionTitle: {
+    fontSize: 18,
+    fontFamily: 'Inter-Bold',
+    color: '#000000',
+    marginBottom: 10,
+  },
+  restrictionText: {
+    fontSize: 14,
+    fontFamily: 'Inter-Regular',
+    color: '#666666',
+    textAlign: 'center',
+    marginBottom: 20,
+    lineHeight: 20,
+  },
+  restrictionButton: {
+    backgroundColor: '#FF5722',
+    paddingHorizontal: 30,
+    paddingVertical: 12,
+    borderRadius: 25,
+  },
+  restrictionButtonText: {
+    fontSize: 16,
+    fontFamily: 'Inter-Semibold',
+    color: '#FFFFFF',
+  },
+  scheduleModal: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 15,
+    width: '90%',
+    maxHeight: '80%',
+  },
+  scheduleHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
+  },
+  scheduleTitle: {
+    fontSize: 18,
+    fontFamily: 'Inter-Semibold',
+    color: '#000000',
+  },
+  scheduleContent: {
+    padding: 20,
+  },
+  scheduleItemInfo: {
+    flexDirection: 'row',
+    marginBottom: 20,
+  },
+  scheduleItemImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 10,
+  },
+  scheduleItemDetails: {
+    flex: 1,
+    marginLeft: 15,
+    justifyContent: 'center',
+  },
+  scheduleItemName: {
+    fontSize: 16,
+    fontFamily: 'Inter-Semibold',
+    color: '#000000',
+    marginBottom: 4,
+  },
+  scheduleItemVendor: {
+    fontSize: 14,
+    fontFamily: 'Inter-Regular',
+    color: '#666666',
+    marginBottom: 4,
+  },
+  scheduleItemPrice: {
+    fontSize: 16,
+    fontFamily: 'Inter-Bold',
+    color: '#FF5722',
+  },
+  scheduleForm: {
+    marginBottom: 20,
+  },
+  scheduleFormLabel: {
+    fontSize: 14,
+    fontFamily: 'Inter-Medium',
+    color: '#000000',
+    marginBottom: 8,
+  },
+  scheduleInput: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F5F5F5',
+    paddingHorizontal: 15,
+    paddingVertical: 12,
+    borderRadius: 12,
+    marginBottom: 15,
+    gap: 12,
+  },
+  scheduleTextInput: {
+    flex: 1,
+    fontSize: 16,
+    fontFamily: 'Inter-Regular',
+    color: '#000000',
+  },
+  confirmScheduleButton: {
+    backgroundColor: '#FF5722',
+    paddingVertical: 15,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  confirmScheduleText: {
+    fontSize: 16,
+    fontFamily: 'Inter-Semibold',
+    color: '#FFFFFF',
   },
 });
