@@ -3,6 +3,7 @@ import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { Database } from '@/types/database';
 import { Alert } from 'react-native';
+import { router } from 'expo-router';
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
 
@@ -60,9 +61,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (session?.user) {
         await fetchProfile(session.user.id);
+        
+        // Handle navigation based on auth events
+        if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
+          // Redirect based on user role after a short delay to ensure profile is loaded
+          setTimeout(() => {
+            if (profile?.role === 'vendor') {
+              router.replace('/vendor-dashboard');
+            } else {
+              router.replace('/(tabs)');
+            }
+          }, 500);
+        }
       } else {
         setProfile(null);
         setLoading(false);
+        
+        if (event === 'SIGNED_OUT') {
+          router.replace('/auth');
+        }
       }
     });
 
@@ -222,6 +239,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         session_expires: data.session?.expires_at
       });
       
+      // Fetch the user profile to determine the role
+      if (data.user) {
+        await fetchProfile(data.user.id);
+      }
+      
       return { error: null };
     } catch (error) {
       console.error('💥 AuthProvider: Unexpected sign in error:', error);
@@ -240,6 +262,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setProfile(null);
       
       console.log('✅ AuthProvider: Sign out successful');
+      
+      // Navigate to auth screen after sign out
+      router.replace('/auth');
     } catch (error) {
       console.error('❌ AuthProvider: Error signing out:', error);
       Alert.alert('Error', 'Failed to sign out. Please try again.');

@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert, ActivityIndicator, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { ArrowLeft, User, Mail, Lock, Eye, EyeOff, Wifi, ChevronRight } from 'lucide-react-native';
+import { User, Mail, Lock, Eye, EyeOff, Wifi, ChevronRight, ArrowLeft } from 'lucide-react-native';
 import CustomLogo from '@/components/CustomLogo';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function SignUpStep1() {
   const [fullName, setFullName] = useState('');
@@ -13,6 +14,8 @@ export default function SignUpStep1() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  
+  const { signUp } = useAuth();
 
   const validateForm = () => {
     if (!fullName || !email || !password || !confirmPassword) {
@@ -44,19 +47,29 @@ export default function SignUpStep1() {
     return true;
   };
 
-  const handleNext = () => {
+  const handleSignUp = async () => {
     if (!validateForm()) return;
-
-    // Pass data to next step
-    router.push({
-      pathname: '/signup-step2',
-      params: {
-        fullName,
-        email,
-        password,
-        role: 'customer'
+    
+    setIsLoading(true);
+    
+    try {
+      const { error } = await signUp(email, password, fullName, 'customer');
+      
+      if (error) {
+        if (error.message?.includes('User already registered')) {
+          Alert.alert('Account Exists', 'An account with this email already exists. Please sign in instead.');
+          router.push('/auth');
+        } else {
+          Alert.alert('Sign Up Error', error.message || 'Failed to create account. Please try again.');
+        }
       }
-    });
+      // No need for success alert or manual navigation - handled by AuthContext
+    } catch (error) {
+      Alert.alert('Error', 'An unexpected error occurred. Please try again.');
+      console.error('Sign up error:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -96,9 +109,9 @@ export default function SignUpStep1() {
       {/* Progress Indicator */}
       <View style={styles.progressContainer}>
         <View style={styles.progressBar}>
-          <View style={[styles.progressFill, { width: '50%' }]} />
+          <View style={[styles.progressFill, { width: '100%' }]} />
         </View>
-        <Text style={styles.progressText}>Step 1 of 2</Text>
+        <Text style={styles.progressText}>Registration</Text>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
@@ -181,20 +194,20 @@ export default function SignUpStep1() {
           <Text style={styles.requirementText}>• Mix of letters and numbers recommended</Text>
         </View>
 
-        {/* Next Button */}
+        {/* Sign Up Button */}
         <TouchableOpacity 
           style={[styles.nextButton, isLoading && styles.nextButtonDisabled]} 
-          onPress={handleNext}
+          onPress={handleSignUp}
           disabled={isLoading}
         >
           {isLoading ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="small" color="#FFFFFF" />
-              <Text style={styles.loadingText}>Processing...</Text>
+              <Text style={styles.loadingText}>Creating Account...</Text>
             </View>
           ) : (
             <View style={styles.nextContainer}>
-              <Text style={styles.nextButtonText}>Continue</Text>
+              <Text style={styles.nextButtonText}>Create Account</Text>
               <ChevronRight size={20} color="#FFFFFF" />
             </View>
           )}

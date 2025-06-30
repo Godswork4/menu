@@ -126,11 +126,7 @@ export default function VendorSignUp() {
           }
         }
         
-        Alert.alert(
-          'Kitchen Partner Account Created!', 
-          'Welcome to Menu! Your kitchen partner account has been created. You can now start managing your food business.',
-          [{ text: 'Get Started', onPress: () => router.push('/vendor-dashboard') }]
-        );
+        // No need for success alert or manual navigation - handled by AuthContext
       }
     } catch (error) {
       Alert.alert('Error', 'An unexpected error occurred. Please try again.');

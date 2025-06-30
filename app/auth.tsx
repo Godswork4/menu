@@ -73,7 +73,7 @@ export default function Auth() {
         console.error('❌ Auth: Sign in failed:', error);
         
         // Provide user-friendly error messages
-        let errorMessage = 'Failed to sign in. Please try again.';
+        let errorMessage = 'Failed to sign in. Please check your credentials and try again.';
         
         if (error.message?.includes('Invalid login credentials')) {
           errorMessage = 'Invalid email or password. Please check your credentials and try again.';
@@ -84,25 +84,8 @@ export default function Auth() {
         }
         
         Alert.alert('Sign In Failed', errorMessage);
-      } else {
-        console.log('✅ Auth: Sign in successful, redirecting to home');
-        Alert.alert(
-          'Welcome Back!', 
-          'You have successfully signed in to your account.',
-          [{ 
-            text: 'Continue', 
-            onPress: () => {
-              // Check user role and redirect accordingly
-              const userRole = 'vendor'; // This should come from the user profile
-              if (userRole === 'vendor') {
-                router.push('/vendor-dashboard');
-              } else {
-                router.push('/(tabs)');
-              }
-            } 
-          }]
-        );
       }
+      // No need for success alert or manual navigation - handled by AuthContext
     } catch (error) {
       console.error('💥 Auth: Unexpected error:', error);
       Alert.alert('Connection Error', 'Unable to connect to our servers. Please check your internet connection and try again.');
