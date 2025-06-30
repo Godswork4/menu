@@ -122,7 +122,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             role: role,
           },
           // Disable email confirmation
-          emailRedirectTo: `${window.location.origin}/(tabs)`,
+          emailRedirectTo: window.location.origin,
         },
       });
 

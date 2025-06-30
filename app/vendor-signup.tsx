@@ -5,6 +5,7 @@ import { router } from 'expo-router';
 import { ArrowLeft, User, Mail, Lock, Eye, EyeOff, Wifi, ChevronRight, ChefHat, Store, Phone, MapPin, Clock } from 'lucide-react-native';
 import CustomLogo from '@/components/CustomLogo';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabase';
 
 export default function VendorSignUp() {
   // Personal information
@@ -104,10 +105,10 @@ export default function VendorSignUp() {
           Alert.alert('Sign Up Error', error.message || 'Failed to create account. Please try again.');
         }
       } else {
-        // Create vendor profile in database
-        const { data: user } = await supabase.auth.getUser();
+        // Get the current user
+        const { data: userData } = await supabase.auth.getUser();
         
-        if (user) {
+        if (userData?.user) {
           // Update vendor-specific fields in profile
           const { error: updateError } = await supabase
             .from('profiles')
@@ -118,7 +119,7 @@ export default function VendorSignUp() {
               address: address,
               operating_hours: operatingHours
             })
-            .eq('id', user.user.id);
+            .eq('id', userData.user.id);
             
           if (updateError) {
             console.error('Error updating vendor profile:', updateError);
