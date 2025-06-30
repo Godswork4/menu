@@ -45,7 +45,16 @@ export default function AddFoodItem() {
 
   const handleImagePicker = async () => {
     try {
-      // Request permissions
+      // For web platform, we'll use a simplified approach
+      if (typeof window !== 'undefined' && 'showOpenFilePicker' in window) {
+        // Web file picker API
+        Alert.alert('Web Platform', 'Image picking is limited in web preview. This would open a file picker on native platforms.');
+        // Set a placeholder image for demo purposes
+        setImageUri(IMAGES.DEFAULT_FOOD);
+        return;
+      }
+      
+      // Request permissions (for native platforms)
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       
       if (status !== 'granted') {
@@ -129,7 +138,7 @@ export default function AddFoodItem() {
           <ArrowLeft size={24} color="#FFFFFF" />
         </TouchableOpacity>
         <View style={styles.headerContent}>
-          <CustomLogo size="medium" color="#FFFFFF" />
+          <CustomLogo size="medium" color="#FFFFFF" useImage={true} />
           <Text style={styles.headerTitle}>Add Food Item</Text>
         </View>
         <View style={styles.placeholder} />

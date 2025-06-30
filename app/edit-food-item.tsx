@@ -95,13 +95,21 @@ export default function EditFoodItem() {
 
   const handleImagePicker = async () => {
     try {
-      // Request permissions
-      if (Platform.OS !== 'web') {
-        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-        if (status !== 'granted') {
-          Alert.alert('Permission Denied', 'We need camera roll permissions to upload images');
-          return;
-        }
+      // For web platform, we'll use a simplified approach
+      if (Platform.OS === 'web') {
+        // Web file picker API
+        Alert.alert('Web Platform', 'Image picking is limited in web preview. This would open a file picker on native platforms.');
+        // Set a placeholder image for demo purposes
+        setImageUri(IMAGES.DEFAULT_FOOD);
+        setIsImageChanged(true);
+        return;
+      }
+      
+      // Request permissions for native platforms
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Denied', 'We need camera roll permissions to upload images');
+        return;
       }
 
       // Launch image picker
@@ -124,13 +132,17 @@ export default function EditFoodItem() {
 
   const handleCameraCapture = async () => {
     try {
-      // Request permissions
-      if (Platform.OS !== 'web') {
-        const { status } = await ImagePicker.requestCameraPermissionsAsync();
-        if (status !== 'granted') {
-          Alert.alert('Permission Denied', 'We need camera permissions to take photos');
-          return;
-        }
+      // For web platform, we'll use a simplified approach
+      if (Platform.OS === 'web') {
+        Alert.alert('Web Platform', 'Camera capture is not available in web preview.');
+        return;
+      }
+      
+      // Request permissions for native platforms
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Denied', 'We need camera permissions to take photos');
+        return;
       }
 
       // Launch camera
@@ -226,7 +238,7 @@ export default function EditFoodItem() {
             <ArrowLeft size={24} color="#FFFFFF" />
           </TouchableOpacity>
           <View style={styles.headerContent}>
-            <CustomLogo size="medium" color="#FFFFFF" />
+            <CustomLogo size="medium" color="#FFFFFF" useImage={true} />
             <Text style={styles.headerTitle}>Edit Food Item</Text>
           </View>
           <View style={styles.placeholder} />
@@ -247,7 +259,7 @@ export default function EditFoodItem() {
           <ArrowLeft size={24} color="#FFFFFF" />
         </TouchableOpacity>
         <View style={styles.headerContent}>
-          <CustomLogo size="medium" color="#FFFFFF" />
+          <CustomLogo size="medium" color="#FFFFFF" useImage={true} />
           <Text style={styles.headerTitle}>Edit Food Item</Text>
         </View>
         <View style={styles.placeholder} />
@@ -263,15 +275,19 @@ export default function EditFoodItem() {
           <TouchableOpacity 
             style={styles.imageUpload} 
             onPress={() => {
-              Alert.alert(
-                'Update Image',
-                'Choose an option',
-                [
-                  { text: 'Take Photo', onPress: handleCameraCapture },
-                  { text: 'Choose from Gallery', onPress: handleImagePicker },
-                  { text: 'Cancel', style: 'cancel' }
-                ]
-              );
+              if (Platform.OS === 'web') {
+                handleImagePicker();
+              } else {
+                Alert.alert(
+                  'Update Image',
+                  'Choose an option',
+                  [
+                    { text: 'Take Photo', onPress: handleCameraCapture },
+                    { text: 'Choose from Gallery', onPress: handleImagePicker },
+                    { text: 'Cancel', style: 'cancel' }
+                  ]
+                );
+              }
             }}
           >
             {imageUri ? (
