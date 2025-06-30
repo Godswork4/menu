@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, TextInput, Alert, ActivityIndicator, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Modal, Alert, ActivityIndicator, RefreshControl, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { ArrowLeft, Calendar, Plus, Clock, ChefHat, Star, MapPin, CreditCard as Edit3, Trash2, Bell } from 'lucide-react-native';
+import { ArrowLeft, Plus, Calendar, Clock, ChefHat, Star, MapPin, CreditCard as Edit3, Trash2, Bell, X, Search, Heart } from 'lucide-react-native';
 import CustomLogo from '@/components/CustomLogo';
 import ImageWithFallback from '@/components/ImageWithFallback';
 import { IMAGES } from '@/constants/Images';
@@ -27,6 +27,13 @@ export default function MealPlanning() {
   const [newMealTime, setNewMealTime] = useState('12:00');
   const [newMealNotes, setNewMealNotes] = useState('');
   const [newMealRecurring, setNewMealRecurring] = useState(false);
+  
+  // Advanced meal planning
+  const [showRestaurantSelector, setShowRestaurantSelector] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedRestaurant, setSelectedRestaurant] = useState<any>(null);
+  const [selectedFoodItem, setSelectedFoodItem] = useState<any>(null);
+  const [showFoodSelector, setShowFoodSelector] = useState(false);
 
   const { user } = useAuth();
 
@@ -65,6 +72,44 @@ export default function MealPlanning() {
     { id: 'lunch', name: 'Lunch', icon: '☀️', color: '#FF6B6B' },
     { id: 'dinner', name: 'Dinner', icon: '🌙', color: '#4ECDC4' },
     { id: 'snack', name: 'Snack', icon: '🍿', color: '#FFA726' },
+  ];
+
+  // Sample restaurants data
+  const restaurants = [
+    {
+      id: 1,
+      name: 'Lagos Kitchen',
+      cuisine: 'Nigerian',
+      rating: 4.8,
+      image: 'https://images.pexels.com/photos/260922/pexels-photo-260922.jpeg',
+      menu: [
+        { id: 101, name: 'Jollof Rice Special', price: 4500, image: 'https://images.pexels.com/photos/5695880/pexels-photo-5695880.jpeg' },
+        { id: 102, name: 'Egusi Soup with Pounded Yam', price: 5500, image: 'https://images.pexels.com/photos/5835350/pexels-photo-5835350.jpeg' },
+        { id: 103, name: 'Pepper Soup', price: 3200, image: 'https://images.pexels.com/photos/539451/pexels-photo-539451.jpeg' },
+      ]
+    },
+    {
+      id: 2,
+      name: 'Spice Garden',
+      cuisine: 'Continental',
+      rating: 4.6,
+      image: 'https://images.pexels.com/photos/1267320/pexels-photo-1267320.jpeg',
+      menu: [
+        { id: 201, name: 'Grilled Chicken', price: 6500, image: 'https://images.pexels.com/photos/2338407/pexels-photo-2338407.jpeg' },
+        { id: 202, name: 'Pasta Alfredo', price: 4800, image: 'https://images.pexels.com/photos/1527603/pexels-photo-1527603.jpeg' },
+      ]
+    },
+    {
+      id: 3,
+      name: 'Ocean Fresh',
+      cuisine: 'Seafood',
+      rating: 4.9,
+      image: 'https://images.pexels.com/photos/262959/pexels-photo-262959.jpeg',
+      menu: [
+        { id: 301, name: 'Grilled Fish', price: 7500, image: 'https://images.pexels.com/photos/842142/pexels-photo-842142.jpeg' },
+        { id: 302, name: 'Seafood Platter', price: 12000, image: 'https://images.pexels.com/photos/566345/pexels-photo-566345.jpeg' },
+      ]
+    },
   ];
 
   const formatPrice = (price: number) => {
@@ -178,6 +223,41 @@ export default function MealPlanning() {
       return;
     }
     
+    // If using restaurant selector
+    if (showRestaurantSelector && selectedFoodItem) {
+      setIsSubmitting(true);
+      
+      try {
+        const { data, error } = await createMealPlan(user.id, {
+          date: selectedDate,
+          meal_type: selectedMealType,
+          food_name: selectedFoodItem.name,
+          restaurant: selectedRestaurant.name,
+          price: selectedFoodItem.price * 100, // Convert to kobo
+          image_url: selectedFoodItem.image,
+          scheduled_time: newMealTime,
+          is_ordered: false,
+          is_recurring: newMealRecurring,
+          notes: newMealNotes || undefined,
+        });
+        
+        if (error) throw error;
+        
+        setMealPlans([...mealPlans, data]);
+        resetForm();
+        setShowAddModal(false);
+        
+        Alert.alert('Success', 'Meal plan added successfully!');
+      } catch (error) {
+        console.error('Error adding meal plan:', error);
+        Alert.alert('Error', 'Failed to add meal plan. Please try again.');
+      } finally {
+        setIsSubmitting(false);
+      }
+      return;
+    }
+    
+    // Manual entry
     if (!newMealName || !newMealRestaurant || !newMealPrice || !newMealTime) {
       Alert.alert('Error', 'Please fill in all required fields');
       return;
@@ -234,6 +314,11 @@ export default function MealPlanning() {
     setNewMealTime('12:00');
     setNewMealNotes('');
     setNewMealRecurring(false);
+    setSelectedRestaurant(null);
+    setSelectedFoodItem(null);
+    setShowRestaurantSelector(false);
+    setShowFoodSelector(false);
+    setSearchQuery('');
   };
 
   const getUpcomingOrders = () => {
@@ -246,6 +331,10 @@ export default function MealPlanning() {
       })
       .slice(0, 3);
   };
+
+  const filteredRestaurants = restaurants.filter(restaurant => 
+    restaurant.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   if (isLoading && !refreshing) {
     return (
@@ -304,6 +393,9 @@ export default function MealPlanning() {
               const isSelected = date === selectedDate;
               const isToday = date === new Date().toISOString().split('T')[0];
               const mealsCount = getMealsForDate(date).length;
+              const dateObj = new Date(date);
+              const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
+              const dayNumber = dateObj.getDate();
 
               return (
                 <TouchableOpacity
@@ -319,13 +411,13 @@ export default function MealPlanning() {
                     styles.dateDay,
                     isSelected && styles.dateDaySelected,
                   ]}>
-                    {new Date(date).toLocaleDateString('en-US', { weekday: 'short' })}
+                    {dayName}
                   </Text>
                   <Text style={[
                     styles.dateNumber,
                     isSelected && styles.dateNumberSelected,
                   ]}>
-                    {new Date(date).getDate()}
+                    {dayNumber}
                   </Text>
                   {mealsCount > 0 && (
                     <View style={styles.mealIndicator}>
@@ -540,97 +632,286 @@ export default function MealPlanning() {
         visible={showAddModal}
         animationType="slide"
         transparent={true}
-        onRequestClose={() => setShowAddModal(false)}
+        onRequestClose={() => {
+          resetForm();
+          setShowAddModal(false);
+        }}
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Add New Meal</Text>
-              <TouchableOpacity onPress={() => setShowAddModal(false)}>
+              <TouchableOpacity onPress={() => {
+                resetForm();
+                setShowAddModal(false);
+              }}>
                 <Text style={styles.modalClose}>✕</Text>
               </TouchableOpacity>
             </View>
 
             <ScrollView style={styles.modalBody}>
-              <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>Meal Name</Text>
-                <TextInput
-                  style={styles.formInput}
-                  placeholder="e.g., Jollof Rice Special"
-                  value={newMealName}
-                  onChangeText={setNewMealName}
-                  editable={!isSubmitting}
-                />
-              </View>
-
-              <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>Restaurant</Text>
-                <TextInput
-                  style={styles.formInput}
-                  placeholder="e.g., Lagos Kitchen"
-                  value={newMealRestaurant}
-                  onChangeText={setNewMealRestaurant}
-                  editable={!isSubmitting}
-                />
-              </View>
-
-              <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>Price (₦)</Text>
-                <TextInput
-                  style={styles.formInput}
-                  placeholder="e.g., 4500"
-                  value={newMealPrice}
-                  onChangeText={setNewMealPrice}
-                  keyboardType="numeric"
-                  editable={!isSubmitting}
-                />
-              </View>
-
-              <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>Scheduled Time</Text>
-                <TextInput
-                  style={styles.formInput}
-                  placeholder="HH:MM (e.g., 12:30)"
-                  value={newMealTime}
-                  onChangeText={setNewMealTime}
-                  editable={!isSubmitting}
-                />
-              </View>
-
-              <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>Notes (Optional)</Text>
-                <TextInput
-                  style={[styles.formInput, styles.textArea]}
-                  placeholder="Any special instructions or notes"
-                  value={newMealNotes}
-                  onChangeText={setNewMealNotes}
-                  multiline
-                  numberOfLines={3}
-                  editable={!isSubmitting}
-                />
-              </View>
-
-              <View style={styles.formGroup}>
-                <TouchableOpacity
-                  style={styles.checkboxContainer}
-                  onPress={() => setNewMealRecurring(!newMealRecurring)}
-                  disabled={isSubmitting}
+              {/* Toggle between manual entry and restaurant selection */}
+              <View style={styles.entryToggle}>
+                <TouchableOpacity 
+                  style={[
+                    styles.entryToggleButton, 
+                    !showRestaurantSelector && styles.entryToggleButtonActive
+                  ]}
+                  onPress={() => setShowRestaurantSelector(false)}
                 >
-                  <View style={[
-                    styles.checkbox,
-                    newMealRecurring && styles.checkboxChecked
+                  <Text style={[
+                    styles.entryToggleText,
+                    !showRestaurantSelector && styles.entryToggleTextActive
                   ]}>
-                    {newMealRecurring && <Text style={styles.checkmark}>✓</Text>}
-                  </View>
-                  <Text style={styles.checkboxLabel}>Make this a recurring meal</Text>
+                    Manual Entry
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[
+                    styles.entryToggleButton, 
+                    showRestaurantSelector && styles.entryToggleButtonActive
+                  ]}
+                  onPress={() => setShowRestaurantSelector(true)}
+                >
+                  <Text style={[
+                    styles.entryToggleText,
+                    showRestaurantSelector && styles.entryToggleTextActive
+                  ]}>
+                    Choose Restaurant
+                  </Text>
                 </TouchableOpacity>
               </View>
+
+              {showRestaurantSelector ? (
+                // Restaurant and Food Selection
+                <>
+                  {!selectedRestaurant ? (
+                    // Restaurant Selection
+                    <View style={styles.restaurantSelector}>
+                      <Text style={styles.formLabel}>Select Restaurant</Text>
+                      <View style={styles.searchContainer}>
+                        <Search size={20} color="#666666" />
+                        <TextInput
+                          style={styles.searchInput}
+                          placeholder="Search restaurants..."
+                          value={searchQuery}
+                          onChangeText={setSearchQuery}
+                        />
+                      </View>
+                      
+                      <ScrollView style={styles.restaurantList}>
+                        {filteredRestaurants.map((restaurant) => (
+                          <TouchableOpacity
+                            key={restaurant.id}
+                            style={styles.restaurantItem}
+                            onPress={() => setSelectedRestaurant(restaurant)}
+                          >
+                            <Image 
+                              source={{ uri: restaurant.image }} 
+                              style={styles.restaurantImage} 
+                            />
+                            <View style={styles.restaurantInfo}>
+                              <Text style={styles.restaurantName}>{restaurant.name}</Text>
+                              <Text style={styles.restaurantCuisine}>{restaurant.cuisine}</Text>
+                              <View style={styles.ratingContainer}>
+                                <Star size={14} color="#FFD700" fill="#FFD700" />
+                                <Text style={styles.ratingText}>{restaurant.rating}</Text>
+                              </View>
+                            </View>
+                            <ChefHat size={20} color="#006400" />
+                          </TouchableOpacity>
+                        ))}
+                      </ScrollView>
+                    </View>
+                  ) : !selectedFoodItem ? (
+                    // Food Item Selection
+                    <View style={styles.foodSelector}>
+                      <View style={styles.selectedRestaurantHeader}>
+                        <TouchableOpacity 
+                          style={styles.backToRestaurants}
+                          onPress={() => setSelectedRestaurant(null)}
+                        >
+                          <ArrowLeft size={16} color="#006400" />
+                          <Text style={styles.backText}>Back to Restaurants</Text>
+                        </TouchableOpacity>
+                        <Text style={styles.selectedRestaurantName}>{selectedRestaurant.name}</Text>
+                      </View>
+                      
+                      <Text style={styles.formLabel}>Select Food Item</Text>
+                      <View style={styles.foodItemList}>
+                        {selectedRestaurant.menu.map((item: any) => (
+                          <TouchableOpacity
+                            key={item.id}
+                            style={styles.foodItem}
+                            onPress={() => setSelectedFoodItem(item)}
+                          >
+                            <Image 
+                              source={{ uri: item.image }} 
+                              style={styles.foodItemImage} 
+                            />
+                            <View style={styles.foodItemInfo}>
+                              <Text style={styles.foodItemName}>{item.name}</Text>
+                              <Text style={styles.foodItemPrice}>₦{item.price.toLocaleString()}</Text>
+                            </View>
+                            <TouchableOpacity style={styles.favoriteButton}>
+                              <Heart size={16} color="#E91E63" />
+                            </TouchableOpacity>
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                    </View>
+                  ) : (
+                    // Selected Food Item Details
+                    <View style={styles.selectedFoodDetails}>
+                      <TouchableOpacity 
+                        style={styles.backToFoods}
+                        onPress={() => setSelectedFoodItem(null)}
+                      >
+                        <ArrowLeft size={16} color="#006400" />
+                        <Text style={styles.backText}>Back to Menu</Text>
+                      </TouchableOpacity>
+                      
+                      <View style={styles.selectedFoodCard}>
+                        <Image 
+                          source={{ uri: selectedFoodItem.image }} 
+                          style={styles.selectedFoodImage} 
+                        />
+                        <View style={styles.selectedFoodInfo}>
+                          <Text style={styles.selectedFoodName}>{selectedFoodItem.name}</Text>
+                          <Text style={styles.selectedFoodRestaurant}>{selectedRestaurant.name}</Text>
+                          <Text style={styles.selectedFoodPrice}>₦{selectedFoodItem.price.toLocaleString()}</Text>
+                        </View>
+                      </View>
+                      
+                      <View style={styles.formGroup}>
+                        <Text style={styles.formLabel}>Scheduled Time</Text>
+                        <TextInput
+                          style={styles.formInput}
+                          placeholder="HH:MM (e.g., 12:30)"
+                          value={newMealTime}
+                          onChangeText={setNewMealTime}
+                          editable={!isSubmitting}
+                        />
+                      </View>
+
+                      <View style={styles.formGroup}>
+                        <Text style={styles.formLabel}>Notes (Optional)</Text>
+                        <TextInput
+                          style={[styles.formInput, styles.textArea]}
+                          placeholder="Any special instructions or notes"
+                          value={newMealNotes}
+                          onChangeText={setNewMealNotes}
+                          multiline
+                          numberOfLines={3}
+                          editable={!isSubmitting}
+                        />
+                      </View>
+
+                      <View style={styles.formGroup}>
+                        <TouchableOpacity
+                          style={styles.checkboxContainer}
+                          onPress={() => setNewMealRecurring(!newMealRecurring)}
+                          disabled={isSubmitting}
+                        >
+                          <View style={[
+                            styles.checkbox,
+                            newMealRecurring && styles.checkboxChecked
+                          ]}>
+                            {newMealRecurring && <Text style={styles.checkmark}>✓</Text>}
+                          </View>
+                          <Text style={styles.checkboxLabel}>Make this a recurring meal</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  )}
+                </>
+              ) : (
+                // Manual Entry Form
+                <>
+                  <View style={styles.formGroup}>
+                    <Text style={styles.formLabel}>Meal Name</Text>
+                    <TextInput
+                      style={styles.formInput}
+                      placeholder="e.g., Jollof Rice Special"
+                      value={newMealName}
+                      onChangeText={setNewMealName}
+                      editable={!isSubmitting}
+                    />
+                  </View>
+
+                  <View style={styles.formGroup}>
+                    <Text style={styles.formLabel}>Restaurant</Text>
+                    <TextInput
+                      style={styles.formInput}
+                      placeholder="e.g., Lagos Kitchen"
+                      value={newMealRestaurant}
+                      onChangeText={setNewMealRestaurant}
+                      editable={!isSubmitting}
+                    />
+                  </View>
+
+                  <View style={styles.formGroup}>
+                    <Text style={styles.formLabel}>Price (₦)</Text>
+                    <TextInput
+                      style={styles.formInput}
+                      placeholder="e.g., 4500"
+                      value={newMealPrice}
+                      onChangeText={setNewMealPrice}
+                      keyboardType="numeric"
+                      editable={!isSubmitting}
+                    />
+                  </View>
+
+                  <View style={styles.formGroup}>
+                    <Text style={styles.formLabel}>Scheduled Time</Text>
+                    <TextInput
+                      style={styles.formInput}
+                      placeholder="HH:MM (e.g., 12:30)"
+                      value={newMealTime}
+                      onChangeText={setNewMealTime}
+                      editable={!isSubmitting}
+                    />
+                  </View>
+
+                  <View style={styles.formGroup}>
+                    <Text style={styles.formLabel}>Notes (Optional)</Text>
+                    <TextInput
+                      style={[styles.formInput, styles.textArea]}
+                      placeholder="Any special instructions or notes"
+                      value={newMealNotes}
+                      onChangeText={setNewMealNotes}
+                      multiline
+                      numberOfLines={3}
+                      editable={!isSubmitting}
+                    />
+                  </View>
+
+                  <View style={styles.formGroup}>
+                    <TouchableOpacity
+                      style={styles.checkboxContainer}
+                      onPress={() => setNewMealRecurring(!newMealRecurring)}
+                      disabled={isSubmitting}
+                    >
+                      <View style={[
+                        styles.checkbox,
+                        newMealRecurring && styles.checkboxChecked
+                      ]}>
+                        {newMealRecurring && <Text style={styles.checkmark}>✓</Text>}
+                      </View>
+                      <Text style={styles.checkboxLabel}>Make this a recurring meal</Text>
+                    </TouchableOpacity>
+                  </View>
+                </>
+              )}
             </ScrollView>
 
             <View style={styles.modalFooter}>
               <TouchableOpacity 
                 style={styles.cancelButton}
-                onPress={() => setShowAddModal(false)}
+                onPress={() => {
+                  resetForm();
+                  setShowAddModal(false);
+                }}
                 disabled={isSubmitting}
               >
                 <Text style={styles.cancelButtonText}>Cancel</Text>
@@ -638,7 +919,7 @@ export default function MealPlanning() {
               <TouchableOpacity 
                 style={[styles.addButton, isSubmitting && styles.addButtonDisabled]}
                 onPress={handleAddMealPlan}
-                disabled={isSubmitting}
+                disabled={isSubmitting || (showRestaurantSelector && !selectedFoodItem)}
               >
                 {isSubmitting ? (
                   <ActivityIndicator size="small" color="#FFFFFF" />
@@ -736,6 +1017,8 @@ const styles = StyleSheet.create({
   },
   backButton: {
     padding: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 8,
   },
   headerContent: {
     alignItems: 'center',
@@ -1135,7 +1418,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    maxHeight: '80%',
+    maxHeight: '90%',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -1156,6 +1439,31 @@ const styles = StyleSheet.create({
   },
   modalBody: {
     padding: 20,
+  },
+  entryToggle: {
+    flexDirection: 'row',
+    marginBottom: 20,
+    borderRadius: 12,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  entryToggleButton: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+    backgroundColor: '#F5F5F5',
+  },
+  entryToggleButtonActive: {
+    backgroundColor: '#006400',
+  },
+  entryToggleText: {
+    fontSize: 14,
+    fontFamily: 'Inter-Medium',
+    color: '#666666',
+  },
+  entryToggleTextActive: {
+    color: '#FFFFFF',
   },
   formGroup: {
     marginBottom: 20,
@@ -1298,5 +1606,171 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: 'Inter-Semibold',
     color: '#FFFFFF',
+  },
+  // Restaurant selector styles
+  restaurantSelector: {
+    marginBottom: 20,
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F5F5F5',
+    paddingHorizontal: 15,
+    paddingVertical: 12,
+    borderRadius: 12,
+    marginBottom: 15,
+    gap: 10,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    fontFamily: 'Inter-Regular',
+    color: '#000000',
+  },
+  restaurantList: {
+    maxHeight: 300,
+  },
+  restaurantItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  restaurantImage: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginRight: 12,
+  },
+  restaurantInfo: {
+    flex: 1,
+  },
+  restaurantName: {
+    fontSize: 16,
+    fontFamily: 'Inter-Semibold',
+    color: '#000000',
+    marginBottom: 2,
+  },
+  restaurantCuisine: {
+    fontSize: 12,
+    fontFamily: 'Inter-Regular',
+    color: '#666666',
+    marginBottom: 4,
+  },
+  ratingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  ratingText: {
+    fontSize: 12,
+    fontFamily: 'Inter-Medium',
+    color: '#000000',
+  },
+  // Food selector styles
+  foodSelector: {
+    marginBottom: 20,
+  },
+  selectedRestaurantHeader: {
+    marginBottom: 15,
+  },
+  backToRestaurants: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 8,
+  },
+  backText: {
+    fontSize: 14,
+    fontFamily: 'Inter-Medium',
+    color: '#006400',
+  },
+  selectedRestaurantName: {
+    fontSize: 18,
+    fontFamily: 'Inter-Bold',
+    color: '#000000',
+  },
+  foodItemList: {
+    gap: 10,
+  },
+  foodItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  foodItemImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 8,
+    marginRight: 12,
+  },
+  foodItemInfo: {
+    flex: 1,
+  },
+  foodItemName: {
+    fontSize: 16,
+    fontFamily: 'Inter-Semibold',
+    color: '#000000',
+    marginBottom: 4,
+  },
+  foodItemPrice: {
+    fontSize: 14,
+    fontFamily: 'Inter-Bold',
+    color: '#006400',
+  },
+  favoriteButton: {
+    padding: 8,
+  },
+  // Selected food details
+  selectedFoodDetails: {
+    marginBottom: 20,
+  },
+  backToFoods: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 15,
+  },
+  selectedFoodCard: {
+    flexDirection: 'row',
+    backgroundColor: '#F8F9FA',
+    borderRadius: 12,
+    padding: 15,
+    marginBottom: 20,
+  },
+  selectedFoodImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 8,
+    marginRight: 15,
+  },
+  selectedFoodInfo: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  selectedFoodName: {
+    fontSize: 18,
+    fontFamily: 'Inter-Bold',
+    color: '#000000',
+    marginBottom: 4,
+  },
+  selectedFoodRestaurant: {
+    fontSize: 14,
+    fontFamily: 'Inter-Regular',
+    color: '#666666',
+    marginBottom: 6,
+  },
+  selectedFoodPrice: {
+    fontSize: 16,
+    fontFamily: 'Inter-Bold',
+    color: '#006400',
   },
 });

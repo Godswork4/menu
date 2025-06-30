@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Modal, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { ArrowLeft, Search, Plus, Minus, ShoppingCart, Filter, Calendar, Clock, Info } from 'lucide-react-native';
+import { ArrowLeft, Search, Plus, Minus, ShoppingCart, Filter, Calendar, Clock, Info, X } from 'lucide-react-native';
 import AIAssistant from '@/components/AIAssistant';
 
 export default function Supermarket() {
@@ -488,6 +488,8 @@ const styles = StyleSheet.create({
   backButton: {
     padding: 8,
     marginRight: 15,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 8,
   },
   headerContent: {
     flex: 1,

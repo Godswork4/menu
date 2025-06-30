@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal, ScrollView, TextInput, Animated, Easing, Image } from 'react-native';
-import { X, Send, ChefHat, Heart, DollarSign, Lightbulb } from 'lucide-react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Modal, ScrollView, TextInput, Animated, Easing, Image, PanResponder, Dimensions } from 'react-native';
+import { X, Send, ChefHat, Heart, DollarSign, Lightbulb, ChartBar as BarChart3, ChartPie as PieChart, CreditCard, Clock } from 'lucide-react-native';
 
 interface Message {
   id: number;
@@ -29,12 +29,39 @@ export default function AIAssistant() {
   const typingDot3 = useRef(new Animated.Value(1)).current;
   const scrollViewRef = useRef<ScrollView>(null);
 
+  // Position for draggable button
+  const [position, setPosition] = useState({ x: 20, y: Dimensions.get('window').height - 150 });
+  const pan = useRef(new Animated.ValueXY({ x: 20, y: Dimensions.get('window').height - 150 })).current;
+
   const quickActions = [
     { id: 1, text: "Find healthy recipes", icon: Heart, color: "#E91E63" },
     { id: 2, text: "Budget meal ideas", icon: DollarSign, color: "#4CAF50" },
     { id: 3, text: "Cooking tips", icon: ChefHat, color: "#FF9800" },
     { id: 4, text: "Nutrition advice", icon: Lightbulb, color: "#2196F3" },
+    { id: 5, text: "Meal planning", icon: Clock, color: "#9C27B0" },
+    { id: 6, text: "Food analytics", icon: BarChart3, color: "#607D8B" },
   ];
+
+  // Create pan responder for draggable button
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onPanResponderMove: Animated.event(
+        [null, { dx: pan.x, dy: pan.y }],
+        { useNativeDriver: false }
+      ),
+      onPanResponderRelease: (e, gestureState) => {
+        // Update position state when dragging ends
+        setPosition({
+          x: position.x + gestureState.dx,
+          y: position.y + gestureState.dy
+        });
+        
+        // Update the animated value to match the new position
+        pan.setValue({ x: position.x + gestureState.dx, y: position.y + gestureState.dy });
+      },
+    })
+  ).current;
 
   // Start pulse animation for the floating button
   useEffect(() => {
@@ -145,8 +172,8 @@ export default function AIAssistant() {
       return "For quick meals, try fried rice (15 mins), noodles with vegetables, or simple pasta dishes. Meal prep on weekends can also save time during busy weekdays!";
     }
     
-    if (message.includes('age') || message.includes('restriction') || message.includes('alcohol')) {
-      return "Menu app has age restrictions for certain products. We don't offer alcohol or age-restricted items. We focus on providing wholesome food options suitable for all ages!";
+    if (message.includes('meal plan') || message.includes('schedule')) {
+      return "I can help you plan your meals! Consider planning a week at a time, mixing different cuisines for variety. Would you like me to suggest a sample meal plan for the week?";
     }
     
     return "That's an interesting question! I'm here to help with all things food-related. Feel free to ask about recipes, nutrition, cooking tips, or meal planning. What specific food topic interests you most?";
@@ -188,13 +215,18 @@ export default function AIAssistant() {
   return (
     <>
       {/* Floating AI Button */}
-      <Animated.View style={{
-        transform: [{ scale: pulseAnim }],
-        position: 'absolute',
-        bottom: 90,
-        right: 20,
-        zIndex: 1000,
-      }}>
+      <Animated.View
+        style={[{
+          transform: [
+            { translateX: pan.x },
+            { translateY: pan.y },
+            { scale: pulseAnim }
+          ],
+          position: 'absolute',
+          zIndex: 1000,
+        }]}
+        {...panResponder.panHandlers}
+      >
         <TouchableOpacity
           style={styles.floatingButton}
           onPress={() => setIsVisible(true)}

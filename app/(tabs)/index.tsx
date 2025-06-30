@@ -1,522 +1,101 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Animated, PanResponder, Dimensions } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Image, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MapPin, Search, Star, Clock, User, Bell, Wifi, ShoppingBag, ChefHat, X, Heart, ChevronLeft, ChevronRight } from 'lucide-react-native';
 import { router } from 'expo-router';
-import CustomLogo from '@/components/CustomLogo';
-import AIAssistant from '@/components/AIAssistant';
+import { Search, Star, Clock, MapPin, ChevronRight, ChevronLeft, Heart } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/lib/supabase';
-
-const { width } = Dimensions.get('window');
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [showInsightNotification, setShowInsightNotification] = useState(true);
-  const [selectedFoodCategory, setSelectedFoodCategory] = useState('dishes');
+  const [activeCategory, setActiveCategory] = useState('All');
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [featuredFoods, setFeaturedFoods] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [favorites, setFavorites] = useState<number[]>([]);
   
-  // Animation values for category indicators
-  const indicatorAnimation = useRef(new Animated.Value(0)).current;
-  const scrollViewRef = useRef<ScrollView>(null);
-  const categoryScrollRef = useRef<ScrollView>(null);
-  const slideScrollRef = useRef<ScrollView>(null);
-
   const { user, profile } = useAuth();
-  const isGuest = !user;
-
-  useEffect(() => {
-    fetchFeaturedFoods();
-  }, []);
-
-  const fetchFeaturedFoods = async () => {
-    try {
-      setIsLoading(true);
-      
-      // Fetch food items from Supabase
-      const { data, error } = await supabase
-        .from('food_items')
-        .select('*')
-        .eq('status', 'active')
-        .order('created_at', { ascending: false })
-        .limit(5);
-      
-      if (error) {
-        console.error('Error fetching food items:', error);
-        return;
-      }
-      
-      // Transform data to match the expected format
-      const transformedItems = data.map(item => ({
-        id: item.id,
-        name: item.name,
-        restaurant: 'Featured Restaurant', // This should come from a join with vendor profiles
-        price: item.price / 100, // Convert from kobo to naira
-        originalPrice: (item.price / 100) * 1.2, // Mock original price
-        rating: (Math.random() * 1 + 4).toFixed(1), // Random rating between 4.0 and 5.0
-        image: item.image_url,
-        badge: 'Featured',
-        cookTime: item.prep_time || '20 min',
-        description: item.description || 'Delicious food item',
-      }));
-      
-      setFeaturedFoods(transformedItems.length > 0 ? transformedItems : defaultFeaturedFoods);
-      
-    } catch (error) {
-      console.error('Unexpected error fetching food items:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const categories = [
-    { id: 1, name: 'Restaurants', icon: '🍽️', color: '#FF6B6B', route: 'restaurants' },
-    { id: 2, name: 'Street Food', icon: '🌮', color: '#4ECDC4', route: 'street-food' },
-    { id: 3, name: 'Desserts', icon: '🍰', color: '#45B7D1', route: 'desserts' },
-    { id: 4, name: 'Bakery', icon: '🥖', color: '#FFA726', route: 'bakery' },
-    { id: 5, name: 'Supermarket', icon: '🛒', color: '#9C27B0', route: 'supermarket' },
-    { id: 6, name: 'Market', icon: '🏪', color: '#FF5722', route: 'market' },
-    { id: 7, name: 'Foreign', icon: '🌍', color: '#AB47BC', route: 'international' },
-    { id: 8, name: 'Budget Meals', icon: '💰', color: '#FFD54F', route: 'budget-meals' },
+    { id: 'all', name: 'All', icon: '🍽️', color: '#FF6B6B' },
+    { id: 'nigerian', name: 'Nigerian', icon: '🇳🇬', color: '#4ECDC4' },
+    { id: 'continental', name: 'Continental', icon: '🌍', color: '#45B7D1' },
+    { id: 'chinese', name: 'Chinese', icon: '🥢', color: '#FFA726' },
+    { id: 'italian', name: 'Italian', icon: '🍝', color: '#AB47BC' },
+    { id: 'indian', name: 'Indian', icon: '🍛', color: '#FF5722' },
   ];
 
-  const defaultFeaturedFoods = [
+  const featuredItems = [
     {
       id: 1,
       name: 'Jollof Rice Special',
       restaurant: 'Lagos Kitchen',
+      description: 'Authentic Nigerian jollof rice with premium spices, grilled chicken, and fried plantain',
       price: 4500,
       originalPrice: 5500,
       rating: 4.8,
-      image: 'https://as1.ftcdn.net/v2/jpg/02/94/52/96/1000_F_294529693_mzhg8TKjQJGkzCMCdElmjXRjmUaOaWoD.jpg',
-      badge: 'Chef Special',
-      cookTime: '20 min',
-      description: 'Authentic Nigerian jollof rice with premium spices, grilled chicken, and fried plantain',
+      deliveryTime: '20 min',
+      image: 'https://images.pexels.com/photos/5695880/pexels-photo-5695880.jpeg',
     },
     {
       id: 2,
-      name: 'Amala & Ewedu',
-      restaurant: 'Yoruba Kitchen',
-      price: 3800,
-      originalPrice: 4800,
+      name: 'Grilled Chicken Deluxe',
+      restaurant: 'Spice Garden',
+      description: 'Succulent grilled chicken marinated in African spices, served with seasoned rice',
+      price: 6500,
+      originalPrice: 7500,
       rating: 4.9,
-      image: 'https://as2.ftcdn.net/v2/jpg/03/45/67/89/1000_F_345678912_AbCdEfGhIjKlMnOpQrStUvWxYz123456.jpg',
-      badge: 'Traditional',
-      cookTime: '25 min',
-      description: 'Traditional Yoruba delicacy with smooth amala and nutritious ewedu soup',
+      deliveryTime: '25 min',
+      image: 'https://images.pexels.com/photos/2338407/pexels-photo-2338407.jpeg',
     },
     {
       id: 3,
-      name: 'Pounded Yam & Egusi',
+      name: 'Traditional Pepper Soup',
       restaurant: 'Traditional Taste',
-      price: 5200,
-      originalPrice: 6500,
+      description: 'Authentic Nigerian pepper soup with fresh catfish and aromatic spices',
+      price: 3200,
+      originalPrice: 4200,
       rating: 4.7,
-      image: 'https://as1.ftcdn.net/v2/jpg/04/56/78/90/1000_F_456789012_BcDeFgHiJkLmNoPqRsTuVwXyZ234567.jpg',
-      badge: 'Popular',
-      cookTime: '30 min',
-      description: 'Smooth pounded yam served with rich egusi soup and assorted meat',
+      deliveryTime: '15 min',
+      image: 'https://images.pexels.com/photos/539451/pexels-photo-539451.jpeg',
     },
     {
       id: 4,
-      name: 'Pepper Soup',
-      restaurant: 'Traditional Taste',
-      price: 3200,
-      originalPrice: 4200,
-      rating: 4.9,
-      image: 'https://as2.ftcdn.net/v2/jpg/05/67/89/01/1000_F_567890123_CdEfGhIjKlMnOpQrStUvWxYz345678.jpg',
-      badge: 'Spicy',
-      cookTime: '25 min',
-      description: 'Spicy Nigerian pepper soup with fresh catfish and aromatic spices',
-    },
-    {
-      id: 5,
       name: 'Suya Platter',
       restaurant: 'Suya Spot',
+      description: 'Premium beef suya with fresh onions, tomatoes, and special suya spice',
       price: 6500,
-      originalPrice: 8000,
+      originalPrice: 7500,
       rating: 4.8,
-      image: 'https://as1.ftcdn.net/v2/jpg/06/78/90/12/1000_F_678901234_DeFgHiJkLmNoPqRsTuVwXyZ456789.jpg',
-      badge: 'Grilled',
-      cookTime: '15 min',
-      description: 'Grilled spiced beef skewers with traditional suya spice blend',
+      deliveryTime: '20 min',
+      image: 'https://images.pexels.com/photos/1251198/pexels-photo-1251198.jpeg',
     },
   ];
 
-  const popularItems = [
+  const popularRestaurants = [
     {
       id: 1,
-      name: 'Jollof Rice Bowl',
-      description: 'Nigerian jollof rice with chicken and plantain',
-      calories: '580 cal',
-      image: 'https://as1.ftcdn.net/v2/jpg/02/94/52/96/1000_F_294529693_mzhg8TKjQJGkzCMCdElmjXRjmUaOaWoD.jpg',
-      price: 4500,
+      name: 'Lagos Kitchen',
+      cuisine: 'Nigerian',
       rating: 4.8,
-      restaurant: 'Lagos Kitchen',
-      hasRecipe: true,
+      deliveryTime: '20-30 min',
+      deliveryFee: 1200,
+      image: 'https://images.pexels.com/photos/260922/pexels-photo-260922.jpeg',
     },
     {
       id: 2,
-      name: 'Pepper Soup',
-      description: 'Spicy Nigerian pepper soup with fish',
-      calories: '320 cal',
-      image: 'https://as2.ftcdn.net/v2/jpg/05/67/89/01/1000_F_567890123_CdEfGhIjKlMnOpQrStUvWxYz345678.jpg',
-      price: 3200,
-      rating: 4.9,
-      restaurant: 'Traditional Taste',
-      hasRecipe: true,
+      name: 'Spice Garden',
+      cuisine: 'Continental',
+      rating: 4.6,
+      deliveryTime: '25-35 min',
+      deliveryFee: 1500,
+      image: 'https://images.pexels.com/photos/1267320/pexels-photo-1267320.jpeg',
     },
     {
       id: 3,
-      name: 'Suya Platter',
-      description: 'Grilled spiced beef with onions and tomatoes',
-      calories: '450 cal',
-      image: 'https://as1.ftcdn.net/v2/jpg/06/78/90/12/1000_F_678901234_DeFgHiJkLmNoPqRsTuVwXyZ456789.jpg',
-      price: 6500,
-      rating: 4.7,
-      restaurant: 'Suya Spot',
-      hasRecipe: true,
-    },
-  ];
-
-  // Food categories with different items
-  const foodCategories = [
-    {
-      id: 'dishes',
-      name: 'Dishes',
-      icon: '🍽️',
-      items: [
-        {
-          id: 1,
-          name: 'Jollof Rice Special',
-          restaurant: 'Lagos Kitchen',
-          price: 4500,
-          rating: 4.8,
-          image: 'https://as1.ftcdn.net/v2/jpg/02/94/52/96/1000_F_294529693_mzhg8TKjQJGkzCMCdElmjXRjmUaOaWoD.jpg',
-          cookTime: '20 min',
-          hasRecipe: true,
-        },
-        {
-          id: 2,
-          name: 'Pounded Yam & Egusi',
-          restaurant: 'Traditional Taste',
-          price: 5200,
-          rating: 4.9,
-          image: 'https://as1.ftcdn.net/v2/jpg/04/56/78/90/1000_F_456789012_BcDeFgHiJkLmNoPqRsTuVwXyZ234567.jpg',
-          cookTime: '30 min',
-          hasRecipe: true,
-        },
-        {
-          id: 3,
-          name: 'Fried Rice',
-          restaurant: 'Asian Fusion',
-          price: 3800,
-          rating: 4.6,
-          image: 'https://as2.ftcdn.net/v2/jpg/07/89/01/23/1000_F_789012345_EfGhIjKlMnOpQrStUvWxYz567890.jpg',
-          cookTime: '15 min',
-          hasRecipe: true,
-        },
-        {
-          id: 4,
-          name: 'Pepper Soup',
-          restaurant: 'Traditional Taste',
-          price: 3200,
-          rating: 4.9,
-          image: 'https://as2.ftcdn.net/v2/jpg/05/67/89/01/1000_F_567890123_CdEfGhIjKlMnOpQrStUvWxYz345678.jpg',
-          cookTime: '25 min',
-          hasRecipe: true,
-        },
-        {
-          id: 5,
-          name: 'Amala & Ewedu',
-          restaurant: 'Yoruba Kitchen',
-          price: 3800,
-          rating: 4.8,
-          image: 'https://as2.ftcdn.net/v2/jpg/03/45/67/89/1000_F_345678912_AbCdEfGhIjKlMnOpQrStUvWxYz123456.jpg',
-          cookTime: '25 min',
-          hasRecipe: true,
-        },
-        {
-          id: 6,
-          name: 'Suya Platter',
-          restaurant: 'Suya Spot',
-          price: 6500,
-          rating: 4.7,
-          image: 'https://as1.ftcdn.net/v2/jpg/06/78/90/12/1000_F_678901234_DeFgHiJkLmNoPqRsTuVwXyZ456789.jpg',
-          cookTime: '15 min',
-          hasRecipe: true,
-        },
-      ]
-    },
-    {
-      id: 'drinks',
-      name: 'Drinks',
-      icon: '🥤',
-      items: [
-        {
-          id: 1,
-          name: 'Zobo Drink',
-          restaurant: 'Local Refreshments',
-          price: 1200,
-          rating: 4.6,
-          image: 'https://as1.ftcdn.net/v2/jpg/08/90/12/34/1000_F_890123456_FgHiJkLmNoPqRsTuVwXyZ678901.jpg',
-          cookTime: '10 min',
-          hasRecipe: true,
-        },
-        {
-          id: 2,
-          name: 'Chapman',
-          restaurant: 'Cocktail Corner',
-          price: 2200,
-          rating: 4.5,
-          image: 'https://as2.ftcdn.net/v2/jpg/09/01/23/45/1000_F_901234567_GhIjKlMnOpQrStUvWxYz789012.jpg',
-          cookTime: '7 min',
-          hasRecipe: true,
-        },
-        {
-          id: 3,
-          name: 'Tiger Nut Drink',
-          restaurant: 'Natural Drinks',
-          price: 1800,
-          rating: 4.9,
-          image: 'https://as1.ftcdn.net/v2/jpg/10/12/34/56/1000_F_101234567_HiJkLmNoPqRsTuVwXyZ890123.jpg',
-          cookTime: '12 min',
-          hasRecipe: true,
-        },
-        {
-          id: 4,
-          name: 'Kunu Drink',
-          restaurant: 'Traditional Beverages',
-          price: 1000,
-          rating: 4.6,
-          image: 'https://as2.ftcdn.net/v2/jpg/11/23/45/67/1000_F_112345678_IjKlMnOpQrStUvWxYz901234.jpg',
-          cookTime: '15 min',
-          hasRecipe: true,
-        },
-        {
-          id: 5,
-          name: 'Fresh Orange Juice',
-          restaurant: 'Juice Bar',
-          price: 1500,
-          rating: 4.8,
-          image: 'https://as1.ftcdn.net/v2/jpg/12/34/56/78/1000_F_123456789_JkLmNoPqRsTuVwXyZ012345.jpg',
-          cookTime: '5 min',
-          hasRecipe: false,
-        },
-        {
-          id: 6,
-          name: 'Smoothie Bowl',
-          restaurant: 'Healthy Drinks',
-          price: 2800,
-          rating: 4.7,
-          image: 'https://as2.ftcdn.net/v2/jpg/13/45/67/89/1000_F_134567890_KlMnOpQrStUvWxYz123456.jpg',
-          cookTime: '8 min',
-          hasRecipe: true,
-        },
-      ]
-    },
-    {
-      id: 'fruits',
-      name: 'Fruits',
-      icon: '🍎',
-      items: [
-        {
-          id: 1,
-          name: 'Fresh Fruit Salad',
-          restaurant: 'Garden Fresh',
-          price: 2500,
-          rating: 4.9,
-          image: 'https://as1.ftcdn.net/v2/jpg/14/56/78/90/1000_F_145678901_LmNoPqRsTuVwXyZ234567.jpg',
-          cookTime: '10 min',
-          hasRecipe: false,
-        },
-        {
-          id: 2,
-          name: 'Watermelon Bowl',
-          restaurant: 'Tropical Fruits',
-          price: 1800,
-          rating: 4.7,
-          image: 'https://as2.ftcdn.net/v2/jpg/15/67/89/01/1000_F_156789012_MnOpQrStUvWxYz345678.jpg',
-          cookTime: '5 min',
-          hasRecipe: false,
-        },
-        {
-          id: 3,
-          name: 'Pineapple Chunks',
-          restaurant: 'Fresh Market',
-          price: 2000,
-          rating: 4.8,
-          image: 'https://as1.ftcdn.net/v2/jpg/16/78/90/12/1000_F_167890123_NoPqRsTuVwXyZ456789.jpg',
-          cookTime: '3 min',
-          hasRecipe: false,
-        },
-        {
-          id: 4,
-          name: 'Mixed Berry Bowl',
-          restaurant: 'Berry Delights',
-          price: 3200,
-          rating: 4.6,
-          image: 'https://as2.ftcdn.net/v2/jpg/17/89/01/23/1000_F_178901234_OpQrStUvWxYz567890.jpg',
-          cookTime: '8 min',
-          hasRecipe: false,
-        },
-        {
-          id: 5,
-          name: 'Mango Slices',
-          restaurant: 'Tropical Paradise',
-          price: 2200,
-          rating: 4.8,
-          image: 'https://as1.ftcdn.net/v2/jpg/18/90/12/34/1000_F_189012345_PqRsTuVwXyZ678901.jpg',
-          cookTime: '5 min',
-          hasRecipe: false,
-        },
-        {
-          id: 6,
-          name: 'Coconut Water',
-          restaurant: 'Fresh Coconuts',
-          price: 1500,
-          rating: 4.7,
-          image: 'https://as2.ftcdn.net/v2/jpg/19/01/23/45/1000_F_190123456_QrStUvWxYz789012.jpg',
-          cookTime: '2 min',
-          hasRecipe: false,
-        },
-      ]
-    },
-    {
-      id: 'pastries',
-      name: 'Pastries',
-      icon: '🥐',
-      items: [
-        {
-          id: 1,
-          name: 'Meat Pie',
-          restaurant: 'Nigerian Bakery',
-          price: 1200,
-          rating: 4.8,
-          image: 'https://as1.ftcdn.net/v2/jpg/20/12/34/56/1000_F_201234567_RsTuVwXyZ890123.jpg',
-          cookTime: 'Fresh daily',
-          hasRecipe: true,
-        },
-        {
-          id: 2,
-          name: 'Sausage Roll',
-          restaurant: 'Golden Crust',
-          price: 1500,
-          rating: 4.7,
-          image: 'https://as2.ftcdn.net/v2/jpg/21/23/45/67/1000_F_212345678_StUvWxYz901234.jpg',
-          cookTime: 'Fresh daily',
-          hasRecipe: true,
-        },
-        {
-          id: 3,
-          name: 'Chin Chin',
-          restaurant: 'Sweet Treats',
-          price: 800,
-          rating: 4.6,
-          image: 'https://as1.ftcdn.net/v2/jpg/22/34/56/78/1000_F_223456789_TuVwXyZ012345.jpg',
-          cookTime: '15 min',
-          hasRecipe: true,
-        },
-        {
-          id: 4,
-          name: 'Puff Puff',
-          restaurant: 'Local Delights',
-          price: 600,
-          rating: 4.9,
-          image: 'https://as2.ftcdn.net/v2/jpg/23/45/67/89/1000_F_234567890_UvWxYz123456.jpg',
-          cookTime: '20 min',
-          hasRecipe: true,
-        },
-        {
-          id: 5,
-          name: 'Doughnut',
-          restaurant: 'Sweet Circle',
-          price: 900,
-          rating: 4.5,
-          image: 'https://as1.ftcdn.net/v2/jpg/24/56/78/90/1000_F_245678901_VwXyZ234567.jpg',
-          cookTime: 'Fresh daily',
-          hasRecipe: true,
-        },
-        {
-          id: 6,
-          name: 'Buns',
-          restaurant: 'Bakery Corner',
-          price: 700,
-          rating: 4.6,
-          image: 'https://as2.ftcdn.net/v2/jpg/25/67/89/01/1000_F_256789012_WxYz345678.jpg',
-          cookTime: 'Fresh daily',
-          hasRecipe: true,
-        },
-      ]
-    },
-    {
-      id: 'raw',
-      name: 'Raw',
-      icon: '🥗',
-      items: [
-        {
-          id: 1,
-          name: 'Garden Salad',
-          restaurant: 'Green House',
-          price: 2800,
-          rating: 4.6,
-          image: 'https://as1.ftcdn.net/v2/jpg/26/78/90/12/1000_F_267890123_XyZ456789.jpg',
-          cookTime: '8 min',
-          hasRecipe: true,
-        },
-        {
-          id: 2,
-          name: 'Caesar Salad',
-          restaurant: 'Salad Station',
-          price: 3500,
-          rating: 4.7,
-          image: 'https://as2.ftcdn.net/v2/jpg/27/89/01/23/1000_F_278901234_YzA567890.jpg',
-          cookTime: '10 min',
-          hasRecipe: true,
-        },
-        {
-          id: 3,
-          name: 'Sushi Platter',
-          restaurant: 'Tokyo Raw',
-          price: 8500,
-          rating: 4.9,
-          image: 'https://as1.ftcdn.net/v2/jpg/28/90/12/34/1000_F_289012345_ZaB678901.jpg',
-          cookTime: '20 min',
-          hasRecipe: false,
-        },
-        {
-          id: 4,
-          name: 'Vegetable Wrap',
-          restaurant: 'Healthy Wraps',
-          price: 2200,
-          rating: 4.5,
-          image: 'https://as2.ftcdn.net/v2/jpg/29/01/23/45/1000_F_290123456_AbC789012.jpg',
-          cookTime: '12 min',
-          hasRecipe: true,
-        },
-        {
-          id: 5,
-          name: 'Cucumber Salad',
-          restaurant: 'Fresh Greens',
-          price: 1800,
-          rating: 4.4,
-          image: 'https://as1.ftcdn.net/v2/jpg/30/12/34/56/1000_F_301234567_BcD890123.jpg',
-          cookTime: '5 min',
-          hasRecipe: true,
-        },
-        {
-          id: 6,
-          name: 'Avocado Bowl',
-          restaurant: 'Healthy Bites',
-          price: 3800,
-          rating: 4.8,
-          image: 'https://as2.ftcdn.net/v2/jpg/31/23/45/67/1000_F_312345678_CdE901234.jpg',
-          cookTime: '8 min',
-          hasRecipe: true,
-        },
-      ]
+      name: 'Ocean Fresh',
+      cuisine: 'Seafood',
+      rating: 4.9,
+      deliveryTime: '30-40 min',
+      deliveryFee: 1800,
+      image: 'https://images.pexels.com/photos/262959/pexels-photo-262959.jpeg',
     },
   ];
 
@@ -524,489 +103,249 @@ export default function Home() {
     return `₦${price.toLocaleString()}`;
   };
 
-  const handleAuthAction = () => {
-    router.push('/onboarding');
-  };
-
-  const handleOrdersPress = () => {
-    if (isGuest) {
-      router.push('/onboarding');
+  const toggleFavorite = (id: number) => {
+    if (favorites.includes(id)) {
+      setFavorites(favorites.filter(item => item !== id));
     } else {
-      router.push('/orders');
+      setFavorites([...favorites, id]);
     }
   };
 
-  const handleCategoryPress = (categoryRoute: string) => {
-    if (categoryRoute === 'supermarket') {
-      router.push('/supermarket');
-    } else if (categoryRoute === 'market') {
-      router.push('/market');
-    } else {
-      router.push({
-        pathname: '/category-detail',
-        params: { category: categoryRoute }
-      });
-    }
+  const nextSlide = () => {
+    setCurrentSlide((prev) => (prev === featuredItems.length - 1 ? 0 : prev + 1));
   };
 
-  const handleFoodItemPress = (itemId: number) => {
+  const prevSlide = () => {
+    setCurrentSlide((prev) => (prev === 0 ? featuredItems.length - 1 : prev - 1));
+  };
+
+  const handleFoodPress = (id: number) => {
     router.push({
       pathname: '/food-detail',
-      params: { id: itemId }
+      params: { id }
     });
-  };
-
-  const handleFoodCategoryChange = (categoryId: string, index: number) => {
-    setSelectedFoodCategory(categoryId);
-    
-    // Animate the indicator
-    Animated.spring(indicatorAnimation, {
-      toValue: index,
-      useNativeDriver: false,
-      tension: 100,
-      friction: 8,
-    }).start();
-  };
-
-  const getCurrentCategoryItems = () => {
-    return foodCategories.find(cat => cat.id === selectedFoodCategory)?.items || [];
-  };
-
-  const handleSlideScroll = (event: any) => {
-    const slideWidth = width - 40; // Account for padding
-    const currentIndex = Math.round(event.nativeEvent.contentOffset.x / slideWidth);
-    setCurrentSlide(currentIndex);
-  };
-
-  const scrollToSlide = (index: number) => {
-    const slideWidth = width - 40;
-    slideScrollRef.current?.scrollTo({ x: index * slideWidth, animated: true });
-    setCurrentSlide(index);
-  };
-
-  // Pan responder for swipe gestures on category items
-  const panResponder = PanResponder.create({
-    onMoveShouldSetPanResponder: (evt, gestureState) => {
-      return Math.abs(gestureState.dx) > Math.abs(gestureState.dy) && Math.abs(gestureState.dx) > 20;
-    },
-    onPanResponderMove: (evt, gestureState) => {
-      // Handle swipe gestures
-    },
-    onPanResponderRelease: (evt, gestureState) => {
-      const currentIndex = foodCategories.findIndex(cat => cat.id === selectedFoodCategory);
-      
-      if (gestureState.dx > 50 && currentIndex > 0) {
-        // Swipe right - go to previous category
-        const prevCategory = foodCategories[currentIndex - 1];
-        handleFoodCategoryChange(prevCategory.id, currentIndex - 1);
-      } else if (gestureState.dx < -50 && currentIndex < foodCategories.length - 1) {
-        // Swipe left - go to next category
-        const nextCategory = foodCategories[currentIndex + 1];
-        handleFoodCategoryChange(nextCategory.id, currentIndex + 1);
-      }
-    },
-  });
-
-  const scrollToNextCategory = () => {
-    const currentIndex = foodCategories.findIndex(cat => cat.id === selectedFoodCategory);
-    if (currentIndex < foodCategories.length - 1) {
-      const nextCategory = foodCategories[currentIndex + 1];
-      handleFoodCategoryChange(nextCategory.id, currentIndex + 1);
-    }
-  };
-
-  const scrollToPrevCategory = () => {
-    const currentIndex = foodCategories.findIndex(cat => cat.id === selectedFoodCategory);
-    if (currentIndex > 0) {
-      const prevCategory = foodCategories[currentIndex - 1];
-      handleFoodCategoryChange(prevCategory.id, currentIndex - 1);
-    }
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Enhanced Status Bar */}
-        <View style={styles.statusBar}>
-          <Text style={styles.time}>12:07 AM</Text>
-          <View style={styles.statusIcons}>
-            <View style={styles.signalContainer}>
-              <View style={[styles.signalBar, styles.signalBar1]} />
-              <View style={[styles.signalBar, styles.signalBar2]} />
-              <View style={[styles.signalBar, styles.signalBar3]} />
-              <View style={[styles.signalBar, styles.signalBar4]} />
-            </View>
-            <Wifi size={16} color="#FFFFFF" />
-            <View style={styles.batteryContainer}>
-              <View style={styles.batteryBody}>
-                <View style={styles.batteryLevel} />
-              </View>
-              <View style={styles.batteryTip} />
-            </View>
-          </View>
-        </View>
-
-        {/* Header with Custom Logo */}
+        {/* Header */}
         <View style={styles.header}>
-          <View style={styles.headerContent}>
-            <View style={styles.brandContainer}>
-              <CustomLogo size="large" color="#FFFFFF" />
-              <Text style={styles.brandTagline}>Food Explorer</Text>
+          <View style={styles.locationContainer}>
+            <MapPin size={18} color="#FFFFFF" />
+            <View>
+              <Text style={styles.deliveryText}>Delivery to</Text>
+              <Text style={styles.locationText}>Lagos, Nigeria</Text>
             </View>
-            
-            <View style={styles.locationContainer}>
-              <View style={styles.locationRow}>
-                <MapPin size={16} color="#FFFFFF" />
-                <View>
-                  <Text style={styles.deliveryText}>Delivery to</Text>
-                  <Text style={styles.locationText}>Lagos, Nigeria ⌄</Text>
-                </View>
-              </View>
-              <TouchableOpacity style={styles.ordersButton} onPress={handleOrdersPress}>
-                <ShoppingBag size={20} color="#FFFFFF" />
-                <Text style={styles.ordersText}>Orders</Text>
-              </TouchableOpacity>
-            </View>
-            
-            {isGuest && (
-              <View style={styles.guestBanner}>
-                <View style={styles.guestInfo}>
-                  <User size={16} color="#B8860B" />
-                  <Text style={styles.guestText}>Browsing as Guest</Text>
-                </View>
-                <TouchableOpacity style={styles.signInButton} onPress={handleAuthAction}>
-                  <Text style={styles.signInText}>Sign In</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-
-            {!isGuest && profile && (
-              <View style={styles.userBanner}>
-                <View style={styles.userInfo}>
-                  <User size={16} color="#B8860B" />
-                  <Text style={styles.userText}>Welcome back, {profile.full_name?.split(' ')[0] || 'User'}!</Text>
-                </View>
-                <View style={styles.userStats}>
-                  <Text style={styles.userPoints}>{profile.points} pts</Text>
-                </View>
-              </View>
-            )}
           </View>
-        </View>
-
-        {/* Food Insight Notification */}
-        {showInsightNotification && (
-          <View style={styles.insightNotification}>
-            <View style={styles.insightContent}>
-              <Text style={styles.insightIcon}>💡</Text>
-              <Text style={styles.insightText}>
-                Did you know? Suya cheese is a great meat alternative with equal protein benefits!
-              </Text>
-            </View>
-            <TouchableOpacity 
-              style={styles.closeNotification}
-              onPress={() => setShowInsightNotification(false)}
-            >
-              <X size={16} color="#666666" />
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {/* Search Bar */}
-        <View style={styles.searchContainer}>
-          <Search size={20} color="#666666" />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search for delicious food..."
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-          <TouchableOpacity>
-            <Text style={styles.filterIcon}>⚙️</Text>
+          <TouchableOpacity style={styles.ordersButton} onPress={() => router.push('/orders')}>
+            <Text style={styles.ordersText}>Orders</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Featured Food Slide Carousel */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Featured Today</Text>
-          
-          {/* Slide Navigation */}
-          <View style={styles.slideNavigation}>
-            <TouchableOpacity 
-              style={[styles.slideNavButton, currentSlide === 0 && styles.slideNavButtonDisabled]}
-              onPress={() => scrollToSlide(Math.max(0, currentSlide - 1))}
-              disabled={currentSlide === 0}
-            >
-              <ChevronLeft size={20} color={currentSlide === 0 ? "#CCCCCC" : "#006400"} />
-            </TouchableOpacity>
-            
-            <View style={styles.slideIndicators}>
-              {featuredFoods.map((_, index) => (
-                <TouchableOpacity
-                  key={index}
-                  style={[
-                    styles.slideIndicator,
-                    currentSlide === index && styles.slideIndicatorActive
-                  ]}
-                  onPress={() => scrollToSlide(index)}
-                />
-              ))}
-            </View>
-            
-            <TouchableOpacity 
-              style={[styles.slideNavButton, currentSlide === featuredFoods.length - 1 && styles.slideNavButtonDisabled]}
-              onPress={() => scrollToSlide(Math.min(featuredFoods.length - 1, currentSlide + 1))}
-              disabled={currentSlide === featuredFoods.length - 1}
-            >
-              <ChevronRight size={20} color={currentSlide === featuredFoods.length - 1 ? "#CCCCCC" : "#006400"} />
-            </TouchableOpacity>
-          </View>
-
-          {/* Slide View */}
-          <ScrollView 
-            ref={slideScrollRef}
-            horizontal 
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-            onMomentumScrollEnd={handleSlideScroll}
-            style={styles.slideContainer}
-          >
-            {featuredFoods.map((item) => (
-              <TouchableOpacity 
-                key={item.id} 
-                style={styles.slideCard} 
-                onPress={() => handleFoodItemPress(item.id)}
-              >
-                <Image source={{ uri: item.image }} style={styles.slideImage} />
-                <View style={styles.slideBadge}>
-                  <Text style={styles.slideBadgeText}>{item.badge}</Text>
-                </View>
-                <View style={styles.slideOverlay}>
-                  <View style={styles.slideInfo}>
-                    <Text style={styles.slideName}>{item.name}</Text>
-                    <Text style={styles.slideRestaurant}>{item.restaurant}</Text>
-                    <Text style={styles.slideDescription}>{item.description}</Text>
-                    <View style={styles.slideMeta}>
-                      <View style={styles.ratingContainer}>
-                        <Star size={14} color="#FFD700" fill="#FFD700" />
-                        <Text style={styles.slideRating}>{item.rating}</Text>
-                      </View>
-                      <View style={styles.timeContainer}>
-                        <Clock size={14} color="#FFFFFF" />
-                        <Text style={styles.slideTime}>{item.cookTime}</Text>
-                      </View>
-                    </View>
-                    <View style={styles.priceContainer}>
-                      <Text style={styles.slidePrice}>{formatPrice(item.price)}</Text>
-                      <Text style={styles.slideOriginalPrice}>{formatPrice(item.originalPrice)}</Text>
-                    </View>
-                  </View>
-                  <TouchableOpacity style={styles.orderNowButton} onPress={handleAuthAction}>
-                    <Text style={styles.orderNowText}>Order Now</Text>
-                  </TouchableOpacity>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-
-        {/* Explore Categories - Updated with Supermarket & Market */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Explore Categories</Text>
-            <View style={styles.categoryNavigation}>
-              <TouchableOpacity 
-                style={styles.navButton}
-                onPress={scrollToPrevCategory}
-              >
-                <ChevronLeft size={20} color="#006400" />
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={styles.navButton}
-                onPress={scrollToNextCategory}
-              >
-                <ChevronRight size={20} color="#006400" />
-              </TouchableOpacity>
-            </View>
-          </View>
-          
-          <ScrollView 
-            ref={categoryScrollRef}
-            horizontal 
-            showsHorizontalScrollIndicator={false}
-            style={styles.categoriesScroll}
-          >
-            {categories.map((category) => (
-              <TouchableOpacity
-                key={category.id}
-                style={[styles.categoryItem, { backgroundColor: category.color + '15' }]}
-                onPress={() => handleCategoryPress(category.route)}
-              >
-                <View style={[styles.categoryIconContainer, { backgroundColor: category.color }]}>
-                  <Text style={styles.categoryIcon}>{category.icon}</Text>
-                </View>
-                <Text style={styles.categoryName}>{category.name}</Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-
-        {/* Popular Near You - Square Images */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Popular Near You</Text>
-            <TouchableOpacity>
-              <Text style={styles.showAllText}>View All</Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.foodGrid}>
-            {popularItems.map((item) => (
-              <TouchableOpacity
-                key={item.id}
-                style={styles.foodGridItem}
-                onPress={() => handleFoodItemPress(item.id)}
-              >
-                <Image source={{ uri: item.image }} style={styles.foodGridImage} />
-                <View style={styles.foodGridInfo}>
-                  <Text style={styles.foodGridName}>{item.name}</Text>
-                  <Text style={styles.foodGridRestaurant}>{item.restaurant}</Text>
-                  <View style={styles.foodGridMeta}>
-                    <View style={styles.ratingContainer}>
-                      <Star size={12} color="#FFD700" fill="#FFD700" />
-                      <Text style={styles.foodGridRating}>{item.rating}</Text>
-                    </View>
-                    <Text style={styles.foodGridCalories}>{item.calories}</Text>
-                  </View>
-                  <View style={styles.foodGridBottom}>
-                    <Text style={styles.foodGridPrice}>{formatPrice(item.price)}</Text>
-                    <View style={styles.actionButtonsRow}>
-                      {item.hasRecipe && (
-                        <TouchableOpacity style={styles.cookButton}>
-                          <ChefHat size={12} color="#006400" />
-                          <Text style={styles.cookButtonText}>Cook</Text>
-                        </TouchableOpacity>
-                      )}
-                      <TouchableOpacity style={styles.orderButton} onPress={handleAuthAction}>
-                        <Text style={styles.orderButtonText}>Order Now</Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        {/* Enhanced More Delicious Options with Category Scrolling */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>More Delicious Options</Text>
-          
-          {/* Category Tabs with Animated Indicator */}
-          <View style={styles.foodCategoryContainer}>
-            <View style={styles.foodCategoryTabs}>
-              {foodCategories.map((category, index) => (
-                <TouchableOpacity
-                  key={category.id}
-                  style={[
-                    styles.foodCategoryTab,
-                    selectedFoodCategory === category.id && styles.foodCategoryTabActive
-                  ]}
-                  onPress={() => handleFoodCategoryChange(category.id, index)}
-                >
-                  <Text style={styles.foodCategoryIcon}>{category.icon}</Text>
-                  <Text style={[
-                    styles.foodCategoryTabText,
-                    selectedFoodCategory === category.id && styles.foodCategoryTabTextActive
-                  ]}>
-                    {category.name}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-            
-            {/* Animated Green Line Indicator */}
-            <Animated.View 
-              style={[
-                styles.categoryIndicator,
-                {
-                  left: indicatorAnimation.interpolate({
-                    inputRange: [0, foodCategories.length - 1],
-                    outputRange: ['10%', '90%'],
-                    extrapolate: 'clamp',
-                  }),
-                }
-              ]} 
+        {/* Search Bar */}
+        <View style={styles.searchContainer}>
+          <View style={styles.searchBar}>
+            <Search size={20} color="#666666" />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search for delicious food..."
+              value={searchQuery}
+              onChangeText={setSearchQuery}
             />
           </View>
+        </View>
 
-          {/* Category Items Vertical Scroll with Swipe Gestures */}
-          <View {...panResponder.panHandlers} style={styles.categoryItemsContainer}>
-            <ScrollView 
-              ref={scrollViewRef}
-              showsVerticalScrollIndicator={false}
-              style={styles.categoryItemsScroll}
-            >
-              {getCurrentCategoryItems().map((item) => (
-                <TouchableOpacity
-                  key={item.id}
-                  style={styles.fullWidthFoodCard}
-                  onPress={() => handleFoodItemPress(item.id)}
-                >
-                  <Image source={{ uri: item.image }} style={styles.fullWidthFoodImage} />
-                  <View style={styles.fullWidthOverlay}>
-                    <View style={styles.fullWidthInfo}>
-                      <Text style={styles.fullWidthName}>{item.name}</Text>
-                      <Text style={styles.fullWidthRestaurant}>{item.restaurant}</Text>
-                      <View style={styles.fullWidthMeta}>
-                        <View style={styles.ratingContainer}>
-                          <Star size={14} color="#FFD700" fill="#FFD700" />
-                          <Text style={styles.fullWidthRating}>{item.rating}</Text>
-                        </View>
-                        <View style={styles.timeContainer}>
-                          <Clock size={14} color="#FFFFFF" />
-                          <Text style={styles.fullWidthTime}>{item.cookTime}</Text>
-                        </View>
-                        <Text style={styles.fullWidthPrice}>{formatPrice(item.price)}</Text>
-                      </View>
-                    </View>
-                    <View style={styles.fullWidthActions}>
-                      {item.hasRecipe && (
-                        <TouchableOpacity style={styles.fullWidthCookButton}>
-                          <ChefHat size={16} color="#006400" />
-                          <Text style={styles.fullWidthCookText}>Cook</Text>
-                        </TouchableOpacity>
-                      )}
-                      <TouchableOpacity style={styles.fullWidthOrderButton} onPress={handleAuthAction}>
-                        <Text style={styles.fullWidthOrderText}>Order Now</Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                  <TouchableOpacity style={styles.heartButton}>
-                    <Heart size={20} color="#FFFFFF" />
-                  </TouchableOpacity>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
+        {/* Promo Banner */}
+        <View style={styles.promoBanner}>
+          <View style={styles.promoContent}>
+            <Text style={styles.promoIcon}>🍖</Text>
+            <Text style={styles.promoText}>
+              Did you know? Suya cheese is a great meat alternative with equal protein benefits!
+            </Text>
+          </View>
+          <TouchableOpacity style={styles.closeButton}>
+            <Text style={styles.closeText}>×</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Featured Today */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Featured Today</Text>
+          <View style={styles.paginationContainer}>
+            {featuredItems.map((_, index) => (
+              <View
+                key={index}
+                style={[
+                  styles.paginationDot,
+                  currentSlide === index ? styles.paginationDotActive : {}
+                ]}
+              />
+            ))}
+          </View>
+          <View style={styles.carouselControls}>
+            <TouchableOpacity style={styles.carouselControl} onPress={prevSlide}>
+              <ChevronLeft size={20} color="#006400" />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.carouselControl} onPress={nextSlide}>
+              <ChevronRight size={20} color="#006400" />
+            </TouchableOpacity>
           </View>
         </View>
 
-        {/* Guest Call-to-Action */}
-        {isGuest && (
-          <View style={styles.guestCTA}>
-            <View style={styles.ctaContent}>
-              <Text style={styles.ctaTitle}>Ready to Order?</Text>
-              <Text style={styles.ctaSubtitle}>Join thousands of food lovers and start your culinary journey</Text>
-              <TouchableOpacity style={styles.ctaButton} onPress={handleAuthAction}>
-                <Text style={styles.ctaButtonText}>Get Started</Text>
-              </TouchableOpacity>
+        <TouchableOpacity 
+          style={styles.featuredCard}
+          onPress={() => handleFoodPress(featuredItems[currentSlide].id)}
+        >
+          <Image 
+            source={{ uri: featuredItems[currentSlide].image }} 
+            style={styles.featuredImage} 
+          />
+          <View style={styles.featuredOverlay}>
+            <View style={styles.featuredContent}>
+              <Text style={styles.restaurantName}>{featuredItems[currentSlide].restaurant}</Text>
+              <Text style={styles.foodName}>{featuredItems[currentSlide].name}</Text>
+              <Text style={styles.foodDescription} numberOfLines={2}>
+                {featuredItems[currentSlide].description}
+              </Text>
+              <View style={styles.featuredMeta}>
+                <View style={styles.ratingContainer}>
+                  <Star size={16} color="#FFD700" fill="#FFD700" />
+                  <Text style={styles.ratingText}>{featuredItems[currentSlide].rating}</Text>
+                </View>
+                <View style={styles.timeContainer}>
+                  <Clock size={16} color="#FFFFFF" />
+                  <Text style={styles.timeText}>{featuredItems[currentSlide].deliveryTime}</Text>
+                </View>
+              </View>
+              <View style={styles.priceContainer}>
+                <Text style={styles.currentPrice}>
+                  {formatPrice(featuredItems[currentSlide].price)}
+                </Text>
+                <Text style={styles.originalPrice}>
+                  {formatPrice(featuredItems[currentSlide].originalPrice)}
+                </Text>
+              </View>
             </View>
+            <TouchableOpacity style={styles.orderButton}>
+              <Text style={styles.orderButtonText}>Order Now</Text>
+            </TouchableOpacity>
           </View>
-        )}
-      </ScrollView>
+        </TouchableOpacity>
 
-      {/* AI Assistant */}
-      <AIAssistant />
+        {/* Categories */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Explore Categories</Text>
+          <View style={styles.carouselControls}>
+            <TouchableOpacity style={styles.carouselControl}>
+              <ChevronLeft size={20} color="#006400" />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.carouselControl}>
+              <ChevronRight size={20} color="#006400" />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false}
+          style={styles.categoriesContainer}
+        >
+          {categories.map((category) => (
+            <TouchableOpacity
+              key={category.id}
+              style={[
+                styles.categoryCard,
+                activeCategory === category.name && { borderColor: category.color }
+              ]}
+              onPress={() => setActiveCategory(category.name)}
+            >
+              <View style={[styles.categoryIcon, { backgroundColor: category.color }]}>
+                <Text style={styles.categoryIconText}>{category.icon}</Text>
+              </View>
+              <Text style={styles.categoryName}>{category.name}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
+        {/* Popular Restaurants */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Popular Restaurants</Text>
+          <TouchableOpacity>
+            <Text style={styles.seeAllText}>See All</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.restaurantsContainer}>
+          {popularRestaurants.map((restaurant) => (
+            <TouchableOpacity key={restaurant.id} style={styles.restaurantCard}>
+              <Image source={{ uri: restaurant.image }} style={styles.restaurantImage} />
+              <View style={styles.restaurantInfo}>
+                <Text style={styles.restaurantCardName}>{restaurant.name}</Text>
+                <Text style={styles.cuisineText}>{restaurant.cuisine}</Text>
+                <View style={styles.restaurantMeta}>
+                  <View style={styles.ratingContainer}>
+                    <Star size={14} color="#FFD700" fill="#FFD700" />
+                    <Text style={styles.ratingText}>{restaurant.rating}</Text>
+                  </View>
+                  <View style={styles.timeContainer}>
+                    <Clock size={14} color="#666666" />
+                    <Text style={styles.deliveryTimeText}>{restaurant.deliveryTime}</Text>
+                  </View>
+                  <Text style={styles.deliveryFeeText}>
+                    {formatPrice(restaurant.deliveryFee)}
+                  </Text>
+                </View>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* Recommended For You */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Recommended For You</Text>
+          <TouchableOpacity>
+            <Text style={styles.seeAllText}>See All</Text>
+          </TouchableOpacity>
+        </View>
+
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false}
+          style={styles.recommendedContainer}
+        >
+          {featuredItems.map((item) => (
+            <TouchableOpacity 
+              key={item.id} 
+              style={styles.recommendedCard}
+              onPress={() => handleFoodPress(item.id)}
+            >
+              <Image source={{ uri: item.image }} style={styles.recommendedImage} />
+              <TouchableOpacity 
+                style={styles.favoriteButton}
+                onPress={() => toggleFavorite(item.id)}
+              >
+                <Heart 
+                  size={20} 
+                  color={favorites.includes(item.id) ? "#FF6B6B" : "#FFFFFF"} 
+                  fill={favorites.includes(item.id) ? "#FF6B6B" : "transparent"}
+                />
+              </TouchableOpacity>
+              <View style={styles.recommendedInfo}>
+                <Text style={styles.recommendedName}>{item.name}</Text>
+                <Text style={styles.recommendedRestaurant}>{item.restaurant}</Text>
+                <View style={styles.recommendedMeta}>
+                  <Text style={styles.recommendedPrice}>{formatPrice(item.price)}</Text>
+                  <View style={styles.ratingContainer}>
+                    <Star size={12} color="#FFD700" fill="#FFD700" />
+                    <Text style={styles.smallRatingText}>{item.rating}</Text>
+                  </View>
+                </View>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -1016,97 +355,15 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FFFFFF',
   },
-  statusBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 10,
-    paddingBottom: 5,
-    backgroundColor: '#006400',
-  },
-  time: {
-    color: '#FFFFFF',
-    fontFamily: 'Inter-Medium',
-    fontSize: 16,
-  },
-  statusIcons: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  signalContainer: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: 2,
-  },
-  signalBar: {
-    backgroundColor: '#FFFFFF',
-    width: 3,
-  },
-  signalBar1: {
-    height: 4,
-  },
-  signalBar2: {
-    height: 6,
-  },
-  signalBar3: {
-    height: 8,
-  },
-  signalBar4: {
-    height: 10,
-  },
-  batteryContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  batteryBody: {
-    width: 22,
-    height: 11,
-    borderWidth: 1,
-    borderColor: '#FFFFFF',
-    borderRadius: 2,
-    padding: 1,
-  },
-  batteryLevel: {
-    flex: 1,
-    backgroundColor: '#32CD32',
-    borderRadius: 1,
-    width: '80%',
-  },
-  batteryTip: {
-    width: 2,
-    height: 6,
-    backgroundColor: '#FFFFFF',
-    borderTopRightRadius: 1,
-    borderBottomRightRadius: 1,
-    marginLeft: 1,
-  },
   header: {
     backgroundColor: '#006400',
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-  },
-  headerContent: {
-    gap: 15,
-  },
-  brandContainer: {
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  brandTagline: {
-    fontSize: 14,
-    fontFamily: 'Inter-Regular',
-    color: '#FFFFFF',
-    opacity: 0.9,
-    marginTop: 4,
-  },
-  locationContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
   },
-  locationRow: {
+  locationContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
@@ -1114,306 +371,179 @@ const styles = StyleSheet.create({
   deliveryText: {
     fontSize: 12,
     color: '#FFFFFF',
+    opacity: 0.8,
     fontFamily: 'Inter-Regular',
-    opacity: 0.9,
   },
   locationText: {
-    fontSize: 16,
-    fontFamily: 'Inter-Semibold',
+    fontSize: 14,
     color: '#FFFFFF',
+    fontFamily: 'Inter-Semibold',
   },
   ordersButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(184, 134, 11, 0.3)',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    gap: 6,
+    paddingVertical: 6,
+    borderRadius: 16,
   },
   ordersText: {
     fontSize: 14,
-    fontFamily: 'Inter-Semibold',
-    color: '#FFFFFF',
-  },
-  guestBanner: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-  },
-  guestInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  guestText: {
     color: '#FFFFFF',
     fontFamily: 'Inter-Medium',
-    fontSize: 14,
   },
-  signInButton: {
-    backgroundColor: '#B8860B',
+  searchContainer: {
     paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
+    paddingVertical: 12,
+    backgroundColor: '#FFFFFF',
   },
-  signInText: {
-    color: '#FFFFFF',
-    fontFamily: 'Inter-Semibold',
-    fontSize: 12,
-  },
-  userBanner: {
+  searchBar: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    paddingHorizontal: 15,
+    backgroundColor: '#F5F5F5',
+    paddingHorizontal: 12,
     paddingVertical: 10,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-  },
-  userInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    borderRadius: 8,
     gap: 8,
   },
-  userText: {
-    color: '#FFFFFF',
-    fontFamily: 'Inter-Medium',
-    fontSize: 14,
-  },
-  userStats: {
-    backgroundColor: '#B8860B',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 15,
-  },
-  userPoints: {
-    color: '#FFFFFF',
-    fontFamily: 'Inter-Semibold',
-    fontSize: 12,
-  },
-  insightNotification: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFF9E6',
-    marginHorizontal: 20,
-    marginTop: 15,
-    padding: 15,
-    borderRadius: 12,
-    borderLeftWidth: 4,
-    borderLeftColor: '#B8860B',
-  },
-  insightContent: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  insightIcon: {
-    fontSize: 20,
-  },
-  insightText: {
+  searchInput: {
     flex: 1,
     fontSize: 14,
     fontFamily: 'Inter-Regular',
     color: '#333333',
-    lineHeight: 20,
   },
-  closeNotification: {
-    padding: 4,
-  },
-  searchContainer: {
+  promoBanner: {
+    backgroundColor: '#FFF9E6',
+    marginHorizontal: 16,
+    marginVertical: 12,
+    borderRadius: 12,
+    padding: 12,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F5F5F5',
-    marginHorizontal: 20,
-    paddingHorizontal: 15,
-    paddingVertical: 12,
-    borderRadius: 25,
-    gap: 10,
-    marginTop: 15,
+    justifyContent: 'space-between',
   },
-  searchInput: {
+  promoContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
     flex: 1,
-    fontSize: 16,
+    gap: 8,
+  },
+  promoIcon: {
+    fontSize: 24,
+  },
+  promoText: {
+    fontSize: 13,
     fontFamily: 'Inter-Regular',
-    color: '#000000',
+    color: '#333333',
+    flex: 1,
   },
-  filterIcon: {
-    fontSize: 16,
+  closeButton: {
+    padding: 4,
   },
-  section: {
-    paddingHorizontal: 20,
-    paddingVertical: 15,
+  closeText: {
+    fontSize: 18,
+    fontFamily: 'Inter-Bold',
+    color: '#999999',
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 15,
+    paddingHorizontal: 16,
+    paddingTop: 20,
+    paddingBottom: 12,
   },
   sectionTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontFamily: 'Inter-Bold',
     color: '#000000',
   },
-  showAllText: {
+  seeAllText: {
     fontSize: 14,
     fontFamily: 'Inter-Medium',
     color: '#006400',
   },
-  categoryNavigation: {
+  paginationContainer: {
     flexDirection: 'row',
-    gap: 8,
+    gap: 4,
   },
-  navButton: {
-    backgroundColor: '#E8F5E8',
-    borderRadius: 20,
-    padding: 8,
-  },
-  categoriesScroll: {
-    marginTop: 10,
-  },
-  categoryItem: {
-    alignItems: 'center',
-    padding: 15,
-    borderRadius: 15,
-    marginRight: 12,
-    width: 100,
-  },
-  categoryIconContainer: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  categoryIcon: {
-    fontSize: 24,
-  },
-  categoryName: {
-    fontSize: 12,
-    fontFamily: 'Inter-Medium',
-    color: '#000000',
-    textAlign: 'center',
-  },
-  // Slide View Styles
-  slideNavigation: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 15,
-    paddingHorizontal: 10,
-  },
-  slideNavButton: {
-    backgroundColor: '#E8F5E8',
-    borderRadius: 20,
-    padding: 8,
-  },
-  slideNavButtonDisabled: {
-    backgroundColor: '#F5F5F5',
-  },
-  slideIndicators: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  slideIndicator: {
+  paginationDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
     backgroundColor: '#D3D3D3',
   },
-  slideIndicatorActive: {
+  paginationDotActive: {
     backgroundColor: '#32CD32',
-    width: 24,
+    width: 16,
   },
-  slideContainer: {
-    marginHorizontal: -20,
+  carouselControls: {
+    flexDirection: 'row',
+    gap: 8,
   },
-  slideCard: {
-    width: width - 40,
-    height: 220,
-    marginHorizontal: 20,
-    borderRadius: 20,
+  carouselControl: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#F5F5F5',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  featuredCard: {
+    marginHorizontal: 16,
+    borderRadius: 16,
     overflow: 'hidden',
-    position: 'relative',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
+    height: 220,
+    marginBottom: 16,
   },
-  slideImage: {
+  featuredImage: {
     width: '100%',
     height: '100%',
   },
-  slideBadge: {
-    position: 'absolute',
-    top: 15,
-    left: 15,
-    backgroundColor: '#FFD700',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 15,
-  },
-  slideBadgeText: {
-    fontSize: 12,
-    fontFamily: 'Inter-Bold',
-    color: '#000000',
-  },
-  slideOverlay: {
+  featuredOverlay: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: 'rgba(0,0,0,0.8)',
-    padding: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    padding: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
   },
-  slideInfo: {
-    marginBottom: 15,
+  featuredContent: {
+    flex: 1,
   },
-  slideName: {
-    fontSize: 22,
+  restaurantName: {
+    fontSize: 12,
+    fontFamily: 'Inter-Medium',
+    color: '#FFFFFF',
+    opacity: 0.9,
+    marginBottom: 4,
+  },
+  foodName: {
+    fontSize: 18,
     fontFamily: 'Inter-Bold',
     color: '#FFFFFF',
     marginBottom: 4,
   },
-  slideRestaurant: {
-    fontSize: 14,
-    fontFamily: 'Inter-Regular',
-    color: '#FFFFFF',
-    opacity: 0.8,
-    marginBottom: 8,
-  },
-  slideDescription: {
-    fontSize: 14,
+  foodDescription: {
+    fontSize: 12,
     fontFamily: 'Inter-Regular',
     color: '#FFFFFF',
     opacity: 0.9,
-    lineHeight: 20,
-    marginBottom: 12,
+    marginBottom: 8,
   },
-  slideMeta: {
+  featuredMeta: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 20,
-    marginBottom: 10,
+    gap: 12,
+    marginBottom: 8,
   },
   ratingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
   },
-  slideRating: {
+  ratingText: {
     fontSize: 14,
     fontFamily: 'Inter-Semibold',
     color: '#FFFFFF',
@@ -1423,7 +553,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
   },
-  slideTime: {
+  timeText: {
     fontSize: 14,
     fontFamily: 'Inter-Regular',
     color: '#FFFFFF',
@@ -1431,300 +561,175 @@ const styles = StyleSheet.create({
   priceContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-  },
-  slidePrice: {
-    fontSize: 20,
-    fontFamily: 'Inter-Bold',
-    color: '#32CD32',
-  },
-  slideOriginalPrice: {
-    fontSize: 16,
-    fontFamily: 'Inter-Regular',
-    color: '#FFFFFF',
-    opacity: 0.6,
-    textDecorationLine: 'line-through',
-  },
-  orderNowButton: {
-    backgroundColor: '#32CD32',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 25,
-    alignSelf: 'flex-start',
-  },
-  orderNowText: {
-    fontSize: 16,
-    fontFamily: 'Inter-Bold',
-    color: '#FFFFFF',
-  },
-  foodGrid: {
-    gap: 15,
-  },
-  foodGridItem: {
-    flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 15,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: '#E5E5E5',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  foodGridImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 12,
-  },
-  foodGridInfo: {
-    flex: 1,
-    marginLeft: 12,
-    justifyContent: 'space-between',
-  },
-  foodGridName: {
-    fontSize: 16,
-    fontFamily: 'Inter-Bold',
-    color: '#000000',
-    marginBottom: 2,
-  },
-  foodGridRestaurant: {
-    fontSize: 12,
-    fontFamily: 'Inter-Regular',
-    color: '#666666',
-    marginBottom: 4,
-  },
-  foodGridMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginBottom: 8,
-  },
-  foodGridRating: {
-    fontSize: 12,
-    fontFamily: 'Inter-Semibold',
-    color: '#000000',
-  },
-  foodGridCalories: {
-    fontSize: 12,
-    fontFamily: 'Inter-Regular',
-    color: '#666666',
-  },
-  foodGridBottom: {
     gap: 8,
   },
-  foodGridPrice: {
-    fontSize: 16,
-    fontFamily: 'Inter-Bold',
-    color: '#006400',
-  },
-  actionButtonsRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  cookButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#E8F5E8',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-    gap: 4,
-  },
-  cookButtonText: {
-    fontSize: 11,
-    fontFamily: 'Inter-Medium',
-    color: '#006400',
-  },
-  orderButton: {
-    backgroundColor: '#32CD32',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-  },
-  orderButtonText: {
-    fontSize: 11,
-    fontFamily: 'Inter-Bold',
-    color: '#FFFFFF',
-  },
-  // Food Category Scroll Styles
-  foodCategoryContainer: {
-    marginBottom: 20,
-    position: 'relative',
-  },
-  foodCategoryTabs: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingBottom: 15,
-  },
-  foodCategoryTab: {
-    alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    flex: 1,
-  },
-  foodCategoryTabActive: {
-    // Active state handled by indicator
-  },
-  foodCategoryIcon: {
-    fontSize: 20,
-    marginBottom: 4,
-  },
-  foodCategoryTabText: {
-    fontSize: 12,
-    fontFamily: 'Inter-Medium',
-    color: '#666666',
-  },
-  foodCategoryTabTextActive: {
-    color: '#006400',
-    fontFamily: 'Inter-Semibold',
-  },
-  categoryIndicator: {
-    position: 'absolute',
-    bottom: 0,
-    height: 3,
-    width: '15%',
-    backgroundColor: '#32CD32',
-    borderRadius: 2,
-    marginLeft: '-7.5%',
-  },
-  categoryItemsContainer: {
-    flex: 1,
-  },
-  categoryItemsScroll: {
-    marginTop: 10,
-  },
-  fullWidthFoodCard: {
-    position: 'relative',
-    height: 160,
-    borderRadius: 20,
-    overflow: 'hidden',
-    marginBottom: 15,
-  },
-  fullWidthFoodImage: {
-    width: '100%',
-    height: '100%',
-  },
-  fullWidthOverlay: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    padding: 15,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
-  },
-  fullWidthInfo: {
-    flex: 1,
-  },
-  fullWidthName: {
-    fontSize: 18,
-    fontFamily: 'Inter-Bold',
-    color: '#FFFFFF',
-    marginBottom: 4,
-  },
-  fullWidthRestaurant: {
-    fontSize: 12,
-    fontFamily: 'Inter-Regular',
-    color: '#FFFFFF',
-    opacity: 0.8,
-    marginBottom: 8,
-  },
-  fullWidthMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 15,
-  },
-  fullWidthRating: {
-    fontSize: 12,
-    fontFamily: 'Inter-Semibold',
-    color: '#FFFFFF',
-  },
-  fullWidthTime: {
-    fontSize: 12,
-    fontFamily: 'Inter-Regular',
-    color: '#FFFFFF',
-  },
-  fullWidthPrice: {
+  currentPrice: {
     fontSize: 16,
     fontFamily: 'Inter-Bold',
     color: '#32CD32',
   },
-  fullWidthActions: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  fullWidthCookButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 15,
-    gap: 4,
-  },
-  fullWidthCookText: {
-    fontSize: 12,
-    fontFamily: 'Inter-Medium',
-    color: '#FFFFFF',
-  },
-  fullWidthOrderButton: {
-    backgroundColor: '#32CD32',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 15,
-  },
-  fullWidthOrderText: {
-    fontSize: 12,
-    fontFamily: 'Inter-Bold',
-    color: '#FFFFFF',
-  },
-  heartButton: {
-    position: 'absolute',
-    top: 15,
-    right: 15,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-    borderRadius: 20,
-    padding: 8,
-  },
-  guestCTA: {
-    marginHorizontal: 20,
-    marginVertical: 15,
-    backgroundColor: '#006400',
-    borderRadius: 20,
-    padding: 25,
-    alignItems: 'center',
-  },
-  ctaContent: {
-    alignItems: 'center',
-  },
-  ctaTitle: {
-    fontSize: 22,
-    fontFamily: 'Inter-Bold',
-    color: '#FFFFFF',
-    marginBottom: 8,
-  },
-  ctaSubtitle: {
+  originalPrice: {
     fontSize: 14,
     fontFamily: 'Inter-Regular',
     color: '#FFFFFF',
-    textAlign: 'center',
-    marginBottom: 20,
-    lineHeight: 20,
-    opacity: 0.9,
+    opacity: 0.7,
+    textDecorationLine: 'line-through',
   },
-  ctaButton: {
+  orderButton: {
     backgroundColor: '#32CD32',
-    paddingHorizontal: 30,
-    paddingVertical: 12,
-    borderRadius: 25,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
   },
-  ctaButtonText: {
-    fontSize: 16,
-    fontFamily: 'Inter-Bold',
+  orderButtonText: {
+    fontSize: 14,
+    fontFamily: 'Inter-Semibold',
     color: '#FFFFFF',
+  },
+  categoriesContainer: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+  },
+  categoryCard: {
+    alignItems: 'center',
+    marginRight: 16,
+    borderWidth: 2,
+    borderColor: 'transparent',
+    borderRadius: 12,
+    padding: 8,
+    backgroundColor: '#FFFFFF',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  categoryIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  categoryIconText: {
+    fontSize: 24,
+  },
+  categoryName: {
+    fontSize: 12,
+    fontFamily: 'Inter-Medium',
+    color: '#333333',
+  },
+  restaurantsContainer: {
+    paddingHorizontal: 16,
+    gap: 12,
+    marginBottom: 16,
+  },
+  restaurantCard: {
+    flexDirection: 'row',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    overflow: 'hidden',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  restaurantImage: {
+    width: 80,
+    height: 80,
+  },
+  restaurantInfo: {
+    flex: 1,
+    padding: 12,
+  },
+  restaurantCardName: {
+    fontSize: 16,
+    fontFamily: 'Inter-Semibold',
+    color: '#000000',
+    marginBottom: 4,
+  },
+  cuisineText: {
+    fontSize: 12,
+    fontFamily: 'Inter-Regular',
+    color: '#666666',
+    marginBottom: 8,
+  },
+  restaurantMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  deliveryTimeText: {
+    fontSize: 12,
+    fontFamily: 'Inter-Regular',
+    color: '#666666',
+  },
+  deliveryFeeText: {
+    fontSize: 12,
+    fontFamily: 'Inter-Medium',
+    color: '#006400',
+  },
+  recommendedContainer: {
+    paddingHorizontal: 16,
+    paddingBottom: 24,
+  },
+  recommendedCard: {
+    width: 160,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginRight: 12,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  recommendedImage: {
+    width: '100%',
+    height: 120,
+  },
+  favoriteButton: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  recommendedInfo: {
+    padding: 12,
+  },
+  recommendedName: {
+    fontSize: 14,
+    fontFamily: 'Inter-Semibold',
+    color: '#000000',
+    marginBottom: 4,
+  },
+  recommendedRestaurant: {
+    fontSize: 12,
+    fontFamily: 'Inter-Regular',
+    color: '#666666',
+    marginBottom: 8,
+  },
+  recommendedMeta: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  recommendedPrice: {
+    fontSize: 14,
+    fontFamily: 'Inter-Bold',
+    color: '#006400',
+  },
+  smallRatingText: {
+    fontSize: 12,
+    fontFamily: 'Inter-Semibold',
+    color: '#000000',
   },
 });

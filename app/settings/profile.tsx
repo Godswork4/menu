@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, ActivityIndicator, Image, Modal } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, ActivityIndicator, Image, Modal, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { ArrowLeft, User, Mail, Phone, Camera, Save, X } from 'lucide-react-native';
@@ -20,6 +20,16 @@ export default function ProfileSettings() {
   const [isLoading, setIsLoading] = useState(false);
   const [showImagePicker, setShowImagePicker] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+
+  // Update state when profile changes
+  useEffect(() => {
+    if (profile) {
+      setFullName(profile.full_name || '');
+      setEmail(profile.email || user?.email || '');
+      setPhone(profile.phone || '');
+      setAvatarUrl(profile.avatar_url || '');
+    }
+  }, [profile, user]);
 
   const handleSaveProfile = async () => {
     if (!fullName) {
@@ -52,6 +62,14 @@ export default function ProfileSettings() {
   const handleImagePicker = async () => {
     try {
       setShowImagePicker(false);
+      
+      // For web platform, we'll use a simplified approach
+      if (Platform.OS === 'web') {
+        Alert.alert('Web Platform', 'Image picking is limited in web preview. This would open a file picker on native platforms.');
+        // Set a placeholder image for demo purposes
+        setAvatarUrl(IMAGES.DEFAULT_CHEF);
+        return;
+      }
       
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -100,12 +118,20 @@ export default function ProfileSettings() {
     try {
       setShowImagePicker(false);
       
+      // For web platform, we'll use a simplified approach
+      if (Platform.OS === 'web') {
+        Alert.alert('Web Platform', 'Camera capture is not available in web preview.');
+        return;
+      }
+      
+      // Request permissions for native platforms
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
       if (status !== 'granted') {
         Alert.alert('Permission Denied', 'We need camera permissions to take photos');
         return;
       }
       
+      // Launch camera
       const result = await ImagePicker.launchCameraAsync({
         allowsEditing: true,
         aspect: [1, 1],
@@ -320,6 +346,8 @@ const styles = StyleSheet.create({
   },
   backButton: {
     padding: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 8,
   },
   headerContent: {
     alignItems: 'center',
