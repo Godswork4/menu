@@ -1,8 +1,30 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, ActivityIndicator, Image } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  TextInput,
+  Alert,
+  ActivityIndicator,
+  Image,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
-import { ArrowLeft, CreditCard, MapPin, Clock, ChevronRight, Check, X, DollarSign, Truck, Smartphone, Copy } from 'lucide-react-native';
+import {
+  ArrowLeft,
+  CreditCard,
+  MapPin,
+  Clock,
+  ChevronRight,
+  Check,
+  X,
+  DollarSign,
+  Truck,
+  Smartphone,
+  Copy,
+} from 'lucide-react-native';
 import CustomLogo from '@/components/CustomLogo';
 import { useAuth } from '@/contexts/AuthContext';
 import ImageWithFallback from '@/components/ImageWithFallback';
@@ -13,14 +35,15 @@ export default function Checkout() {
   const params = useLocalSearchParams();
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('opay');
   const [selectedAddress, setSelectedAddress] = useState(0);
-  const [selectedDeliveryOption, setSelectedDeliveryOption] = useState('standard');
+  const [selectedDeliveryOption, setSelectedDeliveryOption] =
+    useState('standard');
   const [promoCode, setPromoCode] = useState('');
   const [isApplyingPromo, setIsApplyingPromo] = useState(false);
   const [isPromoApplied, setIsPromoApplied] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [showTransferDetails, setShowTransferDetails] = useState(false);
   const [paymentStep, setPaymentStep] = useState(1);
-  
+
   // Mock cart data - in a real app, this would come from a cart context or API
   const cartItems = [
     {
@@ -40,7 +63,7 @@ export default function Checkout() {
       image: IMAGES.GRILLED_CHICKEN,
     },
   ];
-  
+
   // Mock saved addresses
   const savedAddresses = [
     {
@@ -56,7 +79,7 @@ export default function Checkout() {
       isDefault: false,
     },
   ];
-  
+
   // Delivery options
   const deliveryOptions = [
     {
@@ -72,7 +95,7 @@ export default function Checkout() {
       fee: 2500,
     },
   ];
-  
+
   // Payment methods
   const paymentMethods = [
     {
@@ -94,10 +117,10 @@ export default function Checkout() {
       color: '#FF9800',
     },
   ];
-  
+
   // OPay account details
   const opayDetails = {
-    accountName: 'Menu Food Explorer',
+    accountName: 'Menus Food Explorer',
     accountNumber: '8012345678',
     bankName: 'OPay',
   };
@@ -107,11 +130,16 @@ export default function Checkout() {
   };
 
   const getSubtotal = () => {
-    return cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+    return cartItems.reduce(
+      (total, item) => total + item.price * item.quantity,
+      0
+    );
   };
 
   const getDeliveryFee = () => {
-    const option = deliveryOptions.find(opt => opt.id === selectedDeliveryOption);
+    const option = deliveryOptions.find(
+      (opt) => opt.id === selectedDeliveryOption
+    );
     return option ? option.fee : 0;
   };
 
@@ -128,16 +156,22 @@ export default function Checkout() {
       Alert.alert('Error', 'Please enter a promo code');
       return;
     }
-    
+
     setIsApplyingPromo(true);
-    
+
     // Simulate API call
     setTimeout(() => {
       if (promoCode.toUpperCase() === 'MENU10') {
         setIsPromoApplied(true);
-        Alert.alert('Success', 'Promo code applied successfully! 10% discount added.');
+        Alert.alert(
+          'Success',
+          'Promo code applied successfully! 10% discount added.'
+        );
       } else {
-        Alert.alert('Invalid Code', 'The promo code you entered is invalid or expired.');
+        Alert.alert(
+          'Invalid Code',
+          'The promo code you entered is invalid or expired.'
+        );
       }
       setIsApplyingPromo(false);
     }, 1000);
@@ -166,7 +200,7 @@ export default function Checkout() {
 
   const processPayment = () => {
     setIsProcessingPayment(true);
-    
+
     // Simulate payment processing
     setTimeout(() => {
       setIsProcessingPayment(false);
@@ -174,10 +208,10 @@ export default function Checkout() {
         'Order Placed Successfully!',
         'Your order has been confirmed and will be delivered soon.',
         [
-          { 
-            text: 'View Order', 
-            onPress: () => router.push('/orders')
-          }
+          {
+            text: 'View Order',
+            onPress: () => router.push('/orders'),
+          },
         ]
       );
     }, 2000);
@@ -189,25 +223,32 @@ export default function Checkout() {
         <View style={styles.transferContainer}>
           <Text style={styles.transferTitle}>Make Transfer to OPay</Text>
           <Text style={styles.transferInstructions}>
-            Please transfer {formatPrice(getTotal())} to the account details below:
+            Please transfer {formatPrice(getTotal())} to the account details
+            below:
           </Text>
-          
+
           <View style={styles.accountDetailsCard}>
             <View style={styles.accountDetail}>
               <Text style={styles.accountDetailLabel}>Bank Name:</Text>
-              <Text style={styles.accountDetailValue}>{opayDetails.bankName}</Text>
+              <Text style={styles.accountDetailValue}>
+                {opayDetails.bankName}
+              </Text>
             </View>
-            
+
             <View style={styles.accountDetail}>
               <Text style={styles.accountDetailLabel}>Account Name:</Text>
-              <Text style={styles.accountDetailValue}>{opayDetails.accountName}</Text>
+              <Text style={styles.accountDetailValue}>
+                {opayDetails.accountName}
+              </Text>
             </View>
-            
+
             <View style={styles.accountDetail}>
               <Text style={styles.accountDetailLabel}>Account Number:</Text>
               <View style={styles.accountNumberContainer}>
-                <Text style={styles.accountDetailValue}>{opayDetails.accountNumber}</Text>
-                <TouchableOpacity 
+                <Text style={styles.accountDetailValue}>
+                  {opayDetails.accountNumber}
+                </Text>
+                <TouchableOpacity
                   style={styles.copyButton}
                   onPress={handleCopyAccountNumber}
                 >
@@ -216,19 +257,21 @@ export default function Checkout() {
               </View>
             </View>
           </View>
-          
+
           <Text style={styles.transferNote}>
             After making the transfer, click the button below to confirm.
           </Text>
-          
-          <TouchableOpacity 
+
+          <TouchableOpacity
             style={styles.confirmTransferButton}
             onPress={handleTransferConfirmation}
           >
-            <Text style={styles.confirmTransferText}>I've Made the Transfer</Text>
+            <Text style={styles.confirmTransferText}>
+              I've Made the Transfer
+            </Text>
           </TouchableOpacity>
-          
-          <TouchableOpacity 
+
+          <TouchableOpacity
             style={styles.cancelButton}
             onPress={() => setShowTransferDetails(false)}
           >
@@ -258,8 +301,8 @@ export default function Checkout() {
           <Text style={styles.successMessage}>
             Your payment has been confirmed and your order is being processed.
           </Text>
-          
-          <TouchableOpacity 
+
+          <TouchableOpacity
             style={styles.viewOrderButton}
             onPress={() => router.push('/orders')}
           >
@@ -274,7 +317,10 @@ export default function Checkout() {
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.back()}
+        >
           <ArrowLeft size={24} color="#FFFFFF" />
         </TouchableOpacity>
         <View style={styles.headerContent}>
@@ -288,13 +334,13 @@ export default function Checkout() {
         {/* Delivery Address */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Delivery Address</Text>
-          
+
           {savedAddresses.map((address, index) => (
             <TouchableOpacity
               key={address.id}
               style={[
                 styles.addressCard,
-                selectedAddress === index && styles.selectedAddressCard
+                selectedAddress === index && styles.selectedAddressCard,
               ]}
               onPress={() => setSelectedAddress(index)}
             >
@@ -310,10 +356,12 @@ export default function Checkout() {
                 <Text style={styles.addressText}>{address.address}</Text>
               </View>
               <View style={styles.radioContainer}>
-                <View style={[
-                  styles.radioOuter,
-                  selectedAddress === index && styles.radioOuterSelected
-                ]}>
+                <View
+                  style={[
+                    styles.radioOuter,
+                    selectedAddress === index && styles.radioOuterSelected,
+                  ]}
+                >
                   {selectedAddress === index && (
                     <View style={styles.radioInner} />
                   )}
@@ -321,8 +369,8 @@ export default function Checkout() {
               </View>
             </TouchableOpacity>
           ))}
-          
-          <TouchableOpacity 
+
+          <TouchableOpacity
             style={styles.addNewButton}
             onPress={() => router.push('/settings/addresses')}
           >
@@ -333,11 +381,11 @@ export default function Checkout() {
         {/* Order Summary */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Order Summary</Text>
-          
+
           {cartItems.map((item) => (
             <View key={item.id} style={styles.cartItem}>
-              <ImageWithFallback 
-                source={item.image} 
+              <ImageWithFallback
+                source={item.image}
                 style={styles.itemImage}
                 fallback={IMAGES.DEFAULT_FOOD}
               />
@@ -345,14 +393,16 @@ export default function Checkout() {
                 <Text style={styles.itemName}>{item.name}</Text>
                 <Text style={styles.itemRestaurant}>{item.restaurant}</Text>
                 <View style={styles.itemPriceRow}>
-                  <Text style={styles.itemPrice}>{formatPrice(item.price)}</Text>
+                  <Text style={styles.itemPrice}>
+                    {formatPrice(item.price)}
+                  </Text>
                   <Text style={styles.itemQuantity}>x{item.quantity}</Text>
                 </View>
               </View>
             </View>
           ))}
-          
-          <TouchableOpacity 
+
+          <TouchableOpacity
             style={styles.editCartButton}
             onPress={() => router.back()}
           >
@@ -363,20 +413,23 @@ export default function Checkout() {
         {/* Delivery Options */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Delivery Options</Text>
-          
+
           {deliveryOptions.map((option) => (
             <TouchableOpacity
               key={option.id}
               style={[
                 styles.deliveryOption,
-                selectedDeliveryOption === option.id && styles.selectedDeliveryOption
+                selectedDeliveryOption === option.id &&
+                  styles.selectedDeliveryOption,
               ]}
               onPress={() => setSelectedDeliveryOption(option.id)}
             >
               <View style={styles.deliveryOptionInfo}>
                 <View style={styles.deliveryOptionHeader}>
                   <Text style={styles.deliveryOptionName}>{option.name}</Text>
-                  <Text style={styles.deliveryFee}>{formatPrice(option.fee)}</Text>
+                  <Text style={styles.deliveryFee}>
+                    {formatPrice(option.fee)}
+                  </Text>
                 </View>
                 <View style={styles.deliveryMeta}>
                   <Truck size={14} color="#666666" />
@@ -384,10 +437,13 @@ export default function Checkout() {
                 </View>
               </View>
               <View style={styles.radioContainer}>
-                <View style={[
-                  styles.radioOuter,
-                  selectedDeliveryOption === option.id && styles.radioOuterSelected
-                ]}>
+                <View
+                  style={[
+                    styles.radioOuter,
+                    selectedDeliveryOption === option.id &&
+                      styles.radioOuterSelected,
+                  ]}
+                >
                   {selectedDeliveryOption === option.id && (
                     <View style={styles.radioInner} />
                   )}
@@ -400,7 +456,7 @@ export default function Checkout() {
         {/* Promo Code */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Promo Code</Text>
-          
+
           <View style={styles.promoContainer}>
             <TextInput
               style={styles.promoInput}
@@ -410,7 +466,7 @@ export default function Checkout() {
               editable={!isPromoApplied}
             />
             {isPromoApplied ? (
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.removePromoButton}
                 onPress={() => {
                   setPromoCode('');
@@ -421,10 +477,11 @@ export default function Checkout() {
                 <Text style={styles.removePromoText}>Remove</Text>
               </TouchableOpacity>
             ) : (
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[
                   styles.applyButton,
-                  (!promoCode.trim() || isApplyingPromo) && styles.applyButtonDisabled
+                  (!promoCode.trim() || isApplyingPromo) &&
+                    styles.applyButtonDisabled,
                 ]}
                 onPress={handleApplyPromo}
                 disabled={!promoCode.trim() || isApplyingPromo}
@@ -437,7 +494,7 @@ export default function Checkout() {
               </TouchableOpacity>
             )}
           </View>
-          
+
           {isPromoApplied && (
             <View style={styles.appliedPromo}>
               <Check size={16} color="#32CD32" />
@@ -451,7 +508,7 @@ export default function Checkout() {
         {/* Payment Method */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Payment Method</Text>
-          
+
           {paymentMethods.map((method) => {
             const IconComponent = method.icon;
             return (
@@ -459,21 +516,30 @@ export default function Checkout() {
                 key={method.id}
                 style={[
                   styles.paymentMethod,
-                  selectedPaymentMethod === method.id && styles.selectedPaymentMethod
+                  selectedPaymentMethod === method.id &&
+                    styles.selectedPaymentMethod,
                 ]}
                 onPress={() => setSelectedPaymentMethod(method.id)}
               >
                 <View style={styles.paymentMethodInfo}>
-                  <View style={[styles.paymentIcon, { backgroundColor: method.color + '20' }]}>
+                  <View
+                    style={[
+                      styles.paymentIcon,
+                      { backgroundColor: method.color + '20' },
+                    ]}
+                  >
                     <IconComponent size={20} color={method.color} />
                   </View>
                   <Text style={styles.paymentMethodName}>{method.name}</Text>
                 </View>
                 <View style={styles.radioContainer}>
-                  <View style={[
-                    styles.radioOuter,
-                    selectedPaymentMethod === method.id && styles.radioOuterSelected
-                  ]}>
+                  <View
+                    style={[
+                      styles.radioOuter,
+                      selectedPaymentMethod === method.id &&
+                        styles.radioOuterSelected,
+                    ]}
+                  >
                     {selectedPaymentMethod === method.id && (
                       <View style={styles.radioInner} />
                     )}
@@ -487,18 +553,22 @@ export default function Checkout() {
         {/* Order Total */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Order Total</Text>
-          
+
           <View style={styles.totalCard}>
             <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>Subtotal</Text>
-              <Text style={styles.totalValue}>{formatPrice(getSubtotal())}</Text>
+              <Text style={styles.totalValue}>
+                {formatPrice(getSubtotal())}
+              </Text>
             </View>
-            
+
             <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>Delivery Fee</Text>
-              <Text style={styles.totalValue}>{formatPrice(getDeliveryFee())}</Text>
+              <Text style={styles.totalValue}>
+                {formatPrice(getDeliveryFee())}
+              </Text>
             </View>
-            
+
             {isPromoApplied && (
               <View style={styles.totalRow}>
                 <Text style={styles.totalLabel}>Discount</Text>
@@ -507,12 +577,14 @@ export default function Checkout() {
                 </Text>
               </View>
             )}
-            
+
             <View style={styles.divider} />
-            
+
             <View style={styles.totalRow}>
               <Text style={styles.grandTotalLabel}>Total</Text>
-              <Text style={styles.grandTotalValue}>{formatPrice(getTotal())}</Text>
+              <Text style={styles.grandTotalValue}>
+                {formatPrice(getTotal())}
+              </Text>
             </View>
           </View>
         </View>
@@ -520,7 +592,7 @@ export default function Checkout() {
 
       {/* Checkout Button */}
       <View style={styles.checkoutButtonContainer}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.checkoutButton}
           onPress={handlePaymentConfirmation}
           disabled={isProcessingPayment}
@@ -538,9 +610,7 @@ export default function Checkout() {
       {/* Transfer Details Modal */}
       {showTransferDetails && (
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            {renderTransferDetails()}
-          </View>
+          <View style={styles.modalContent}>{renderTransferDetails()}</View>
         </View>
       )}
     </SafeAreaView>
